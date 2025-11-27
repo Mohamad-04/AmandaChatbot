@@ -1,0 +1,106 @@
+{
+  "assessment_type": "ipv",
+  "description": "Intimate Partner Violence assessment protocol",
+  "questions": [
+    {
+      "id": 1,
+      "text": "Are you currently in a safe location where your partner cannot hear or see this conversation?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 2,
+      "text": "Has your partner ever physically hurt you (hit, pushed, grabbed, or harmed you in any way)?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 3,
+      "text": "How recently did this happen?",
+      "required": true,
+      "type": "timeline",
+      "depends_on": {"question_id": 2, "answer": "yes"}
+    },
+    {
+      "id": 4,
+      "text": "Do you feel afraid of your partner?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 5,
+      "text": "Has your partner threatened to hurt you, themselves, your children, or your pets?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 6,
+      "text": "Are there weapons in your home that your partner has access to?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 7,
+      "text": "Does your partner control your access to money, transportation, or communication with others?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 8,
+      "text": "Do you have a safe place you can go if you need to leave quickly?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 9,
+      "text": "Are there children in the home?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 10,
+      "text": "Would you like information about domestic violence resources and safety planning?",
+      "required": true,
+      "type": "yes_no"
+    }
+  ],
+  "severity_criteria": {
+    "imminent": {
+      "description": "Immediate danger - urgent intervention",
+      "indicators": [
+        "Currently unsafe location",
+        "Recent escalation or violence",
+        "Weapons present",
+        "Threats made",
+        "Children at risk"
+      ]
+    },
+    "high": {
+      "description": "Serious risk - safety planning needed",
+      "indicators": [
+        "Physical violence occurred",
+        "Feeling fearful",
+        "Controlling behavior",
+        "Limited escape options"
+      ]
+    },
+    "medium": {
+      "description": "Concerning patterns - resources recommended",
+      "indicators": [
+        "Emotional or verbal abuse",
+        "Controlling behavior present",
+        "Has safe place to go",
+        "Support system available"
+      ]
+    },
+    "low": {
+      "description": "Early warning signs - education and monitoring",
+      "indicators": [
+        "Isolated concerning behaviors",
+        "Good support system",
+        "Safety plan possible",
+        "Open to resources"
+      ]
+    }
+  }
+}

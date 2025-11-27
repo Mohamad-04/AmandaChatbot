@@ -1,0 +1,95 @@
+{
+  "suicidality": {
+    "title": "Suicide Prevention Resources",
+    "resources": [
+      {
+        "name": "National Suicide Prevention Lifeline",
+        "phone": "988",
+        "description": "24/7 crisis support",
+        "availability": "24/7"
+      },
+      {
+        "name": "Crisis Text Line",
+        "contact": "Text HOME to 741741",
+        "description": "Text-based crisis support",
+        "availability": "24/7"
+      },
+      {
+        "name": "International Association for Suicide Prevention",
+        "website": "https://www.iasp.info/resources/Crisis_Centres/",
+        "description": "Find crisis centers worldwide"
+      }
+    ],
+    "immediate_action": "If you are in immediate danger, please call 911 or go to your nearest emergency room."
+  },
+  "ipv": {
+    "title": "Domestic Violence Resources",
+    "resources": [
+      {
+        "name": "National Domestic Violence Hotline",
+        "phone": "1-800-799-7233",
+        "description": "24/7 support, information, and safety planning",
+        "availability": "24/7"
+      },
+      {
+        "name": "National Domestic Violence Text Line",
+        "contact": "Text START to 88788",
+        "description": "Text-based support",
+        "availability": "24/7"
+      },
+      {
+        "name": "National Dating Abuse Helpline",
+        "phone": "1-866-331-9474",
+        "description": "Support for dating violence",
+        "availability": "24/7"
+      }
+    ],
+    "immediate_action": "If you are in immediate danger, please call 911. For safety planning and resources, contact the National Domestic Violence Hotline."
+  },
+  "substance_misuse": {
+    "title": "Substance Abuse Resources",
+    "resources": [
+      {
+        "name": "SAMHSA National Helpline",
+        "phone": "1-800-662-4357",
+        "description": "Treatment referral and information service",
+        "availability": "24/7"
+      },
+      {
+        "name": "Substance Abuse Treatment Locator",
+        "website": "https://findtreatment.gov/",
+        "description": "Find treatment facilities near you"
+      },
+      {
+        "name": "Narcotics Anonymous",
+        "phone": "1-818-773-9999",
+        "website": "https://www.na.org/",
+        "description": "12-step support program"
+      },
+      {
+        "name": "Alcoholics Anonymous",
+        "phone": "1-212-870-3400",
+        "website": "https://www.aa.org/",
+        "description": "12-step support program"
+      }
+    ],
+    "immediate_action": "If you are experiencing a medical emergency related to substance use, please call 911 immediately."
+  },
+  "general": {
+    "title": "General Crisis Resources",
+    "resources": [
+      {
+        "name": "Emergency Services",
+        "phone": "911",
+        "description": "For immediate life-threatening emergencies",
+        "availability": "24/7"
+      },
+      {
+        "name": "Crisis Text Line",
+        "contact": "Text HELLO to 741741",
+        "description": "Text with a crisis counselor",
+        "availability": "24/7"
+      }
+    ]
+  }
+}

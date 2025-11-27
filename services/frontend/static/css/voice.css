@@ -1,0 +1,231 @@
+/**
+ * Voice Chat Styles
+ * Styles for voice recording and playback controls
+ */
+
+/* Voice Button */
+.btn-voice {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: var(--primary-color, #0066cc);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    margin-right: 8px;
+}
+
+.btn-voice:hover:not(:disabled) {
+    background-color: var(--primary-hover, #0052a3);
+    transform: scale(1.05);
+}
+
+.btn-voice:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Recording state */
+.btn-voice.recording {
+    background-color: var(--error-color, #dc3545);
+    animation: pulse-recording 1.5s infinite;
+}
+
+.btn-voice.recording:hover {
+    background-color: #c82333;
+}
+
+@keyframes pulse-recording {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    }
+}
+
+/* Processing state */
+.btn-voice.processing {
+    background-color: var(--warning-color, #ffc107);
+    animation: pulse-processing 1s infinite;
+}
+
+@keyframes pulse-processing {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Voice Status Indicator */
+.voice-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background-color: rgba(220, 53, 69, 0.1);
+    border-radius: 8px;
+    margin: 0 16px 12px 16px;
+    font-size: 14px;
+    color: var(--text-primary, #333);
+}
+
+.voice-status.processing {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+.voice-status.playing {
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+/* Recording Dot Animation */
+.recording-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: var(--error-color, #dc3545);
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+#recording-time {
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    min-width: 45px;
+}
+
+#voice-status-text {
+    color: var(--text-secondary, #666);
+}
+
+/* Adjust input area layout for voice button */
+.input-area {
+    display: flex;
+    align-items: flex-end;
+    gap: 0;
+}
+
+.input-area textarea {
+    flex: 1;
+    margin: 0 8px;
+}
+
+/* Voice message indicators in chat */
+.message-voice-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-secondary, #666);
+    margin-top: 4px;
+    padding: 4px 8px;
+    background-color: rgba(0, 102, 204, 0.1);
+    border-radius: 12px;
+}
+
+.message-voice-indicator svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Playback controls for voice messages */
+.voice-playback-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+}
+
+.voice-play-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--primary-color, #0066cc);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+}
+
+.voice-play-btn:hover {
+    background-color: var(--primary-hover, #0052a3);
+}
+
+.voice-play-btn.playing {
+    background-color: var(--error-color, #dc3545);
+}
+
+/* Transcription text in messages */
+.message-transcription {
+    font-style: italic;
+    opacity: 0.8;
+    margin-top: 4px;
+    font-size: 0.9em;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .btn-voice {
+        width: 40px;
+        height: 40px;
+    }
+
+    .voice-status {
+        margin: 0 12px 8px 12px;
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    #recording-time {
+        min-width: 40px;
+    }
+}
+
+/* Accessibility */
+.btn-voice:focus-visible,
+.voice-play-btn:focus-visible {
+    outline: 2px solid var(--primary-color, #0066cc);
+    outline-offset: 2px;
+}
+
+/* Error states */
+.voice-error {
+    color: var(--error-color, #dc3545);
+    font-size: 14px;
+    padding: 8px 16px;
+    background-color: rgba(220, 53, 69, 0.1);
+    border-radius: 8px;
+    margin: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.voice-error svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}

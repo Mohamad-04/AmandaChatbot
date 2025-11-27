@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Amanda</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="stylesheet" href="/static/css/voice.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Left Sidebar: Chat List -->
+        <div class="sidebar-left">
+            <div class="sidebar-header">
+                <h1>Amanda</h1>
+                <p id="user-email" class="user-email"></p>
+            </div>
+            
+            <button id="new-chat-btn" class="btn btn-new-chat">
+                + New Chat
+            </button>
+            
+            <div id="chat-list" class="chat-list">
+                <!-- Chat items will be dynamically inserted here -->
+            </div>
+            
+            <div class="sidebar-footer">
+                <button id="profile-btn" class="btn-icon" title="Profile">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Chat Area -->
+        <div class="main-chat">
+            <div class="chat-header">
+                <h2 id="chat-title">Select a chat or start a new one</h2>
+                <button id="voice-chat-btn" class="btn-voice-chat" title="Start voice chat" style="display: none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                    Voice Chat
+                </button>
+            </div>
+            
+            <div id="messages-container" class="messages-container">
+                <!-- Messages will be dynamically inserted here -->
+                <div id="empty-state" class="empty-state">
+                    <h3>Welcome to Amanda</h3>
+                    <p>Your AI-powered relationship support companion</p>
+                    <p>Start a new chat or select an existing one to continue</p>
+                </div>
+            </div>
+            
+            <!-- Voice Status Indicator -->
+            <div id="voice-status" class="voice-status" style="display: none;">
+                <span class="recording-dot"></span>
+                <span id="recording-time">00:00</span>
+                <span id="voice-status-text">Recording...</span>
+            </div>
+
+            <div class="input-area">
+                <button id="voice-btn" class="btn btn-voice" title="Voice chat" disabled>
+                    <svg id="voice-icon-mic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                    <svg id="voice-icon-stop" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+                        <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+                    </svg>
+                </button>
+                <textarea
+                    id="message-input"
+                    placeholder="Type your message here or use voice..."
+                    rows="1"
+                    disabled
+                ></textarea>
+                <button id="send-btn" class="btn btn-send" disabled>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Right Sidebar: Profile (hidden by default) -->
+        <div id="profile-modal" class="profile-modal" style="display: none;">
+            <div class="profile-content">
+                <div class="profile-header">
+                    <h2>Profile</h2>
+                    <button id="close-profile-btn" class="btn-close">&times;</button>
+                </div>
+                <div class="profile-body">
+                    <div class="profile-info">
+                        <label>Email</label>
+                        <p id="profile-email"></p>
+                    </div>
+                    <div class="profile-info">
+                        <label>Member Since</label>
+                        <p id="profile-created"></p>
+                    </div>
+                </div>
+                <div class="profile-footer">
+                    <button id="logout-btn" class="btn btn-logout">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/voice-recorder.js"></script>
+    <script src="/static/js/voice-player.js"></script>
+    <script type="module" src="/static/js/dashboard.js"></script>
+</body>
+</html>

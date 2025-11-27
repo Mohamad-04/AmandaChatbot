@@ -1,0 +1,400 @@
+# Amanda AI Backend Configuration
+
+# ============================================================
+# LLM Provider Configuration
+# ============================================================
+llm:
+  provider: "anthropic"  # Options: openai, anthropic, google
+
+  # API Keys - ADD YOUR API KEYS HERE
+  api_keys:
+    openai: ""      # Required for: whisper (API), OpenAI TTS
+    anthropic: ""   # Get from https://console.anthropic.com/
+    google: ""      # Required for: Google TTS, get from https://aistudio.google.com/app/apikey
+
+  # Provider-specific settings
+  providers:
+    anthropic:
+      model: "claude-3-5-sonnet-20241022"
+      # Available models: claude-3-5-sonnet-20241022, claude-3-opus-20240229, claude-3-haiku-20240307
+
+    openai:
+      model: "gpt-4"
+      # Available models: gpt-4, gpt-4-turbo, gpt-3.5-turbo
+
+    google:
+      model: "gemini-pro"
+      # Available models: gemini-pro, gemini-pro-vision
+
+  # Generation Parameters (applied to all providers)
+  temperature: 0.7
+  max_tokens: 2048
+  top_p: 1.0
+
+
+# ============================================================
+# Agent Configuration
+# ============================================================
+agents:
+  amanda:
+    name: "Amanda"
+    role: "relationship_support"
+    enabled: true
+
+
+# ============================================================
+# Orchestrator Configuration
+# ============================================================
+# Currently using SEQUENTIAL strategy (fully implemented)
+# - sequential: Agents run one after another (Amanda → Supervisor → Risk Assessor)
+# - parallel: Agents run simultaneously (NOT YET IMPLEMENTED)
+# - hierarchical: Master agent delegates to sub-agents (NOT YET IMPLEMENTED)
+orchestrator:
+  enabled: false  # Placeholder - orchestrator always runs
+  strategy: "sequential"  # Only sequential is implemented
+  max_iterations: 5  # For future iterative refinement
+
+
+# ============================================================
+# Voice Configuration (ASR + TTS)
+# ============================================================
+#
+# AVAILABLE ASR PROVIDERS:
+# ------------------------
+# 1. "whisper" - OpenAI Whisper API
+#    - Cost: $0.006/min
+#    - Quality: Excellent
+#    - Latency: Medium (2-5s)
+#    - Requirements: pip install openai
+#    - Best for: Production (no GPU needed)
+#
+# 2. "local-whisper" - Local Whisper (runs on your GPU)
+#    - Cost: FREE
+#    - Quality: Excellent
+#    - Latency: Fast with GPU (1-3s), slow on CPU (10-30s)
+#    - Requirements: pip install openai-whisper
+#    - Models: tiny, base, small, medium, large
+#    - Best for: Privacy, cost savings
+#
+# 3. "whisperx" - WhisperX (optimized local Whisper)
+#    - Cost: FREE
+#    - Quality: Excellent + word-level timestamps
+#    - Latency: FASTEST (0.5-2s) - ~70x faster than standard!
+#    - Requirements: pip install whisperx, FFmpeg, CUDA GPU
+#    - Best for: Real-time, lowest latency
+#
+# AVAILABLE TTS PROVIDERS:
+# ------------------------
+# 1. "openai" - OpenAI TTS API
+#    - Cost: $0.015 per 1K characters
+#    - Voices: nova, shimmer (therapy), alloy, echo, fable, onyx
+#    - Streaming: Full support
+#    - Models: tts-1 (fast), tts-1-hd (high quality)
+#    - Requirements: pip install openai
+#    - Best for: Production, streaming
+#
+# 2. "google" - Google Cloud Text-to-Speech
+#    - Cost: Varies (check Google pricing)
+#    - Voices: Journey (therapy), Puck, Charon, Kore, Fenrir, Aoede
+#    - Streaming: Limited
+#    - Requirements: pip install google-cloud-texttospeech google-generativeai
+#    - Best for: Alternative voices
+#
+# RECOMMENDED SETUPS:
+# -------------------
+# Production (simple, reliable):
+#   asr: { provider: "whisper", model: "whisper-1" }
+#   tts: { provider: "openai", voice: "nova" }
+#   Cost: ~$0.26 per 30-min session
+#
+# Cost-optimized (local ASR):
+#   asr: { provider: "local-whisper", model: "base" }
+#   tts: { provider: "openai", voice: "nova" }
+#   Cost: ~$0.08 per 30-min session
+#
+# Fastest (best performance):
+#   asr: { provider: "whisperx", model: "base" }
+#   tts: { provider: "openai", voice: "nova" }
+#   Latency: 50% faster, Cost: ~$0.08 per 30-min session
+#
+# INSTALLATION:
+# -------------
+# pip install openai                    # For Whisper API + OpenAI TTS
+# pip install openai-whisper            # For Local Whisper
+# pip install whisperx                  # For WhisperX (+ FFmpeg required)
+# pip install google-cloud-texttospeech google-generativeai  # For Google TTS
+#
+# ============================================================
+
+voice:
+  enabled: false  # Set to true to enable voice features
+
+  # ============================================================
+  # ASR (Automatic Speech Recognition) - Speech to Text
+  # ============================================================
+  asr:
+    # Provider Selection
+    # ------------------
+    provider: "whisper"  # Options: whisper, local-whisper, whisperx
+
+    # PROVIDER: "whisper" (OpenAI Whisper API)
+    # - Cost: $0.006 per minute (~$0.36/hour)
+    # - Quality: Excellent accuracy
+    # - Latency: Medium (2-5 seconds for 10s audio)
+    # - Requirements: pip install openai, OpenAI API key
+    # - Best for: Production use, no GPU needed, cloud-based
+    # - Models: whisper-1
+
+    # PROVIDER: "local-whisper" (Local Whisper on your GPU/CPU)
+    # - Cost: FREE (runs locally)
+    # - Quality: Excellent (same as API)
+    # - Latency: Fast with GPU (1-3s), slow on CPU (10-30s)
+    # - Requirements: pip install openai-whisper, GPU recommended
+    # - Best for: Privacy, cost savings, offline use
+    # - Models: tiny, base, small, medium, large
+    #   * tiny: ~32x faster than realtime, less accurate
+    #   * base: ~16x faster than realtime, good accuracy (RECOMMENDED)
+    #   * small: ~6x faster than realtime, very good accuracy
+    #   * medium: ~2x faster than realtime, excellent accuracy
+    #   * large: ~1x realtime, best accuracy
+
+    # PROVIDER: "whisperx" (Optimized Local Whisper)
+    # - Cost: FREE (runs locally)
+    # - Quality: Excellent + word-level timestamps
+    # - Latency: FASTEST (0.5-2s) - ~70x faster than standard Whisper!
+    # - Requirements: pip install whisperx, FFmpeg, CUDA GPU required
+    # - Best for: Real-time transcription, lowest latency
+    # - Models: tiny, base, small, medium, large-v2
+    # - Features: Batched inference, VAD, speaker diarization
+
+    # Model Configuration
+    # -------------------
+    model: "whisper-1"
+    # For provider "whisper": Use "whisper-1"
+    # For provider "local-whisper": Choose from tiny, base, small, medium, large
+    # For provider "whisperx": Choose from tiny, base, small, medium, large-v2
+
+    # Language Configuration
+    # ----------------------
+    language: "en"
+    # Supported languages (99+ total):
+    # - en (English), es (Spanish), fr (French), de (German), it (Italian)
+    # - pt (Portuguese), nl (Dutch), pl (Polish), ru (Russian), ar (Arabic)
+    # - zh (Chinese), ja (Japanese), ko (Korean), hi (Hindi), tr (Turkish)
+    # - sv (Swedish), da (Danish), no (Norwegian), fi (Finnish), cs (Czech)
+    # - and 80+ more languages...
+    # Set to null for auto-detection (slower)
+
+    # Device Configuration (for local-whisper and whisperx only)
+    # -----------------------------------------------------------
+    # device: null
+    # Options:
+    # - null: Auto-detect (uses CUDA if available, else CPU)
+    # - "cuda": Force GPU (NVIDIA CUDA)
+    # - "cpu": Force CPU (slow for real-time)
+    # Uncomment to override auto-detection
+
+    # Compute Type (for whisperx only)
+    # ---------------------------------
+    # compute_type: "float16"
+    # Options:
+    # - "float16": Best for GPU (default for CUDA)
+    # - "int8": CPU fallback (default for CPU)
+    # - "float32": Highest precision (slower)
+    # Uncomment to override defaults
+
+  # ============================================================
+  # TTS (Text-to-Speech) - Text to Speech
+  # ============================================================
+  tts:
+    # Provider Selection
+    # ------------------
+    provider: "openai"  # Options: openai, google
+
+    # PROVIDER: "openai" (OpenAI TTS API)
+    # - Cost: $0.015 per 1K characters (~$0.30 for 20K chars)
+    # - Quality: Natural neural voices, excellent for conversation
+    # - Streaming: Full support (low latency)
+    # - Requirements: pip install openai, OpenAI API key
+    # - Best for: Production, streaming support, natural voices
+    # - Models: tts-1 (fast), tts-1-hd (higher quality)
+    # - Voices: 6 options (see below)
+
+    # PROVIDER: "google" (Google Cloud Text-to-Speech)
+    # - Cost: Variable (check Google Cloud pricing)
+    # - Quality: Natural voices, different character
+    # - Streaming: Limited support
+    # - Requirements: pip install google-cloud-texttospeech google-generativeai
+    # - Best for: Alternative voice options, Google ecosystem
+    # - Models: text-to-speech-001
+    # - Voices: Journey, Puck, Charon, Kore, Fenrir, Aoede
+
+    # Model Configuration
+    # -------------------
+    model: "tts-1"
+    # For provider "openai":
+    # - "tts-1": Standard quality, faster, lower cost
+    # - "tts-1-hd": Higher quality, slightly slower, same cost
+    # For provider "google":
+    # - "text-to-speech-001": Standard model
+
+    # Voice Configuration
+    # -------------------
+    voice: "nova"
+
+    # OPENAI VOICES:
+    # - "nova": Female, warm and empathetic ⭐ RECOMMENDED for therapy
+    # - "shimmer": Female, energetic and friendly ⭐ RECOMMENDED for therapy
+    # - "alloy": Neutral, balanced and versatile
+    # - "echo": Male, clear and articulate
+    # - "fable": Male, British accent, warm
+    # - "onyx": Male, deep and authoritative
+
+    # GOOGLE VOICES:
+    # - "Journey": Female, warm and comforting ⭐ RECOMMENDED for therapy
+    # - "Puck": Male, energetic and upbeat
+    # - "Charon": Male, deep and serious
+    # - "Kore": Female, clear and professional
+    # - "Fenrir": Male, authoritative
+    # - "Aoede": Female, gentle and soft
+
+    # Speed Configuration
+    # -------------------
+    speed: 1.0
+    # Range: 0.25 to 4.0
+    # - 0.25: Very slow (4x slower)
+    # - 0.5: Half speed (2x slower)
+    # - 1.0: Normal speed (default)
+    # - 1.5: 1.5x faster
+    # - 2.0: Double speed
+    # - 4.0: Very fast (4x faster)
+    # Recommended: 0.9-1.1 for therapy (natural pace)
+
+  # ============================================================
+  # Audio Settings
+  # ============================================================
+  audio:
+    # Sample Rate
+    # -----------
+    sample_rate: 16000
+    # Options: 8000, 16000, 22050, 44100, 48000
+    # - 16000 (16kHz): Optimal for Whisper, good quality, lower bandwidth
+    # - 22050: Higher quality speech
+    # - 44100: CD quality (overkill for speech)
+    # Recommended: 16000 for speech/Whisper
+
+    # Chunk Size
+    # ----------
+    chunk_size: 4096
+    # Size of audio chunks in bytes
+    # - Smaller (1024-2048): Lower latency, more processing overhead
+    # - Medium (4096): Good balance (RECOMMENDED)
+    # - Larger (8192-16384): Higher latency, less overhead
+    # Affects streaming performance and buffering
+
+    # Output Format
+    # -------------
+    format: "mp3"
+    # Options: mp3, wav, opus, flac
+    # - mp3: Compressed, widely supported, good quality (RECOMMENDED)
+    # - wav: Uncompressed, larger files, highest quality
+    # - opus: Highly compressed, good for streaming
+    # - flac: Lossless compression, high quality
+
+
+# ============================================================
+# VOICE CONFIGURATION EXAMPLES (Copy/paste to replace above)
+# ============================================================
+#
+# --- OPTION 1: WhisperX + OpenAI TTS (RECOMMENDED - Fastest!) ---
+# voice:
+#   enabled: true
+#   asr:
+#     provider: "whisperx"
+#     model: "base"
+#     device: null  # auto-detect CUDA
+#     compute_type: "float16"
+#     language: "en"
+#   tts:
+#     provider: "openai"
+#     model: "tts-1"
+#     voice: "nova"
+#     speed: 1.0
+#   audio:
+#     sample_rate: 16000
+#     chunk_size: 4096
+#     format: "mp3"
+#
+# --- OPTION 2: Local Whisper + OpenAI TTS (Cost-optimized) ---
+# voice:
+#   enabled: true
+#   asr:
+#     provider: "local-whisper"
+#     model: "base"
+#     device: null  # auto-detect CUDA/CPU
+#     language: "en"
+#   tts:
+#     provider: "openai"
+#     model: "tts-1"
+#     voice: "nova"
+#     speed: 1.0
+#   audio:
+#     sample_rate: 16000
+#     chunk_size: 4096
+#     format: "mp3"
+#
+# --- OPTION 3: Whisper API + Google TTS (Alternative voices) ---
+# voice:
+#   enabled: true
+#   asr:
+#     provider: "whisper"
+#     model: "whisper-1"
+#     language: "en"
+#   tts:
+#     provider: "google"
+#     model: "text-to-speech-001"
+#     voice: "Journey"
+#     speed: 1.0
+#   audio:
+#     sample_rate: 16000
+#     chunk_size: 4096
+#     format: "mp3"
+#
+# --- OPTION 4: WhisperX + Google TTS (Fastest + Google) ---
+# voice:
+#   enabled: true
+#   asr:
+#     provider: "whisperx"
+#     model: "base"
+#     device: "cuda"
+#     compute_type: "float16"
+#     language: "en"
+#   tts:
+#     provider: "google"
+#     model: "text-to-speech-001"
+#     voice: "Journey"
+#     speed: 1.0
+#   audio:
+#     sample_rate: 16000
+#     chunk_size: 4096
+#     format: "mp3"
+#
+# ============================================================
+
+
+# ============================================================
+# Server Configuration
+# ============================================================
+server:
+  host: "localhost"
+  port: 50051
+  max_workers: 10
+
+
+# ============================================================
+# Logging Configuration
+# ============================================================
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "ai_backend.log"

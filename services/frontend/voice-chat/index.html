@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Chat - Amanda</title>
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/voice-chat.css">
+</head>
+<body>
+    <div class="voice-chat-container">
+        <!-- Header -->
+        <div class="voice-chat-header">
+            <button id="back-btn" class="btn-back" title="Back to chat">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <h1>Voice Chat with Amanda</h1>
+            <div class="connection-status">
+                <span id="connection-dot" class="status-dot disconnected"></span>
+                <span id="connection-text">Connecting...</span>
+            </div>
+        </div>
+
+        <!-- Main Voice Interface -->
+        <div class="voice-interface">
+            <!-- Visual Orb/Avatar -->
+            <div id="voice-orb" class="voice-orb idle">
+                <div class="orb-inner">
+                    <div class="orb-core"></div>
+                    <div class="orb-ring ring-1"></div>
+                    <div class="orb-ring ring-2"></div>
+                    <div class="orb-ring ring-3"></div>
+                </div>
+                <!-- Sound wave visualization -->
+                <div id="sound-wave" class="sound-wave">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+            </div>
+
+            <!-- Status Text -->
+            <div id="status-container" class="status-container">
+                <h2 id="status-text">Click the button to start</h2>
+                <p id="status-subtext">Speak naturally, I'll listen</p>
+            </div>
+
+            <!-- Transcript Display -->
+            <div id="transcript-container" class="transcript-container">
+                <div id="user-transcript" class="transcript user-transcript">
+                    <span class="transcript-label">You:</span>
+                    <span id="user-text" class="transcript-text"></span>
+                </div>
+                <div id="assistant-transcript" class="transcript assistant-transcript">
+                    <span class="transcript-label">Amanda:</span>
+                    <span id="assistant-text" class="transcript-text"></span>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="voice-controls">
+                <button id="voice-toggle-btn" class="btn-voice-toggle" disabled>
+                    <!-- Microphone icon (start) -->
+                    <svg id="icon-mic" class="control-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                    <!-- Stop icon (active) -->
+                    <svg id="icon-stop" class="control-icon" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                    </svg>
+                </button>
+                <p class="control-hint">Click to start talking</p>
+            </div>
+
+            <!-- Settings Panel (collapsed by default) -->
+            <div id="settings-panel" class="settings-panel">
+                <button id="settings-toggle" class="btn-settings-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6M1 12h6m6 0h6"></path>
+                    </svg>
+                    Settings
+                </button>
+                <div id="settings-content" class="settings-content" style="display: none;">
+                    <div class="setting-item">
+                        <label for="vad-threshold">Voice Detection Sensitivity (Higher = Less Sensitive)</label>
+                        <input type="range" id="vad-threshold" min="0.05" max="0.5" step="0.05" value="0.15">
+                        <span id="vad-value">0.15</span>
+                    </div>
+                    <div class="setting-item">
+                        <label for="silence-duration">Pause Duration (ms)</label>
+                        <input type="range" id="silence-duration" min="500" max="3000" step="100" value="1500">
+                        <span id="silence-value">1500ms</span>
+                    </div>
+                    <div class="setting-item">
+                        <label for="tts-speed">Speech Speed</label>
+                        <input type="range" id="tts-speed" min="0.5" max="2.0" step="0.1" value="1.0">
+                        <span id="speed-value">1.0x</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversation History (sidebar) -->
+        <button id="history-toggle" class="btn-history-toggle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+        </button>
+        <div id="history-sidebar" class="history-sidebar">
+            <div class="history-header">
+                <h3>Conversation</h3>
+                <button id="history-close" class="btn-close">&times;</button>
+            </div>
+            <div id="history-messages" class="history-messages">
+                <!-- Messages will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/vad-detector.js"></script>
+    <script src="/static/js/grpc-voice-client.js"></script>
+    <script src="/static/js/voice-chat.js"></script>
+</body>
+</html>

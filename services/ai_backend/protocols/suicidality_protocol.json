@@ -1,0 +1,137 @@
+{
+  "assessment_type": "suicidality",
+  "description": "Suicide risk assessment protocol",
+  "questions": [
+    {
+      "id": 1,
+      "text": "Have you been having thoughts about harming yourself or ending your life?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 2,
+      "text": "How often have you been having these thoughts?",
+      "required": true,
+      "type": "frequency",
+      "depends_on": {"question_id": 1, "answer": "yes"}
+    },
+    {
+      "id": 3,
+      "text": "When did these thoughts start?",
+      "required": true,
+      "type": "timeline",
+      "depends_on": {"question_id": 1, "answer": "yes"}
+    },
+    {
+      "id": 4,
+      "text": "Do you have a specific plan for how you would harm yourself?",
+      "required": true,
+      "type": "yes_no",
+      "depends_on": {"question_id": 1, "answer": "yes"}
+    },
+    {
+      "id": 5,
+      "text": "Do you have access to the means you're thinking about using?",
+      "required": true,
+      "type": "yes_no",
+      "depends_on": {"question_id": 4, "answer": "yes"}
+    },
+    {
+      "id": 6,
+      "text": "Have you attempted to harm yourself before?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 7,
+      "text": "When was your most recent attempt?",
+      "required": true,
+      "type": "timeline",
+      "depends_on": {"question_id": 6, "answer": "yes"}
+    },
+    {
+      "id": 8,
+      "text": "What stops you from acting on these thoughts right now?",
+      "required": true,
+      "type": "open",
+      "depends_on": {"question_id": 1, "answer": "yes"}
+    },
+    {
+      "id": 9,
+      "text": "Are you currently in a safe location?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 10,
+      "text": "Is there someone you trust who you can talk to about these feelings?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 11,
+      "text": "Have you been using alcohol or drugs?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 12,
+      "text": "Have you experienced a recent loss or significant life change?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 13,
+      "text": "On a scale of 1-10, how strong is your urge to act on these thoughts right now?",
+      "required": true,
+      "type": "scale",
+      "scale_range": [1, 10],
+      "depends_on": {"question_id": 1, "answer": "yes"}
+    },
+    {
+      "id": 14,
+      "text": "Are you willing to reach out for help if these thoughts become overwhelming?",
+      "required": true,
+      "type": "yes_no"
+    }
+  ],
+  "severity_criteria": {
+    "imminent": {
+      "description": "Immediate intervention required",
+      "indicators": [
+        "Has specific plan",
+        "Has access to means",
+        "High urgency score (8-10)",
+        "Recent attempt",
+        "Unable to stay safe"
+      ]
+    },
+    "high": {
+      "description": "Urgent professional help needed",
+      "indicators": [
+        "Frequent thoughts (daily)",
+        "Has plan but no means",
+        "Previous attempts",
+        "Limited support system"
+      ]
+    },
+    "medium": {
+      "description": "Professional assessment recommended",
+      "indicators": [
+        "Occasional thoughts",
+        "No specific plan",
+        "Has support system",
+        "Willing to seek help"
+      ]
+    },
+    "low": {
+      "description": "Monitor and provide resources",
+      "indicators": [
+        "Rare thoughts",
+        "No plan or means",
+        "Strong support system",
+        "Good coping mechanisms"
+      ]
+    }
+  }
+}

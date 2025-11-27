@@ -1,0 +1,16 @@
+Flask==3.0.0
+Flask-SocketIO==5.3.5
+Flask-Session==0.8.0
+Flask-SQLAlchemy==3.1.1
+Flask-CORS==4.0.0
+python-dotenv==1.0.0
+werkzeug==3.0.1
+grpcio>=1.60.0
+protobuf>=3.20.3,<5.0.0
+python-socketio==5.10.0
+bcrypt==4.1.2
+cachelib==0.13.0
+
+# Optional async modes (threading mode is default, works with Python 3.12+)
+# eventlet==0.33.3  # Uncomment for eventlet mode (Python <3.12 only)
+# gevent==23.9.1    # Uncomment for gevent mode

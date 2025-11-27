@@ -1,0 +1,127 @@
+{
+  "assessment_type": "substance_misuse",
+  "description": "Substance misuse assessment protocol",
+  "questions": [
+    {
+      "id": 1,
+      "text": "What substance or substances have you been using?",
+      "required": true,
+      "type": "open"
+    },
+    {
+      "id": 2,
+      "text": "How often are you currently using?",
+      "required": true,
+      "type": "frequency"
+    },
+    {
+      "id": 3,
+      "text": "When did you first start using this substance?",
+      "required": true,
+      "type": "timeline"
+    },
+    {
+      "id": 4,
+      "text": "Have you noticed an increase in how much you need to use to get the same effect?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 5,
+      "text": "Have you tried to cut down or stop using before?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 6,
+      "text": "What happened when you tried to stop?",
+      "required": true,
+      "type": "open",
+      "depends_on": {"question_id": 5, "answer": "yes"}
+    },
+    {
+      "id": 7,
+      "text": "Is your substance use affecting your work, school, or relationships?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 8,
+      "text": "Have you experienced any physical symptoms when you haven't used (shaking, sweating, nausea)?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 9,
+      "text": "Are you using alone or in risky situations?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 10,
+      "text": "Have there been recent major life changes or stressors?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 11,
+      "text": "Do you have people in your life who know about your substance use and can support you?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 12,
+      "text": "Have you ever experienced an overdose or medical emergency related to substance use?",
+      "required": true,
+      "type": "yes_no"
+    },
+    {
+      "id": 13,
+      "text": "Are you interested in learning about treatment options or support resources?",
+      "required": true,
+      "type": "yes_no"
+    }
+  ],
+  "severity_criteria": {
+    "imminent": {
+      "description": "Medical emergency - immediate intervention",
+      "indicators": [
+        "Recent overdose",
+        "Severe withdrawal symptoms",
+        "Using in dangerous amounts",
+        "Medical complications",
+        "High-risk behaviors"
+      ]
+    },
+    "high": {
+      "description": "Significant dependence - treatment recommended",
+      "indicators": [
+        "Daily use",
+        "Withdrawal symptoms present",
+        "Multiple failed quit attempts",
+        "Major life impact",
+        "Tolerance developed"
+      ]
+    },
+    "medium": {
+      "description": "Problematic use - intervention beneficial",
+      "indicators": [
+        "Regular use",
+        "Some life disruption",
+        "Wants to cut down",
+        "Support system present",
+        "Recognizes problem"
+      ]
+    },
+    "low": {
+      "description": "Early concerns - education and monitoring",
+      "indicators": [
+        "Occasional use",
+        "Minimal life impact",
+        "Good insight",
+        "Support available",
+        "Open to resources"
+      ]
+    }
+  }
+}

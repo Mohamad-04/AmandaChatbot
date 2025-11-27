@@ -1,0 +1,31 @@
+# Core Dependencies
+grpcio>=1.60.0
+protobuf>=3.20.3,<5.0.0
+pyyaml>=6.0.1
+
+# LLM Provider SDKs (install based on which provider you're using)
+# All are optional - only install the one(s) you need
+
+# Anthropic Claude (recommended for Amanda)
+anthropic>=0.18.0
+
+# OpenAI GPT
+openai>=1.12.0
+
+# Google Gemini
+google-generativeai>=0.3.0
+
+# Optional: Better token counting (for production)
+# tiktoken>=0.5.0  # For accurate OpenAI token counting
+
+# Voice Features
+# For ASR (Speech-to-Text)
+openai-whisper>=20231117  # Local Whisper
+# whisperx  # Optional: For faster inference (requires separate installation)
+
+# For TTS (Text-to-Speech)
+google-cloud-texttospeech>=2.16.0  # Google TTS
+
+# WebSocket Server for Real-Time Voice Chat
+aiohttp>=3.9.0
+aiohttp-cors>=0.7.0
