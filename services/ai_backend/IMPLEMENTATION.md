@@ -14,7 +14,7 @@ The Amanda AI Backend implements a sophisticated three-agent system for relation
 │                                                          │
 │  ┌──────────────────────────────────────────────────┐  │
 │  │  Agent 1: Amanda (Main Therapist)                │  │
-│  │  - Model: GPT-4o                                 │  │
+│  │  - Model: GPT-5.1                                │  │
 │  │  - Temperature: 0.7 (warm, empathetic)           │  │
 │  │  - Role: Therapeutic conversation                │  │
 │  └──────────────────────────────────────────────────┘  │
