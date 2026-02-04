@@ -1,7 +1,21 @@
-# Configuration files with API keys
+# ================================
+# Secrets & Configuration
+# ================================
+.env
+.env.*
 config.yaml
 
-# Python
+# ================================
+# Runtime data (DO NOT COMMIT)
+# ================================
+session_data/
+monitoring_logs/
+*.log
+ai_backend.log
+
+# ================================
+# Python artifacts
+# ================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -11,22 +25,24 @@ __pycache__/
 dist/
 build/
 
+# ================================
 # Virtual environments
+# ================================
 venv/
 env/
 ENV/
 
-# IDE
+# ================================
+# IDE / Editor files
+# ================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# Logs
-*.log
-ai_backend.log
-
-# OS
+# ================================
+# OS files
+# ================================
 .DS_Store
 Thumbs.db
