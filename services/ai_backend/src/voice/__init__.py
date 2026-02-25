@@ -1,28 +1,17 @@
 """
-Voice module for ASR (Speech-to-Text) and TTS (Text-to-Speech).
+Voice module exports.
 
-Provides providers for:
-- ASR: OpenAI Whisper API, Local Whisper, WhisperX
-- TTS: OpenAI TTS, Google TTS (Gemini)
+Keeps imports explicit so examples and servers can import from `src.voice`.
 """
-from .asr_provider import (
-    ASRProvider,
-    WhisperASRProvider,
-    LocalWhisperProvider,
-    WhisperXProvider
-)
-from .tts_provider import (
-    TTSProvider,
-    OpenAITTSProvider,
-    GoogleTTSProvider
-)
+
+from .asr_provider import ASRProvider, WhisperASRProvider
+from .tts_provider import TTSProvider, OpenAITTSProvider
+from .voice_service import VoiceService
 
 __all__ = [
-    'ASRProvider',
-    'WhisperASRProvider',
-    'LocalWhisperProvider',
-    'WhisperXProvider',
-    'TTSProvider',
-    'OpenAITTSProvider',
-    'GoogleTTSProvider',
+    "ASRProvider",
+    "WhisperASRProvider",
+    "TTSProvider",
+    "OpenAITTSProvider",
+    "VoiceService",
 ]
