@@ -1,23 +1,9 @@
 """
-Amanda AI Backend - Source Package
+Amanda AI Backend package.
 
-Professional AI backend with multi-provider support and agent orchestration.
+Keep this module lightweight to avoid import-time side effects.
 """
+
 from .config import config, Config
-from .prompts import PromptManager
-from .providers import ProviderFactory, BaseLLMProvider
-from .agents import ChatAgent, BaseAgent
-from .orchestrator import Orchestrator
 
-__all__ = [
-    'config',
-    'Config',
-    'PromptManager',
-    'ProviderFactory',
-    'BaseLLMProvider',
-    'ChatAgent',
-    'BaseAgent',
-    'Orchestrator'
-]
-
-__version__ = '1.0.0'
+__all__ = ["config", "Config"]

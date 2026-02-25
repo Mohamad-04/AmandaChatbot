@@ -3,16 +3,25 @@ Configuration loader for Amanda AI Backend.
 
 Loads and validates configuration from config.yaml file.
 Supports environment variable interpolation like: ${OPENAI_API_KEY}
+
+Project constraint:
+- OpenAI is the ONLY supported provider.
 """
+
 import os
 import re
-import yaml
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
+import yaml
+from dotenv import load_dotenv
+
+# Load environment variables from services/ai_backend/.env
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[1] / ".env")
 
 
 class Config:
-    """Configuration manager for the AI backend."""
+    """Configuration manager for the AI backend (OpenAI only)."""
 
     _instance: Optional["Config"] = None
     _config: Dict[str, Any] = {}
@@ -33,10 +42,10 @@ class Config:
         Load configuration from YAML file.
 
         Args:
-            config_path: Path to config file (default: config.yaml in project root)
+            config_path: Path to config file (default: config.yaml in ai_backend root)
         """
         if config_path is None:
-            base_dir = Path(__file__).parent.parent
+            base_dir = Path(__file__).parent.parent  # services/ai_backend
             config_path = base_dir / "config.yaml"
 
         if not os.path.exists(config_path):
@@ -74,65 +83,62 @@ class Config:
         return value
 
     def _validate(self):
-        """Validate configuration structure and required fields."""
+        """Validate configuration structure and required fields (OpenAI only)."""
         required_sections = ["llm", "agents", "server"]
         for section in required_sections:
             if section not in self._config:
                 raise ValueError(f"Missing required configuration section: {section}")
 
-        # Validate LLM provider
-        provider = self.llm_provider
-        if provider not in ["openai", "anthropic", "google"]:
+        # Provider must be openai
+        provider = (self._config.get("llm", {}).get("provider") or "").strip().lower()
+        if provider != "openai":
             raise ValueError(
-                f"Invalid LLM provider: {provider}. Must be one of: openai, anthropic, google"
+                f"Invalid LLM provider: '{provider}'. This project supports OpenAI only.\n"
+                f"Set llm.provider = openai in config.yaml."
             )
 
-        # Validate API key for selected provider
-        api_key = self.llm_api_key
-
-        # Fallbacks (especially useful if user forgot ${...} interpolation)
-        if not api_key and provider == "openai":
+        # API key must exist either from config interpolation or env
+        api_key = self._config.get("llm", {}).get("api_keys", {}).get("openai", "")
+        if not api_key:
             api_key = os.getenv("OPENAI_API_KEY", "")
-        elif not api_key and provider == "anthropic":
-            api_key = os.getenv("ANTHROPIC_API_KEY", "")
-        elif not api_key and provider == "google":
-            api_key = os.getenv("GOOGLE_API_KEY", "")
 
         if not api_key:
             raise ValueError(
-                f"API key for provider '{provider}' not found.\n"
-                f"Set llm.api_keys.{provider} in config.yaml (you can use ${{...}}), "
-                f"or set the environment variable "
-                f"{'OPENAI_API_KEY' if provider == 'openai' else ('ANTHROPIC_API_KEY' if provider == 'anthropic' else 'GOOGLE_API_KEY')}."
+                "OPENAI_API_KEY not found.\n"
+                "Set llm.api_keys.openai in config.yaml (you can use ${OPENAI_API_KEY}), "
+                "or set the environment variable OPENAI_API_KEY."
             )
 
         # Store resolved key back so the rest of the app uses the real one
-        self._config.setdefault("llm", {}).setdefault("api_keys", {})[provider] = api_key
+        self._config.setdefault("llm", {}).setdefault("api_keys", {})["openai"] = api_key
 
-        # Validate model presence for selected provider
-        providers_cfg = self._config["llm"].get("providers", {})
-        if provider not in providers_cfg or not providers_cfg[provider].get("model"):
+        # Validate model presence
+        providers_cfg = self._config.get("llm", {}).get("providers", {})
+        openai_cfg = providers_cfg.get("openai", {})
+        if not openai_cfg.get("model"):
             raise ValueError(
-                f"Model not found for provider '{provider}'. "
-                f"Please set llm.providers.{provider}.model in config.yaml"
+                "OpenAI model not found.\n"
+                "Please set llm.providers.openai.model in config.yaml"
             )
+
+    # --------------------------
+    # Properties
+    # --------------------------
 
     @property
     def llm_provider(self) -> str:
-        """Get the configured LLM provider."""
-        return self._config["llm"]["provider"]
+        """Get the configured LLM provider (always 'openai')."""
+        return "openai"
 
     @property
     def llm_api_key(self) -> str:
-        """Get the API key for the configured provider."""
-        provider = self.llm_provider
-        return self._config["llm"].get("api_keys", {}).get(provider, "")
+        """Get the OpenAI API key."""
+        return self._config["llm"].get("api_keys", {}).get("openai", "")
 
     @property
     def llm_model(self) -> str:
-        """Get the model for the configured provider."""
-        provider = self.llm_provider
-        return self._config["llm"]["providers"][provider]["model"]
+        """Get the configured OpenAI model."""
+        return self._config["llm"]["providers"]["openai"]["model"]
 
     @property
     def llm_temperature(self) -> float:
@@ -184,8 +190,8 @@ class Config:
 
     @property
     def api_keys(self) -> Dict[str, str]:
-        """Get all API keys."""
-        return self._config["llm"].get("api_keys", {})
+        """Get all API keys (OpenAI only)."""
+        return {"openai": self.llm_api_key}
 
     @property
     def voice(self) -> Dict[str, Any]:
