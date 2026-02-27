@@ -85,6 +85,8 @@ def signup():
         db.session.commit()
         
         # Auto-login after signup
+        session.clear()
+        session.permanent = True
         session['user_id'] = user.id
         session['email'] = user.email
         
@@ -148,6 +150,8 @@ def login():
             }), 401
         
         # Create session
+        session.clear()
+        session.permanent = True
         session['user_id'] = user.id
         session['email'] = user.email
         
@@ -213,7 +217,7 @@ def check():
                 'authenticated': True,
                 'user': {
                     'id': session['user_id'],
-                    'email': session['email']
+                    'email': session.get('email')
                 }
             }), 200
         else:
