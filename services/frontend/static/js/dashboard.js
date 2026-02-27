@@ -261,23 +261,21 @@ class Dashboard {
     /**
      * Connect to WebSocket
      */
+/**
+ * Connect to WebSocket (Voice only)
+ * Text chat is handled via REST (/api/...) in api.js
+ */
     async connectWebSocket() {
         try {
-            await chatSocket.connect();
-
-            // Setup WebSocket event listeners
-            chatSocket.onToken((data) => this.handleTokenReceived(data));
-            chatSocket.onComplete((data) => this.handleMessageComplete(data));
-            chatSocket.onError((data) => this.handleError(data));
-
-            // Setup voice event listeners
+            // Voice WS listeners only (native WS handled inside websocket.js)
             chatSocket.onVoiceTranscribed((data) => this.handleVoiceTranscribed(data));
             chatSocket.onVoiceProcessing((data) => this.handleVoiceProcessing(data));
             chatSocket.onVoiceResponse((data) => this.handleVoiceResponse(data));
+            chatSocket.onError((data) => this.handleError(data));
 
-            console.log('WebSocket connected');
+            console.log('Voice WebSocket handlers registered');
         } catch (error) {
-            console.error('WebSocket connection failed:', error);
+            console.error('Voice WebSocket setup failed:', error);
         }
     }
 
@@ -321,12 +319,44 @@ class Dashboard {
         this.elements.messageInput.disabled = true;
         this.elements.sendBtn.disabled = true;
         
-        // Send via WebSocket
+        // Send via REST (streaming not used here)
         try {
-            chatSocket.sendMessage(this.currentChatId, message);
+            const result = await api.sendMessage(this.currentChatId, message);
+
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to send message');
+            }
+
+            // Update assistant placeholder with returned assistant reply
+            // (Assuming backend returns: { assistant_message, message_id } or similar)
+            const assistantText =
+                result.data?.assistant_message ||
+                result.data?.reply ||
+                result.data?.message ||
+                '';
+
+            if (this.currentStreamingMessage) {
+                const contentDiv = this.currentStreamingMessage.querySelector('.message-content');
+                contentDiv.textContent = assistantText;
+
+                const lastMessage = this.currentMessages[this.currentMessages.length - 1];
+                lastMessage.content = assistantText;
+                lastMessage.id = result.data?.assistant_message_id || result.data?.message_id;
+            }
+
+            // Re-enable input
+            this.isStreaming = false;
+            this.currentStreamingMessage = null;
+            this.elements.messageInput.disabled = false;
+            this.elements.sendBtn.disabled = false;
+            this.elements.messageInput.focus();
+
+            this.updateChatTitleIfNeeded();
+            this.scrollToBottom();
+
         } catch (error) {
             console.error('Error sending message:', error);
-            this.handleError({ message: 'Failed to send message' });
+            this.handleError({ message: error.message || 'Failed to send message' });
         }
     }
 
@@ -680,7 +710,9 @@ class Dashboard {
             const audioBase64 = await this.voiceRecorder.blobToBase64(audioBlob);
 
             // Send voice message via WebSocket
-            chatSocket.sendVoiceMessage(this.currentChatId, audioBase64, format);
+            await chatSocket.sendVoiceMessage(this.currentChatId, audioBase64, format, {
+                userId: this.currentUser?.id || 1
+            });
 
         } catch (error) {
             console.error('Error processing recording:', error);
@@ -693,35 +725,54 @@ class Dashboard {
      * Handle voice transcribed event
      */
     handleVoiceTranscribed(data) {
-        console.log('Voice transcribed:', data.text);
+        // data: { type:"transcript", text, role, is_final }
+        if (data.role === 'user') {
+            console.log('User transcript:', data.text);
 
-        // Update status
-        this.elements.voiceStatusText.textContent = 'Transcribed! Getting response...';
+            // Update status
+            this.elements.voiceStatusText.textContent = 'Transcribed! Getting response...';
 
-        // Add user message to UI (same as text messages)
-        const userMessage = {
-            role: 'user',
-            content: data.text,
-            timestamp: new Date().toISOString(),
-            isVoice: true
-        };
+            // Add user message to UI
+            const userMessage = {
+                role: 'user',
+                content: data.text,
+                timestamp: new Date().toISOString(),
+                isVoice: true
+            };
 
-        this.currentMessages.push(userMessage);
-        this.renderMessage(userMessage);
-        this.scrollToBottom();
+            this.currentMessages.push(userMessage);
+            this.renderMessage(userMessage);
+            this.scrollToBottom();
 
-        // Create assistant message placeholder
-        const assistantMessage = {
-            role: 'assistant',
-            content: '',
-            timestamp: new Date().toISOString()
-        };
+            // Create assistant placeholder (only once per utterance)
+            const assistantMessage = {
+                role: 'assistant',
+                content: '',
+                timestamp: new Date().toISOString(),
+                isVoice: true
+            };
 
-        this.currentMessages.push(assistantMessage);
-        this.currentStreamingMessage = this.renderMessage(assistantMessage);
+            this.currentMessages.push(assistantMessage);
+            this.currentStreamingMessage = this.renderMessage(assistantMessage);
 
-        // Mark as streaming
-        this.isStreaming = true;
+            this.isStreaming = true;
+            return;
+        }
+
+        if (data.role === 'assistant') {
+            // Update assistant message live
+            if (!this.currentStreamingMessage) return;
+            const contentDiv = this.currentStreamingMessage.querySelector('.message-content');
+            contentDiv.textContent = data.text || '';
+            this.scrollToBottom();
+
+            // If final, stop streaming state
+            if (data.is_final) {
+                this.isStreaming = false;
+                this.currentStreamingMessage = null;
+                this.updateChatTitleIfNeeded();
+            }
+        }
     }
 
     /**
@@ -730,11 +781,11 @@ class Dashboard {
     handleVoiceProcessing(data) {
         console.log('Voice processing:', data.status);
 
-        const statusMessages = {
-            'transcribing': 'Transcribing audio...',
-            'thinking': 'Amanda is thinking...',
-            'synthesizing': 'Converting to speech...'
-        };
+    const statusMessages = {
+        'transcribing': 'Transcribing audio...',
+        'thinking': 'Amanda is thinking...',
+        'speaking': 'Amanda is speaking...'
+    };
 
         if (statusMessages[data.status]) {
             this.elements.voiceStatusText.textContent = statusMessages[data.status];
@@ -752,8 +803,8 @@ class Dashboard {
             this.elements.voiceStatus.style.display = 'none';
             this.elements.voiceStatus.classList.remove('processing');
 
-            // Play audio response
-            await this.voicePlayer.playAudio(data.audio, data.format || 'mp3');
+            // data: {type:"audio_chunk", data:"<base64>", format:"mp3", is_final:false}
+            await this.voicePlayer.playAudio(data.data, data.format || 'mp3');
 
             // Reset voice UI
             this.resetVoiceUI();

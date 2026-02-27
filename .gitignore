@@ -22,7 +22,9 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
+*.mp3
+*.wav
+*.webm
 # Environment
 .env
 *.env

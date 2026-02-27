@@ -1,223 +1,208 @@
 /**
- * WebSocket client for real-time chat streaming
- * Uses Socket.IO for WebSocket communication with the backend
+ * WebSocket client
+ *
+ * NOTE:
+ * - Text chat in this project is handled via REST (/api/...) from api.js/dashboard.js.
+ * - Voice notes should NOT use Socket.IO against the Flask dev server.
+ * - Voice notes should connect directly to the AI voice server (aiohttp) on :8080
+ *   Endpoint: ws://localhost:8080/voice-stream?user_id=...&chat_id=...&session_id=...
+ *
+ * This file keeps the same exported name `chatSocket` to avoid breaking dashboard.js,
+ * but internally it only implements VOICE messaging via native WebSocket.
  */
 
-// Import Socket.IO from CDN
-// Note: In production, you might want to bundle this properly
-const SOCKET_URL = 'http://localhost:5000';
+const DEFAULT_VOICE_WS_URL = "ws://localhost:8080/voice-stream";
 
-class ChatWebSocket {
-    constructor(url = SOCKET_URL) {
-        this.url = url;
-        this.socket = null;
-        this.connected = false;
-    }
-
-    /**
-     * Connect to the WebSocket server
-     * Must be called after user is authenticated
-     */
-    connect() {
-        return new Promise((resolve, reject) => {
-            try {
-                // Import Socket.IO from CDN
-                if (typeof io === 'undefined') {
-                    const script = document.createElement('script');
-                    script.src = 'https://cdn.socket.io/4.5.4/socket.io.min.js';
-                    script.onload = () => {
-                        this._initSocket(resolve, reject);
-                    };
-                    script.onerror = () => reject(new Error('Failed to load Socket.IO'));
-                    document.head.appendChild(script);
-                } else {
-                    this._initSocket(resolve, reject);
-                }
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-    /**
-     * Initialize Socket.IO connection
-     * @private
-     */
-    _initSocket(resolve, reject) {
-        this.socket = io(this.url, {
-            withCredentials: true, // Important for session cookies
-            transports: ['websocket', 'polling']
-        });
-
-        this.socket.on('connect', () => {
-            console.log('WebSocket connected');
-            this.connected = true;
-            resolve();
-        });
-
-        this.socket.on('disconnect', () => {
-            console.log('WebSocket disconnected');
-            this.connected = false;
-        });
-
-        this.socket.on('connect_error', (error) => {
-            console.error('WebSocket connection error:', error);
-            this.connected = false;
-            reject(error);
-        });
-    }
-
-    /**
-     * Disconnect from the WebSocket server
-     */
-    disconnect() {
-        if (this.socket) {
-            this.socket.disconnect();
-            this.socket = null;
-            this.connected = false;
-        }
-    }
-
-    /**
-     * Send a chat message
-     * @param {number} chatId - Chat ID
-     * @param {string} message - Message text
-     */
-    sendMessage(chatId, message) {
-        if (!this.socket || !this.connected) {
-            throw new Error('WebSocket not connected');
-        }
-
-        this.socket.emit('send_message', {
-            chat_id: chatId,
-            message: message
-        });
-    }
-
-    /**
-     * Send a voice message
-     * @param {number} chatId - Chat ID
-     * @param {string} audioBase64 - Base64 encoded audio
-     * @param {string} format - Audio format (webm, wav, etc.)
-     */
-    sendVoiceMessage(chatId, audioBase64, format) {
-        if (!this.socket || !this.connected) {
-            throw new Error('WebSocket not connected');
-        }
-
-        this.socket.emit('send_voice_message', {
-            chat_id: chatId,
-            audio: audioBase64,
-            format: format
-        });
-    }
-
-    /**
-     * Convert text to speech
-     * @param {string} text - Text to convert
-     * @param {string} voice - Voice to use (optional)
-     * @param {number} speed - Speech speed (optional)
-     */
-    textToSpeech(text, voice = null, speed = 1.0) {
-        if (!this.socket || !this.connected) {
-            throw new Error('WebSocket not connected');
-        }
-
-        this.socket.emit('text_to_speech', {
-            text: text,
-            voice: voice,
-            speed: speed
-        });
-    }
-
-    /**
-     * Listen for message tokens (streaming chunks)
-     * @param {function} callback - Callback function(data)
-     */
-    onToken(callback) {
-        if (!this.socket) {
-            throw new Error('WebSocket not initialized');
-        }
-        this.socket.on('message_token', callback);
-    }
-
-    /**
-     * Listen for message completion
-     * @param {function} callback - Callback function(data)
-     */
-    onComplete(callback) {
-        if (!this.socket) {
-            throw new Error('WebSocket not initialized');
-        }
-        this.socket.on('message_complete', callback);
-    }
-
-    /**
-     * Listen for errors
-     * @param {function} callback - Callback function(data)
-     */
-    onError(callback) {
-        if (!this.socket) {
-            throw new Error('WebSocket not initialized');
-        }
-        this.socket.on('error', callback);
-    }
-
-    /**
-     * Listen for voice transcription results
-     * @param {function} callback - Callback function(data)
-     */
-    onVoiceTranscribed(callback) {
-        if (!this.socket) {
-            throw new Error('WebSocket not initialized');
-        }
-        this.socket.on('voice_transcribed', callback);
-    }
-
-    /**
-     * Listen for voice processing status updates
-     * @param {function} callback - Callback function(data)
-     */
-    onVoiceProcessing(callback) {
-        if (!this.socket) {
-            throw new Error('WebSocket not initialized');
-        }
-        this.socket.on('voice_processing', callback);
-    }
-
-    /**
-     * Listen for voice response (audio)
-     * @param {function} callback - Callback function(data)
-     */
-    onVoiceResponse(callback) {
-        if (!this.socket) {
-            throw new Error('WebSocket not initialized');
-        }
-        this.socket.on('voice_response', callback);
-    }
-
-    /**
-     * Remove all event listeners
-     */
-    removeAllListeners() {
-        if (this.socket) {
-            this.socket.off('message_token');
-            this.socket.off('message_complete');
-            this.socket.off('error');
-            this.socket.off('voice_transcribed');
-            this.socket.off('voice_processing');
-            this.socket.off('voice_response');
-        }
-    }
-
-    /**
-     * Check if connected
-     * @returns {boolean}
-     */
-    isConnected() {
-        return this.connected;
-    }
+function makeSessionId() {
+  // Modern browsers
+  if (crypto && crypto.randomUUID) return crypto.randomUUID();
+  // Fallback
+  return "sess_" + Math.random().toString(16).slice(2) + "_" + Date.now();
 }
 
-// Export singleton instance
+function buildVoiceWsUrl({ userId, chatId, sessionId }) {
+  const url = new URL(DEFAULT_VOICE_WS_URL);
+  url.searchParams.set("user_id", String(userId));
+  url.searchParams.set("chat_id", String(chatId));
+  url.searchParams.set("session_id", String(sessionId));
+  return url.toString();
+}
+
+class ChatWebSocket {
+  constructor() {
+    // Voice WS state
+    this.voiceWs = null;
+    this.voiceConnected = false;
+
+    // Event callbacks (dashboard can subscribe)
+    this._onVoiceTranscribed = null; // (data) => void
+    this._onVoiceProcessing = null;  // (data) => void
+    this._onVoiceResponse = null;    // (data) => void
+    this._onError = null;            // (data) => void
+  }
+
+  /**
+   * Optional: connect voice WS early.
+   * You can also just call sendVoiceMessage(), which will connect automatically.
+   */
+  connectVoice({ userId, chatId, sessionId = makeSessionId() }) {
+    return new Promise((resolve, reject) => {
+      try {
+        const wsUrl = buildVoiceWsUrl({ userId, chatId, sessionId });
+        const ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          this.voiceWs = ws;
+          this.voiceConnected = true;
+          resolve({ sessionId });
+        };
+
+        ws.onerror = (err) => {
+          this.voiceConnected = false;
+          reject(err);
+        };
+
+        ws.onclose = () => {
+          this.voiceConnected = false;
+          this.voiceWs = null;
+        };
+
+        ws.onmessage = (evt) => {
+          this._handleVoiceMessage(evt.data);
+        };
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  disconnect() {
+    // Only voice WS exists in this implementation
+    if (this.voiceWs) {
+      this.voiceWs.close();
+      this.voiceWs = null;
+      this.voiceConnected = false;
+    }
+  }
+
+  /**
+   * Send a TEXT chat message
+   * Not supported here because your text chat uses REST (/api/chat/...)
+   */
+  sendMessage(chatId, message) {
+    throw new Error(
+      "sendMessage is not implemented here. Use REST endpoints in api.js for text chat."
+    );
+  }
+
+  /**
+   * Send a VOICE NOTE to the voice server.
+   *
+   * @param {number|string} chatId
+   * @param {string} audioBase64 - base64 audio bytes (NO data: prefix)
+   * @param {string} format - "webm" | "wav" | etc.
+   * @param {object} opts - { userId, sessionId }
+   */
+  async sendVoiceMessage(chatId, audioBase64, format, opts = {}) {
+    const userId = opts.userId ?? 1; // ✅ default for local demo if not available
+    const sessionId = opts.sessionId ?? makeSessionId();
+
+    // Ensure connected
+    if (!this.voiceWs || !this.voiceConnected) {
+      await this.connectVoice({ userId, chatId, sessionId });
+    }
+
+    // Your aiohttp handler expects:
+    // { type: "audio_chunk", data: "<base64>", format: "webm", is_final: true }
+    const payload = {
+      type: "audio_chunk",
+      data: audioBase64,
+      format: format || "webm",
+      is_final: true,
+    };
+
+    this.voiceWs.send(JSON.stringify(payload));
+    return { sessionId };
+  }
+
+  /**
+   * Optional control messages (interrupt / set speed)
+   */
+  sendVoiceControl(command, params = {}) {
+    if (!this.voiceWs || !this.voiceConnected) return;
+    this.voiceWs.send(
+      JSON.stringify({
+        type: "control",
+        command,
+        params,
+      })
+    );
+  }
+
+  /**
+   * Incoming messages from voice_server.py:
+   * - {type:"status", status:"transcribing|thinking|speaking|..."}
+   * - {type:"transcript", role:"user|assistant", text:"...", is_final:true|false}
+   * - {type:"audio_chunk", data:"<base64>", format:"mp3", is_final:false}
+   * - {type:"error", error:"..."}
+   */
+  _handleVoiceMessage(raw) {
+    try {
+      const msg = JSON.parse(raw);
+
+      if (msg.type === "status") {
+        if (this._onVoiceProcessing) this._onVoiceProcessing(msg);
+        return;
+      }
+
+      if (msg.type === "transcript") {
+        if (this._onVoiceTranscribed) this._onVoiceTranscribed(msg);
+        return;
+      }
+
+      if (msg.type === "audio_chunk") {
+        if (this._onVoiceResponse) this._onVoiceResponse(msg);
+        return;
+      }
+
+      if (msg.type === "error") {
+        if (this._onError) this._onError(msg);
+        return;
+      }
+    } catch (e) {
+      // If message is not JSON, ignore but log for debugging
+      console.warn("Voice WS message parse failed:", e, raw);
+    }
+  }
+
+  // ---- Event subscriptions (keep old names so dashboard.js likely already matches) ----
+  onVoiceTranscribed(callback) {
+    this._onVoiceTranscribed = callback;
+  }
+
+  onVoiceProcessing(callback) {
+    this._onVoiceProcessing = callback;
+  }
+
+  onVoiceResponse(callback) {
+    this._onVoiceResponse = callback;
+  }
+
+  onError(callback) {
+    this._onError = callback;
+  }
+
+  removeAllListeners() {
+    this._onVoiceTranscribed = null;
+    this._onVoiceProcessing = null;
+    this._onVoiceResponse = null;
+    this._onError = null;
+  }
+
+  isConnected() {
+    return this.voiceConnected;
+  }
+}
+
+// Export singleton instance (same name as before)
 export const chatSocket = new ChatWebSocket();
