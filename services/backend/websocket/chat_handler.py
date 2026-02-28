@@ -9,6 +9,7 @@ from models.chat import Chat
 from models.message import Message
 from services.grpc_client import GRPCClient
 from config import get_config
+from utils.rate_limiter import socket_rate_limit, RateLimit
 
 
 def require_auth(f):
@@ -54,6 +55,7 @@ def register_handlers(socketio):
     
     @socketio.on('send_message')
     @require_auth
+    @socket_rate_limit(RateLimit(20, 60), identity="user", scope="chat_send")
     def handle_send_message(data):
         """
         Handle incoming chat message from client.
