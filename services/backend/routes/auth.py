@@ -4,6 +4,7 @@ Authentication routes for user signup, login, logout, and session checking.
 from flask import Blueprint, request, jsonify, session
 from database import db
 from models.user import User
+from utils.rate_limiter import rate_limit, RateLimit
 import re
 
 # Create blueprint
@@ -25,6 +26,7 @@ def is_valid_email(email):
 
 
 @auth_bp.route('/signup', methods=['POST'])
+@rate_limit(RateLimit(5, 60), identity="ip", scope="signup")
 def signup():
     """
     Register a new user account.
@@ -106,6 +108,7 @@ def signup():
 
 
 @auth_bp.route('/login', methods=['POST'])
+@rate_limit(RateLimit(5, 60), identity="ip", scope="login")
 def login():
     """
     Authenticate user and create session.
