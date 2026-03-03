@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Google Fonts – Funnel Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+    >
+
+    <title>Chat – Amanda</title>
+    <link rel="stylesheet" href="./css/style.css">
+  </head>
+
+  <body>
+    <div class="page chat-layout">
+
+      <!-- Top navigation -->
+      <header class="navbar">
+        <a class="brand" href="./landing.html">Amanda</a>
+        <nav class="navlinks" aria-label="Primary">
+          <a href="./landing.html">Home</a>
+          <a href="./about.html">About</a>
+          <a href="./contact.html">Contact</a>
+          <a href="./terms.html">User Terms &amp; Conditions</a>
+        </nav>
+      </header>
+
+      <!-- Chat body -->
+      <div class="chat-body">
+
+        <!-- Message history -->
+        <section class="chat-history" id="chatHistory" aria-label="Conversation" aria-live="polite">
+          <!-- Empty state shown until first message -->
+          <div class="chat-empty" id="chatEmpty">
+            <svg width="40" height="40" fill="rgba(255,255,255,0.3)" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M10,21.236,6.755,14.745.264,11.5,6.755,8.255,10,1.764l3.245,6.491L19.736,11.5l-6.491,3.245ZM18,21l1.5,3L21,21l3-1.5L21,18l-1.5-3L18,18l-3,1.5Z"/>
+            </svg>
+            <p>Send a message to start talking with Amanda.</p>
+          </div>
+        </section>
+
+        <!-- Input area -->
+        <div class="chat-input-area">
+          <form class="chat-input-form" id="chatForm" autocomplete="off">
+            <textarea
+              class="chat-input"
+              id="messageInput"
+              placeholder="Type a message…"
+              rows="1"
+              aria-label="Message"
+            ></textarea>
+            <button class="send-btn" type="submit" aria-label="Send message">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+              </svg>
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+      <footer class="page-footer">
+        <div class="trust">
+          <span class="trust__item">Not a substitute for emergency services.</span>
+          <span class="dot">&middot;</span>
+          <span class="trust__item">You're in control of what you share.</span>
+        </div>
+      </footer>
+
+    </div>
+
+    <script src="./js/background-loader.js"></script>
+    <script>
+      const form = document.getElementById('chatForm');
+      const input = document.getElementById('messageInput');
+      const history = document.getElementById('chatHistory');
+      const emptyState = document.getElementById('chatEmpty');
+
+      // Auto-grow textarea
+      input.addEventListener('input', () => {
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+      });
+
+      // Submit on Enter (Shift+Enter for newline)
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          form.requestSubmit();
+        }
+      });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+
+        // Hide empty state on first message
+        emptyState.style.display = 'none';
+
+        appendMessage('user', text);
+        input.value = '';
+        input.style.height = 'auto';
+
+        // Scroll to bottom
+        history.scrollTop = history.scrollHeight;
+
+        // TODO: send message to backend and stream Amanda's response
+      });
+
+      function appendMessage(role, text) {
+        const msg = document.createElement('div');
+        msg.className = `message message--${role}`;
+
+        const bubble = document.createElement('div');
+        bubble.className = 'message__bubble';
+        bubble.textContent = text;
+
+        msg.appendChild(bubble);
+        history.appendChild(msg);
+        history.scrollTop = history.scrollHeight;
+      }
+    </script>
+  </body>
+</html>
