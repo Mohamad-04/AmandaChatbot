@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./venv/Scripts/pip install python-dotenv -q)",
+      "Bash(PYTHONUTF8=1 ./venv/Scripts/python server.py)",
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/login -H \"Content-Type: application/json\" -H \"Origin: http://localhost:55061\" -d '{\"\"email\"\":\"\"test@test.com\"\",\"\"password\"\":\"\"wrongpass\"\"}' -i)",
+      "Bash(curl -s http://localhost:5000/api/auth/check -H \"Origin: http://localhost:55061\" -i)",
+      "Bash(curl -s -X OPTIONS http://localhost:5000/api/auth/login -H \"Origin: http://localhost:55061\" -H \"Access-Control-Request-Method: POST\" -H \"Access-Control-Request-Headers: Content-Type\" -i)",
+      "Bash(./venv/Scripts/pip show flask-cors)",
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/login -H \"Origin: http://localhost:55061\" -H \"Content-Type: application/json\" -d '{\"\"email\"\":\"\"test@test.com\"\",\"\"password\"\":\"\"test1234\"\"}' -i)",
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/signup -H \"Origin: http://localhost:55061\" -H \"Content-Type: application/json\" -d '{\"\"email\"\":\"\"maria@test.com\"\",\"\"password\"\":\"\"password123\"\"}' -i)",
+      "Bash(./venv/Scripts/pip show flask-socketio)",
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/login -H \"Origin: http://localhost:55061\" -H \"Content-Type: application/json\" -d '{\"\"email\"\":\"\"maria@test.com\"\",\"\"password\"\":\"\"password123\"\"}' -i)",
+      "Bash(./venv/Scripts/pip show flask flask-session)",
+      "Bash(./venv/Scripts/pip install \"flask-cors==3.0.10\" -q)",
+      "Bash(./venv/Scripts/python -c \":*)",
+      "Bash(curl -s http://localhost:5000/cors-debug -H \"Origin: http://localhost:55061\" -i)",
+      "Bash(curl -s http://localhost:5000/health -H \"Origin: http://localhost:55061\" -i)",
+      "Bash(netstat -ano)"
+    ]
+  }
+}

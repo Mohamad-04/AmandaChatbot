@@ -1,0 +1,353 @@
+/* =========================================================
+   AMANDA DASHBOARD THEME
+   Dark glass-morphism overlay — matches the landing page.
+   Loaded last so it overrides common.css, dashboard.css, voice.css.
+   ========================================================= */
+
+/* =========================================================
+   CSS VARIABLE OVERRIDES
+   ========================================================= */
+:root {
+  /* Landing-page palette */
+  --text:             rgba(255, 255, 255, 0.92);
+  --text-muted:       rgba(255, 255, 255, 0.72);
+  --card-bg:          rgba(0,   0,   0,   0.22);
+  --card-border:      rgba(255, 255, 255, 0.10);
+
+  /* common.css variable overrides */
+  --primary-color:          rgba(255, 255, 255, 0.15);
+  --primary-hover:          rgba(255, 255, 255, 0.24);
+  --text-primary:           rgba(255, 255, 255, 0.92);
+  --text-secondary:         rgba(255, 255, 255, 0.70);
+  --text-light:             rgba(255, 255, 255, 0.45);
+  --border-color:           rgba(255, 255, 255, 0.10);
+  --bg-primary:             rgba(0,   0,   0,   0.25);
+  --bg-secondary:           rgba(0,   0,   0,   0.14);
+  --bg-hover:               rgba(255, 255, 255, 0.08);
+  --user-message-bg:        rgba(255, 255, 255, 0.18);
+  --user-message-text:      rgba(255, 255, 255, 0.92);
+  --assistant-message-bg:   rgba(0,   0,   0,   0.20);
+  --assistant-message-text: rgba(255, 255, 255, 0.92);
+  --error-color:            #e05a5a;
+}
+
+/* =========================================================
+   BODY + BACKGROUND
+   ========================================================= */
+body {
+  font-family: "Funnel Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--text);
+  background-image: url('/images/background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #1a1015; /* fallback colour */
+  overflow: hidden;
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+a {
+  color: var(--text);
+}
+a:hover {
+  color: white;
+}
+
+/* =========================================================
+   SCROLLBARS
+   ========================================================= */
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.28); }
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+.sidebar-left {
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid var(--card-border);
+}
+
+.sidebar-header {
+  border-bottom-color: var(--card-border);
+}
+
+.sidebar-header h1 {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+.user-email {
+  color: var(--text-muted);
+}
+
+/* New Chat button — matches landing page .u-btn */
+.btn-new-chat {
+  background: #1C1A1C;
+  color: rgba(255, 255, 255, 0.80);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 3em;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 350ms ease-in-out;
+}
+.btn-new-chat:hover {
+  background: linear-gradient(180deg, #C9A29D, #A87A74);
+  color: white;
+  border-color: transparent;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.35),
+    inset 0 -3px 0 rgba(0,0,0,0.18),
+    0 0 0 3px rgba(255,255,255,0.20);
+  transform: translateY(-1px);
+}
+
+/* Chat list items */
+.chat-item {
+  border-color: transparent;
+}
+.chat-item:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+}
+.chat-item.active {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.chat-item-title {
+  color: var(--text);
+}
+.chat-item-time {
+  color: var(--text-muted);
+}
+
+.sidebar-footer {
+  border-top-color: var(--card-border);
+}
+
+/* Profile icon button */
+.btn-icon {
+  color: rgba(255, 255, 255, 0.65);
+}
+.btn-icon:hover {
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+/* =========================================================
+   MAIN CHAT AREA
+   ========================================================= */
+.main-chat {
+  background: transparent;
+}
+
+.chat-header {
+  background: rgba(0, 0, 0, 0.20);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom-color: var(--card-border);
+}
+
+.chat-header h2 {
+  color: var(--text);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* =========================================================
+   MESSAGES
+   ========================================================= */
+.messages-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+
+.empty-state {
+  color: var(--text-muted);
+}
+.empty-state h3 {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Override hardcoded dashboard.css message colours */
+.message.user .message-bubble {
+  background-color: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.92);
+}
+.message.assistant .message-bubble {
+  background-color: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--card-border);
+  color: rgba(255, 255, 255, 0.92);
+}
+.message.user .message-time {
+  color: rgba(255, 255, 255, 0.65);
+}
+.message.assistant .message-time {
+  color: rgba(255, 255, 255, 0.50);
+}
+
+/* Typing indicator dots */
+.typing-indicator span {
+  background-color: rgba(255, 255, 255, 0.45);
+}
+
+/* =========================================================
+   INPUT AREA
+   ========================================================= */
+.input-area {
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top-color: var(--card-border);
+  padding: 14px 20px;
+}
+
+#message-input {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  border-radius: 14px;
+}
+#message-input:focus {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+#message-input:disabled {
+  background: rgba(255, 255, 255, 0.04);
+  cursor: not-allowed;
+}
+#message-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Send button — frosted circle */
+.btn-send {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  color: var(--text);
+  transition: background 0.15s ease;
+}
+.btn-send:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.22);
+}
+.btn-send:disabled {
+  opacity: 0.35;
+}
+
+/* =========================================================
+   VOICE BUTTON + STATUS
+   ========================================================= */
+.btn-voice {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text);
+}
+.btn-voice:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.22);
+  transform: scale(1.05);
+}
+.btn-voice:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  opacity: 0.40;
+}
+.btn-voice.recording {
+  background: rgba(220, 53, 69, 0.55);
+  border-color: rgba(220, 53, 69, 0.70);
+}
+
+.voice-status {
+  background: rgba(220, 53, 69, 0.18);
+  color: var(--text);
+  border: 1px solid rgba(220, 53, 69, 0.25);
+}
+#voice-status-text {
+  color: var(--text-muted);
+}
+
+/* =========================================================
+   VOICE CHAT BUTTON (chat header)
+   ========================================================= */
+.btn-voice-chat {
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: none;
+  color: var(--text);
+  font-family: inherit;
+}
+.btn-voice-chat:hover {
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   PROFILE MODAL
+   ========================================================= */
+.profile-modal {
+  background: rgba(0, 0, 0, 0.60);
+}
+
+.profile-content {
+  background: rgba(20, 16, 20, 0.80);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--card-border);
+  color: var(--text);
+}
+
+.profile-header {
+  border-bottom-color: var(--card-border);
+}
+.profile-header h2 {
+  color: var(--text);
+}
+
+.btn-close {
+  color: var(--text-muted);
+}
+.btn-close:hover {
+  background: rgba(255, 255, 255, 0.10);
+  color: var(--text);
+}
+
+.profile-info label {
+  color: var(--text-muted);
+}
+.profile-info p {
+  color: var(--text);
+}
+
+.profile-footer {
+  border-top-color: var(--card-border);
+}
+
+.btn-logout {
+  background: rgba(220, 53, 69, 0.70);
+  border: 1px solid rgba(220, 53, 69, 0.40);
+  font-family: inherit;
+  border-radius: 14px;
+}
+.btn-logout:hover {
+  background: rgba(220, 53, 69, 0.90);
+  opacity: 1;
+}
+
+/* =========================================================
+   FORM INPUTS (auth pages etc.)
+   ========================================================= */
+input, textarea, select {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+}
+input:focus, textarea:focus, select:focus {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+}

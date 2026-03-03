@@ -35,9 +35,8 @@
 
         <!-- Message history -->
         <section class="chat-history" id="chatHistory" aria-label="Conversation" aria-live="polite">
-          <!-- Empty state shown until first message -->
           <div class="chat-empty" id="chatEmpty">
-            <svg width="40" height="40" fill="rgba(255,255,255,0.3)" viewBox="0 0 24 24" aria-hidden="true">
+            <svg width="36" height="36" fill="rgba(255,255,255,0.3)" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M10,21.236,6.755,14.745.264,11.5,6.755,8.255,10,1.764l3.245,6.491L19.736,11.5l-6.491,3.245ZM18,21l1.5,3L21,21l3-1.5L21,18l-1.5-3L18,18l-3,1.5Z"/>
             </svg>
             <p>Send a message to start talking with Amanda.</p>
@@ -53,8 +52,9 @@
               placeholder="Type a message…"
               rows="1"
               aria-label="Message"
+              disabled
             ></textarea>
-            <button class="send-btn" type="submit" aria-label="Send message">
+            <button class="send-btn" type="submit" aria-label="Send message" disabled>
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
               </svg>
@@ -75,20 +75,122 @@
     </div>
 
     <script src="./js/background-loader.js"></script>
-    <script>
-      const form = document.getElementById('chatForm');
-      const input = document.getElementById('messageInput');
-      const history = document.getElementById('chatHistory');
-      const emptyState = document.getElementById('chatEmpty');
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+    <script type="module">
+      import { api } from './static/js/api.js';
+
+      const historyEl  = document.getElementById('chatHistory');
+      const emptyEl    = document.getElementById('chatEmpty');
+      const form       = document.getElementById('chatForm');
+      const inputEl    = document.getElementById('messageInput');
+      const sendBtn    = form.querySelector('.send-btn');
+
+      let currentChatId    = null;
+      let socket           = null;
+      let isStreaming      = false;
+      let streamingBubble  = null; // the <div class="message__bubble"> being built
+
+      // ── Boot ────────────────────────────────────────────────
+      async function init() {
+        // 1. Verify the user is logged in
+        const auth = await api.checkAuth();
+        if (!auth.success || !auth.data.authenticated) {
+          window.location.href = './auth/login.html';
+          return;
+        }
+
+        // 2. Load or create a chat session
+        await setupChat();
+
+        // 3. Open the Socket.IO connection for streaming replies
+        connectSocket();
+
+        // 4. Enable the input now that we're ready
+        enableInput();
+      }
+
+      // ── Chat session ─────────────────────────────────────────
+      async function setupChat() {
+        // Reuse the most recent chat if one exists
+        const listResult = await api.listChats();
+        if (listResult.success && listResult.data.chats?.length > 0) {
+          currentChatId = listResult.data.chats[0].id; // already sorted newest-first
+
+          // Load its existing messages
+          const msgsResult = await api.getChatMessages(currentChatId);
+          if (msgsResult.success && msgsResult.data.messages?.length > 0) {
+            hideEmpty();
+            msgsResult.data.messages.forEach(m => appendMessage(m.role, m.content));
+            scrollBottom();
+          }
+        } else {
+          // First-time user — create a fresh chat
+          const createResult = await api.createChat();
+          if (createResult.success) {
+            currentChatId = createResult.data.chat_id;
+          }
+        }
+      }
+
+      // ── Socket.IO (text chat streaming) ──────────────────────
+      function connectSocket() {
+        // `io` is the global exported by the Socket.IO client script above
+        socket = io('http://localhost:5000', { withCredentials: true });
+
+        socket.on('connect', () => {
+          console.log('Socket.IO connected');
+        });
+
+        // Each token arrives here while Amanda is "typing"
+        socket.on('message_token', (data) => {
+          if (!streamingBubble) {
+            // Create the assistant bubble on the first token
+            hideEmpty();
+            streamingBubble = createBubble('assistant');
+            historyEl.appendChild(streamingBubble.wrapper);
+          }
+          streamingBubble.content.textContent += data.text;
+          scrollBottom();
+        });
+
+        // Full response is done
+        socket.on('message_complete', (data) => {
+          if (streamingBubble) {
+            streamingBubble.content.textContent = data.full_text;
+            streamingBubble = null;
+          }
+          finishStreaming();
+          scrollBottom();
+        });
+
+        socket.on('error', (data) => {
+          console.error('Chat error:', data.message);
+          streamingBubble = null;
+          finishStreaming();
+        });
+
+        socket.on('disconnect', () => {
+          console.warn('Socket.IO disconnected');
+        });
+      }
+
+      // ── Form interactions ────────────────────────────────────
+      function enableInput() {
+        inputEl.disabled = false;
+        sendBtn.disabled = false;
+        inputEl.focus();
+      }
 
       // Auto-grow textarea
-      input.addEventListener('input', () => {
-        input.style.height = 'auto';
-        input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+      inputEl.addEventListener('input', () => {
+        inputEl.style.height = 'auto';
+        inputEl.style.height = Math.min(inputEl.scrollHeight, 150) + 'px';
       });
 
-      // Submit on Enter (Shift+Enter for newline)
-      input.addEventListener('keydown', (e) => {
+      // Enter = send, Shift+Enter = newline
+      inputEl.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
           form.requestSubmit();
@@ -97,34 +199,61 @@
 
       form.addEventListener('submit', (e) => {
         e.preventDefault();
-        const text = input.value.trim();
-        if (!text) return;
 
-        // Hide empty state on first message
-        emptyState.style.display = 'none';
+        const text = inputEl.value.trim();
+        if (!text || !currentChatId || isStreaming || !socket?.connected) return;
 
+        // Show the user's message immediately
+        hideEmpty();
         appendMessage('user', text);
-        input.value = '';
-        input.style.height = 'auto';
+        inputEl.value = '';
+        inputEl.style.height = 'auto';
+        scrollBottom();
 
-        // Scroll to bottom
-        history.scrollTop = history.scrollHeight;
+        // Lock input while Amanda is responding
+        isStreaming = true;
+        inputEl.disabled = true;
+        sendBtn.disabled = true;
 
-        // TODO: send message to backend and stream Amanda's response
+        // Emit to the Flask-SocketIO backend (chat_handler.py → handle_send_message)
+        socket.emit('send_message', { chat_id: currentChatId, message: text });
       });
 
-      function appendMessage(role, text) {
-        const msg = document.createElement('div');
-        msg.className = `message message--${role}`;
+      // ── Helpers ──────────────────────────────────────────────
+      function createBubble(role, text = '') {
+        const wrapper = document.createElement('div');
+        wrapper.className = `message message--${role}`;
 
         const bubble = document.createElement('div');
         bubble.className = 'message__bubble';
         bubble.textContent = text;
 
-        msg.appendChild(bubble);
-        history.appendChild(msg);
-        history.scrollTop = history.scrollHeight;
+        wrapper.appendChild(bubble);
+        return { wrapper, content: bubble };
       }
+
+      function appendMessage(role, text) {
+        const { wrapper } = createBubble(role, text);
+        historyEl.appendChild(wrapper);
+      }
+
+      function hideEmpty() {
+        emptyEl.style.display = 'none';
+      }
+
+      function finishStreaming() {
+        isStreaming = false;
+        inputEl.disabled = false;
+        sendBtn.disabled = false;
+        inputEl.focus();
+      }
+
+      function scrollBottom() {
+        historyEl.scrollTop = historyEl.scrollHeight;
+      }
+
+      // Start
+      init();
     </script>
   </body>
 </html>

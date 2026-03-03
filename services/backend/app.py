@@ -7,6 +7,7 @@ from flask_socketio import SocketIO
 from flask_session import Session
 from flask_cors import CORS
 import os
+import re
 
 # Import configuration
 from config import get_config
@@ -42,29 +43,31 @@ def create_app():
     # Initialize session handling
     Session(app)
     
-    # Initialize CORS for cross-origin requests
-    CORS(app, 
-         origins=config.CORS_ORIGINS,
+    # CORS — allow all localhost origins in dev (port varies per npx serve run)
+    CORS(app,
+         origins=re.compile(r"http://localhost(:\d+)?"),
          supports_credentials=True,
-         allow_headers=['Content-Type'],
-         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
-    
+         allow_headers=["Content-Type"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+
+    cors_origins = config.CORS_ORIGINS
+
     # Initialize database
     init_db(app)
-    
+
     # Register API blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(chat_bp)
     app.register_blueprint(user_bp)
-    
+
     # Initialize SocketIO for WebSocket support
     socketio = SocketIO(
         app,
-        cors_allowed_origins=config.CORS_ORIGINS,
+        cors_allowed_origins="*",
         manage_session=False,  # We manage sessions ourselves
         async_mode='threading'  # Use threading for Python 3.12+ compatibility
     )
-    
+
     # Register WebSocket event handlers
     register_handlers(socketio)
     register_voice_handlers(socketio)
@@ -77,12 +80,13 @@ def create_app():
             'status': 'running',
             'version': '1.0.0'
         }, 200
-    
+
     # Health check endpoint
     @app.route('/health')
     def health():
         return {'status': 'healthy'}, 200
-    
+
+
     return app, socketio
 
 

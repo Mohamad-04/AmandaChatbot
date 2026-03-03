@@ -15,6 +15,9 @@ class Dashboard {
         this.isStreaming = false;
         this.currentStreamingMessage = null;
 
+        // Text chat Socket.IO connection
+        this.textSocket = null;
+
         // Voice features
         this.voiceRecorder = null;
         this.voicePlayer = null;
@@ -261,21 +264,24 @@ class Dashboard {
     /**
      * Connect to WebSocket
      */
-/**
- * Connect to WebSocket (Voice only)
- * Text chat is handled via REST (/api/...) in api.js
- */
     async connectWebSocket() {
         try {
-            // Voice WS listeners only (native WS handled inside websocket.js)
+            // Text chat via Socket.IO (chat_handler.py)
+            this.textSocket = io('http://localhost:5000', { withCredentials: true });
+
+            this.textSocket.on('message_token', (data) => this.handleTokenReceived(data));
+            this.textSocket.on('message_complete', (data) => this.handleMessageComplete(data));
+            this.textSocket.on('error', (data) => this.handleError(data));
+
+            // Voice WS listeners (native WS via websocket.js)
             chatSocket.onVoiceTranscribed((data) => this.handleVoiceTranscribed(data));
             chatSocket.onVoiceProcessing((data) => this.handleVoiceProcessing(data));
             chatSocket.onVoiceResponse((data) => this.handleVoiceResponse(data));
             chatSocket.onError((data) => this.handleError(data));
 
-            console.log('Voice WebSocket handlers registered');
+            console.log('WebSocket handlers registered');
         } catch (error) {
-            console.error('Voice WebSocket setup failed:', error);
+            console.error('WebSocket setup failed:', error);
         }
     }
 
@@ -319,45 +325,11 @@ class Dashboard {
         this.elements.messageInput.disabled = true;
         this.elements.sendBtn.disabled = true;
         
-        // Send via REST (streaming not used here)
-        try {
-            const result = await api.sendMessage(this.currentChatId, message);
-
-            if (!result.success) {
-                throw new Error(result.message || 'Failed to send message');
-            }
-
-            // Update assistant placeholder with returned assistant reply
-            // (Assuming backend returns: { assistant_message, message_id } or similar)
-            const assistantText =
-                result.data?.assistant_message ||
-                result.data?.reply ||
-                result.data?.message ||
-                '';
-
-            if (this.currentStreamingMessage) {
-                const contentDiv = this.currentStreamingMessage.querySelector('.message-content');
-                contentDiv.textContent = assistantText;
-
-                const lastMessage = this.currentMessages[this.currentMessages.length - 1];
-                lastMessage.content = assistantText;
-                lastMessage.id = result.data?.assistant_message_id || result.data?.message_id;
-            }
-
-            // Re-enable input
-            this.isStreaming = false;
-            this.currentStreamingMessage = null;
-            this.elements.messageInput.disabled = false;
-            this.elements.sendBtn.disabled = false;
-            this.elements.messageInput.focus();
-
-            this.updateChatTitleIfNeeded();
-            this.scrollToBottom();
-
-        } catch (error) {
-            console.error('Error sending message:', error);
-            this.handleError({ message: error.message || 'Failed to send message' });
-        }
+        // Send via Socket.IO — backend streams back message_token / message_complete
+        this.textSocket.emit('send_message', {
+            chat_id: this.currentChatId,
+            message: message
+        });
     }
 
     /**
