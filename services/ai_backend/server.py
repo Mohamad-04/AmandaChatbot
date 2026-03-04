@@ -185,7 +185,7 @@ def serve(port=None):
     server.add_generic_rpc_handlers((generic_handler,))
 
     # Start the server
-    server.add_insecure_port(f'[::]:{port}')
+    server.add_insecure_port(f'0.0.0.0:{port}')
     server.start()
 
     print("=" * 60)

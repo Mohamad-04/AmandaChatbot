@@ -7,7 +7,7 @@ which ensures that only authenticated users can access chat data.
 """
 
 # Flask imports
-from flask import Blueprint, jsonify, session
+from flask import Blueprint, jsonify, session, request
 
 # Shared authentication decorator (prevents duplication across files)
 from utils.auth import require_auth
@@ -199,3 +199,63 @@ def get_messages(chat_id):
             "success": False,
             "message": "An error occurred fetching messages"
         }), 500
+
+
+# RENAME CHAT
+
+@chat_bp.route('/<int:chat_id>/rename', methods=['PUT'])
+@require_auth
+def rename_chat(chat_id):
+    """Rename a chat. Body: { "title": "New name" }"""
+    try:
+        user_id = session["user_id"]
+        chat = db.session.get(Chat, chat_id)
+
+        if not chat:
+            return jsonify({"success": False, "message": "Chat not found"}), 404
+
+        if chat.user_id != user_id:
+            return jsonify({"success": False, "message": "Access denied"}), 403
+
+        data = request.get_json() or {}
+        new_title = (data.get("title") or "").strip()
+        if not new_title:
+            return jsonify({"success": False, "message": "Title cannot be empty"}), 400
+
+        chat.title = new_title
+        db.session.commit()
+
+        return jsonify({"success": True, "title": chat.title}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Rename chat error: {e}")
+        return jsonify({"success": False, "message": "An error occurred renaming chat"}), 500
+
+
+# DELETE CHAT
+
+@chat_bp.route('/<int:chat_id>', methods=['DELETE'])
+@require_auth
+def delete_chat(chat_id):
+    """Delete a chat and all its messages."""
+    try:
+        user_id = session["user_id"]
+        chat = db.session.get(Chat, chat_id)
+
+        if not chat:
+            return jsonify({"success": False, "message": "Chat not found"}), 404
+
+        if chat.user_id != user_id:
+            return jsonify({"success": False, "message": "Access denied"}), 403
+
+        Message.query.filter_by(chat_id=chat_id).delete()
+        db.session.delete(chat)
+        db.session.commit()
+
+        return jsonify({"success": True}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Delete chat error: {e}")
+        return jsonify({"success": False, "message": "An error occurred deleting chat"}), 500

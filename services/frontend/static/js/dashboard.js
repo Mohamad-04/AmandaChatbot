@@ -31,6 +31,8 @@ class Dashboard {
             chatList: document.getElementById('chat-list'),
             chatTitle: document.getElementById('chat-title'),
             voiceChatBtn: document.getElementById('voice-chat-btn'),
+            renameChatBtn: document.getElementById('rename-chat-btn'),
+            deleteChatBtn: document.getElementById('delete-chat-btn'),
             messagesContainer: document.getElementById('messages-container'),
             emptyState: document.getElementById('empty-state'),
             messageInput: document.getElementById('message-input'),
@@ -131,16 +133,16 @@ class Dashboard {
             const titleDiv = document.createElement('div');
             titleDiv.className = 'chat-item-title';
             titleDiv.textContent = chat.title;
-            
+
             const timeDiv = document.createElement('div');
             timeDiv.className = 'chat-item-time';
             timeDiv.textContent = this.formatRelativeTime(chat.last_message_time);
-            
+
             chatItem.appendChild(titleDiv);
             chatItem.appendChild(timeDiv);
-            
+
             chatItem.addEventListener('click', () => this.selectChat(chat.id));
-            
+
             this.elements.chatList.appendChild(chatItem);
         });
     }
@@ -179,6 +181,8 @@ class Dashboard {
                 this.elements.sendBtn.disabled = false;
                 this.elements.voiceBtn.disabled = false;
                 this.elements.voiceChatBtn.style.display = 'flex';
+                this.elements.renameChatBtn.style.display = 'flex';
+                this.elements.deleteChatBtn.style.display = 'flex';
                 this.elements.messageInput.focus();
             }
         } catch (error) {
@@ -191,6 +195,7 @@ class Dashboard {
      */
     renderMessages() {
         this.elements.messagesContainer.innerHTML = '';
+        this.elements.messagesContainer.appendChild(this.elements.emptyState);
         this.elements.emptyState.style.display = 'none';
         
         if (this.currentMessages.length === 0) {
@@ -231,6 +236,56 @@ class Dashboard {
         this.elements.messagesContainer.appendChild(messageDiv);
         
         return messageDiv;
+    }
+
+    /**
+     * Rename a chat
+     */
+    async renameChat(chatId) {
+        const chat = this.chats.find(c => c.id === chatId);
+        const current = chat ? chat.title : '';
+        const newTitle = prompt('Rename chat:', current);
+        if (!newTitle || newTitle.trim() === current) return;
+
+        const result = await api.renameChat(chatId, newTitle.trim());
+        if (result.success) {
+            chat.title = result.data.title;
+            this.renderChatList();
+            if (this.currentChatId === chatId) {
+                this.elements.chatTitle.textContent = result.data.title;
+            }
+        } else {
+            alert('Failed to rename chat');
+        }
+    }
+
+    /**
+     * Delete a chat
+     */
+    async deleteChat(chatId) {
+        if (!confirm('Delete this chat and all its messages?')) return;
+
+        const result = await api.deleteChat(chatId);
+        if (result.success) {
+            this.chats = this.chats.filter(c => c.id !== chatId);
+            if (this.currentChatId === chatId) {
+                this.currentChatId = null;
+                this.currentMessages = [];
+                this.elements.chatTitle.textContent = 'Select a chat or start a new one';
+                this.elements.messagesContainer.innerHTML = '';
+                this.elements.messagesContainer.appendChild(this.elements.emptyState);
+                this.elements.emptyState.style.display = 'flex';
+                this.elements.messageInput.disabled = true;
+                this.elements.sendBtn.disabled = true;
+                this.elements.voiceBtn.disabled = true;
+                this.elements.voiceChatBtn.style.display = 'none';
+                this.elements.renameChatBtn.style.display = 'none';
+                this.elements.deleteChatBtn.style.display = 'none';
+            }
+            this.renderChatList();
+        } else {
+            alert('Failed to delete chat');
+        }
     }
 
     /**
@@ -424,6 +479,10 @@ class Dashboard {
         // Voice chat button (navigate to dedicated voice chat page)
         this.elements.voiceChatBtn.addEventListener('click', () => this.openVoiceChat());
 
+        // Rename / Delete chat buttons in header
+        this.elements.renameChatBtn.addEventListener('click', () => this.renameChat(this.currentChatId));
+        this.elements.deleteChatBtn.addEventListener('click', () => this.deleteChat(this.currentChatId));
+
         // Profile modal
         this.elements.profileBtn.addEventListener('click', () => this.showProfile());
         this.elements.closeProfileBtn.addEventListener('click', () => this.hideProfile());
@@ -435,6 +494,17 @@ class Dashboard {
         
         // Logout button
         this.elements.logoutBtn.addEventListener('click', () => this.logout());
+
+        // Dark theme toggle
+        const darkToggle = document.getElementById('theme');
+        if (localStorage.getItem('darkTheme') === 'true') {
+            document.body.classList.add('dark-theme');
+            darkToggle.checked = true;
+        }
+        darkToggle.addEventListener('change', () => {
+            document.body.classList.toggle('dark-theme', darkToggle.checked);
+            localStorage.setItem('darkTheme', darkToggle.checked);
+        });
     }
 
     /**

@@ -121,8 +121,8 @@ async def voice_stream_handler(request: web.Request) -> web.WebSocketResponse:
             user_id=user_id,
             chat_id=chat_id,
             voice_service=voice_service,
-            ai_backend_host="localhost",
-            ai_backend_port=50051,
+            ai_backend_host=config.server_host,
+            ai_backend_port=config.server_port,
         )
 
         # Initialize gRPC connection

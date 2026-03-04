@@ -30,7 +30,7 @@ class Config:
 
     # AI Backend gRPC Configuration
     GRPC_AI_BACKEND_HOST = os.getenv('GRPC_AI_BACKEND_HOST', 'localhost')
-    GRPC_AI_BACKEND_PORT = int(os.getenv('GRPC_AI_BACKEND_PORT', 50051))
+    GRPC_AI_BACKEND_PORT = int(os.getenv('GRPC_AI_BACKEND_PORT', 9090))
 
     # Session Configuration
     SESSION_TYPE = os.getenv('SESSION_TYPE', 'filesystem')

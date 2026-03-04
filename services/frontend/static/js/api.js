@@ -136,6 +136,28 @@ class API {
             method: 'GET'
         });
     }
+
+    /**
+     * Rename a chat
+     * @param {number} chatId - Chat ID
+     * @param {string} title - New title
+     */
+    async renameChat(chatId, title) {
+        return this.request(`/api/chat/${chatId}/rename`, {
+            method: 'PUT',
+            body: JSON.stringify({ title })
+        });
+    }
+
+    /**
+     * Delete a chat and all its messages
+     * @param {number} chatId - Chat ID
+     */
+    async deleteChat(chatId) {
+        return this.request(`/api/chat/${chatId}`, {
+            method: 'DELETE'
+        });
+    }
 }
 
 // Export singleton instance
