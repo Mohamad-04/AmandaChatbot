@@ -1,7 +1,8 @@
 /**
  * Voice Player
- * Handles audio playback for TTS responses.
- * Manages audio queue and playback controls.
+ * Handles queued audio playback for TTS responses.
+ * Important: incoming audio chunks are queued and played sequentially,
+ * so new chunks do NOT interrupt currently playing speech.
  */
 
 class VoicePlayer {
@@ -15,6 +16,7 @@ class VoicePlayer {
         this.onPlayStart = null;
         this.onPlayEnd = null;
         this.onPlayError = null;
+        this.onQueueEmpty = null;
     }
 
     /**
@@ -28,86 +30,104 @@ class VoicePlayer {
     }
 
     /**
-     * Play audio from base64 encoded data
-     * @param {string} base64Audio - Base64 encoded audio data
-     * @param {string} format - Audio format (mp3, wav, etc.)
+     * Internal method: play one audio item ONLY.
+     * Does not clear existing queue.
      */
-    async playAudio(base64Audio, format = 'mp3') {
+    async _playSingle(base64Audio, format = 'mp3') {
         try {
-            // Stop any currently playing audio
-            this.stop();
-
             // Convert base64 to audio blob
             const audioBlob = this.base64ToBlob(base64Audio, format);
             const audioUrl = URL.createObjectURL(audioBlob);
 
-            // Create audio element
             this.currentAudio = new Audio(audioUrl);
 
-            // Set up event listeners
-            this.currentAudio.onended = () => {
+            this.currentAudio.onended = async () => {
                 this.isPlaying = false;
                 URL.revokeObjectURL(audioUrl);
+                this.currentAudio = null;
+
                 if (this.onPlayEnd) {
                     this.onPlayEnd();
                 }
-                // Play next in queue if available
-                this.playNext();
+
+                // Continue with next queued chunk
+                await this.playNext();
             };
 
-            this.currentAudio.onerror = (error) => {
+            this.currentAudio.onerror = async (error) => {
                 console.error('Audio playback error:', error);
                 this.isPlaying = false;
                 URL.revokeObjectURL(audioUrl);
+                this.currentAudio = null;
+
                 if (this.onPlayError) {
                     this.onPlayError(error);
                 }
+
+                // Try to continue queue even if one chunk fails
+                await this.playNext();
             };
 
-            // Play audio
             this.isPlaying = true;
             if (this.onPlayStart) {
                 this.onPlayStart();
             }
 
             await this.currentAudio.play();
-
         } catch (error) {
-            console.error('Play audio error:', error);
+            console.error('Play single audio error:', error);
             this.isPlaying = false;
+            this.currentAudio = null;
+
             if (this.onPlayError) {
                 this.onPlayError(error);
             }
+
             throw error;
         }
     }
 
     /**
-     * Add audio to queue for sequential playback
+     * Legacy method kept for compatibility.
+     * For chunked TTS, this now ENQUEUES instead of interrupting current audio.
+     */
+    async playAudio(base64Audio, format = 'mp3') {
+        return this.queueAudio(base64Audio, format);
+    }
+
+    /**
+     * Add audio chunk to queue for sequential playback
      */
     async queueAudio(base64Audio, format = 'mp3') {
         this.queue.push({ base64Audio, format });
 
-        // If not currently playing, start playback
+        // If nothing is currently playing, start immediately
         if (!this.isPlaying) {
             await this.playNext();
         }
     }
 
     /**
-     * Play next audio in queue
+     * Play next audio chunk in queue
      */
     async playNext() {
+        if (this.isPlaying) {
+            return;
+        }
+
         if (this.queue.length === 0) {
+            if (this.onQueueEmpty) {
+                this.onQueueEmpty();
+            }
             return;
         }
 
         const { base64Audio, format } = this.queue.shift();
-        await this.playAudio(base64Audio, format);
+        await this._playSingle(base64Audio, format);
     }
 
     /**
-     * Stop current audio playback
+     * Stop current audio playback and clear everything
      */
     stop() {
         if (this.currentAudio) {
@@ -116,6 +136,7 @@ class VoicePlayer {
             this.currentAudio = null;
         }
         this.isPlaying = false;
+        this.clearQueue();
     }
 
     /**
@@ -143,6 +164,13 @@ class VoicePlayer {
      */
     clearQueue() {
         this.queue = [];
+    }
+
+    /**
+     * Check whether all audio playback is done
+     */
+    isIdle() {
+        return !this.isPlaying && this.queue.length === 0;
     }
 
     /**
@@ -174,7 +202,7 @@ class VoicePlayer {
             'flac': 'audio/flac'
         };
 
-        return mimeTypes[format.toLowerCase()] || 'audio/mpeg';
+        return mimeTypes[(format || 'mp3').toLowerCase()] || 'audio/mpeg';
     }
 
     /**
@@ -205,7 +233,6 @@ class VoicePlayer {
      */
     cleanup() {
         this.stop();
-        this.clearQueue();
         if (this.audioContext) {
             this.audioContext.close();
             this.audioContext = null;
