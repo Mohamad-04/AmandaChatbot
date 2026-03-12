@@ -33,7 +33,7 @@
    BODY + BACKGROUND
    ========================================================= */
 body {
-  font-family: "Funnel Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-family: "Lexend Deca", "Funnel Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color: var(--text);
   background:
     radial-gradient(ellipse at 15% 5%,  rgba(241, 227, 211, 0.80) 0%, transparent 55%),

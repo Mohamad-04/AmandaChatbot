@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Lexend+Deca:wght@100..900&display=swap"
     >
 
     <title>Amanda</title>
@@ -28,6 +28,7 @@
           <a href="./about.html">About</a>
           <a href="./contact.html">Contact</a>
           <a href="./terms.html">User Terms &amp; Conditions</a>
+          <a href="/auth/login.html">Sign in</a>
         </nav>
       </header>
 
@@ -43,7 +44,7 @@
           <p class="tagline">Your personal AI therapist. I'm here to help you feel heard.</p>
 
           <div class="cta">
-            <a class="u-btn" href="./dashboard/index.html">
+            <a class="u-btn" href="/auth/login.html">
               <svg
                 class="u-sparkle"
                 width="20"
@@ -73,5 +74,15 @@
 
     </div>
 
+  <script type="module">
+    import { api } from './static/js/api.js';
+    // If already logged in, skip landing and go straight to chat
+    try {
+      const result = await api.checkAuth();
+      if (result.success && result.data.authenticated) {
+        window.location.href = '/dashboard/';
+      }
+    } catch (_) {}
+  </script>
   </body>
 </html>

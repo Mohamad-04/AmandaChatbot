@@ -75,7 +75,7 @@ class Dashboard {
             console.log('Dashboard initialized');
         } catch (error) {
             console.error('Dashboard initialization error:', error);
-            window.location.href = '/auth/login.html';
+            window.location.href = '/landing.html';
         }
     }
 
@@ -538,10 +538,10 @@ class Dashboard {
         try {
             await api.logout();
             chatSocket.disconnect();
-            window.location.href = '/auth/login.html';
+            window.location.href = '/landing.html';
         } catch (error) {
             console.error('Logout error:', error);
-            window.location.href = '/auth/login.html';
+            window.location.href = '/landing.html';
         }
     }
 

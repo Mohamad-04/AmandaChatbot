@@ -63,13 +63,11 @@
                     // User is authenticated, redirect to dashboard
                     window.location.href = '/dashboard/';
                 } else {
-                    // User is not authenticated, redirect to login
-                    window.location.href = '/auth/login.html';
+                    window.location.href = '/landing.html';
                 }
             } catch (error) {
                 console.error('Auth check failed:', error);
-                // On error, redirect to login
-                window.location.href = '/auth/login.html';
+                window.location.href = '/landing.html';
             }
         }
 

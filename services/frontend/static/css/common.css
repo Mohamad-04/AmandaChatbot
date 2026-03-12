@@ -55,9 +55,8 @@
     --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
     
     /* Typography */
-    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-                   'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-                   sans-serif;
+    --font-family: "Lexend Deca", "Funnel Sans", system-ui, -apple-system, BlinkMacSystemFont,
+                   'Segoe UI', 'Roboto', sans-serif;
     --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
 }
 
