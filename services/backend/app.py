@@ -19,10 +19,15 @@ from database import db, init_db
 from routes.auth import auth_bp
 from routes.chat import chat_bp
 from routes.user import user_bp
+from routes.email_verification import email_verification_bp
+from routes.password_reset import password_reset_bp
 
 # Import WebSocket handlers
 from websocket.chat_handler import register_handlers
 from websocket.voice_handler import register_voice_handlers
+
+# Import email service
+from services.email_service import init_mail
 
 
 def create_app():
@@ -55,10 +60,15 @@ def create_app():
     # Initialize database
     init_db(app)
 
+    # Initialize email service
+    init_mail(app)
+
     # Register API blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(chat_bp)
     app.register_blueprint(user_bp)
+    app.register_blueprint(email_verification_bp)
+    app.register_blueprint(password_reset_bp)
 
     # Initialize SocketIO for WebSocket support
     socketio = SocketIO(
