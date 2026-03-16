@@ -10,6 +10,7 @@ protobuf>=3.20.3,<5.0.0
 python-socketio==5.10.0
 bcrypt==4.1.2
 cachelib==0.13.0
+Flask-Mail==0.10.0
 
 # Optional async modes (threading mode is default, works with Python 3.12+)
 # eventlet==0.33.3  # Uncomment for eventlet mode (Python <3.12 only)

@@ -66,6 +66,18 @@ class Config:
     CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:8000').split(',')
     CORS_SUPPORTS_CREDENTIALS = True
 
+    # Email Configuration (Flask-Mail)
+    MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.mailtrap.io')
+    MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'True').lower() == 'true'
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME', '')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD', '')
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', 'noreply@amandachatbot.local')
+    MAIL_SUPPRESS_SEND = os.getenv('MAIL_SUPPRESS_SEND', 'True').lower() == 'true'
+
+    # Frontend base URL for email links (verify/reset pages live here)
+    FRONTEND_BASE_URL = os.getenv('FRONTEND_BASE_URL', 'http://localhost:3000')
+
     @classmethod
     def validate(cls):
         """
