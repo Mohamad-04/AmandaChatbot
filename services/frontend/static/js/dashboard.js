@@ -224,11 +224,22 @@ class Dashboard {
         const content = document.createElement('div');
         content.className = 'message-content';
         content.textContent = message.content;
-        
+
+        if (message.role === 'assistant' && !message.content) {
+            bubble.classList.add('message-bubble--loading');
+            const loader = document.createElement('div');
+            loader.className = 'three-body';
+            loader.innerHTML = '<div class="three-body__dot"></div><div class="three-body__dot"></div><div class="three-body__dot"></div>';
+            bubble.appendChild(loader);
+        }
+
         const time = document.createElement('div');
         time.className = 'message-time';
         time.textContent = this.formatTime(message.timestamp);
-        
+        if (message.role === 'assistant' && !message.content) {
+            time.style.display = 'none';
+        }
+
         bubble.appendChild(content);
         bubble.appendChild(time);
         messageDiv.appendChild(bubble);
@@ -354,6 +365,9 @@ class Dashboard {
         this.elements.messageInput.value = '';
         this.elements.messageInput.style.height = 'auto';
         
+        // Hide empty state when first message is sent
+        this.elements.emptyState.style.display = 'none';
+
         // Add user message to UI (optimistic)
         const userMessage = {
             role: 'user',
@@ -374,7 +388,10 @@ class Dashboard {
         
         this.currentMessages.push(assistantMessage);
         this.currentStreamingMessage = this.renderMessage(assistantMessage);
-        
+        this._loaderTransitioning = false;
+        this._loaderTokenBuffer = '';
+        this.scrollToBottom();
+
         // Disable input during streaming
         this.isStreaming = true;
         this.elements.messageInput.disabled = true;
@@ -392,10 +409,47 @@ class Dashboard {
      */
     handleTokenReceived(data) {
         if (!this.currentStreamingMessage) return;
-        
+
+        const loader = this.currentStreamingMessage.querySelector('.three-body');
         const contentDiv = this.currentStreamingMessage.querySelector('.message-content');
+
+        if (loader) {
+            // Buffer tokens that arrive during the fade transition
+            this._loaderTokenBuffer = (this._loaderTokenBuffer || '') + data.text;
+
+            if (this._loaderTransitioning) return;
+            this._loaderTransitioning = true;
+
+            const bubble = this.currentStreamingMessage.querySelector('.message-bubble');
+
+            // Fade out
+            bubble.style.transition = 'opacity 0.5s ease-in-out';
+            bubble.style.opacity = '0';
+
+            setTimeout(() => {
+                loader.remove();
+                bubble.classList.remove('message-bubble--loading');
+                contentDiv.textContent = this._loaderTokenBuffer;
+                this._loaderTokenBuffer = '';
+                const timeDiv = this.currentStreamingMessage?.querySelector('.message-time');
+                if (timeDiv) timeDiv.style.display = '';
+
+                // Fade in
+                requestAnimationFrame(() => {
+                    bubble.style.transition = 'opacity 0.6s ease-in-out';
+                    bubble.style.opacity = '1';
+                    setTimeout(() => {
+                        bubble.style.transition = '';
+                        this._loaderTransitioning = false;
+                    }, 600);
+                });
+
+                this.scrollToBottom();
+            }, 500);
+            return;
+        }
+
         contentDiv.textContent += data.text;
-        
         this.scrollToBottom();
     }
 
@@ -406,6 +460,10 @@ class Dashboard {
         // Update the message with final text
         if (this.currentStreamingMessage) {
             const contentDiv = this.currentStreamingMessage.querySelector('.message-content');
+            // If still transitioning from loader, buffer the final text
+            if (this._loaderTransitioning) {
+                this._loaderTokenBuffer = data.full_text;
+            }
             contentDiv.textContent = data.full_text;
             
             // Update message in array
