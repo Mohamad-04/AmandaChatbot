@@ -39,6 +39,8 @@ class Dashboard {
             messageInput: document.getElementById('message-input'),
             sendBtn: document.getElementById('send-btn'),
             voiceBtn: document.getElementById('voice-btn'),
+            cancelRecordingBtn: document.getElementById('cancel-recording-btn'),
+            sttCheckbox: document.getElementById('stt-checkbox'),
             voiceStatus: document.getElementById('voice-status'),
             recordingTime: document.getElementById('recording-time'),
             voiceStatusText: document.getElementById('voice-status-text'),
@@ -59,6 +61,7 @@ class Dashboard {
             await this.loadChats();
             await this.connectWebSocket();
             this.initializeVoice();
+            this.initializeSpeechToText();
             this.setupEventListeners();
 
             console.log('Dashboard initialized');
@@ -152,6 +155,7 @@ class Dashboard {
                 this.elements.messageInput.disabled = false;
                 this.elements.sendBtn.disabled = false;
                 this.elements.voiceBtn.disabled = false;
+                if (this.elements.sttCheckbox) this.elements.sttCheckbox.disabled = false;
                 this.elements.voiceChatBtn.style.display = 'flex';
 
                 if (this.elements.renameChatBtn) this.elements.renameChatBtn.style.display = 'flex';
@@ -312,6 +316,7 @@ class Dashboard {
 
         this.elements.messageInput.value = '';
         this.elements.messageInput.style.height = 'auto';
+        document.getElementById('chat-input-container').classList.remove('has-text');
         // Hide empty state when first message is sent
         this.elements.emptyState.style.display = 'none';
 
@@ -354,38 +359,10 @@ class Dashboard {
         const contentDiv = this.currentStreamingMessage.querySelector('.message-content');
 
         if (loader) {
-            // Buffer tokens that arrive during the fade transition
             this._loaderTokenBuffer = (this._loaderTokenBuffer || '') + data.text;
-
-            if (this._loaderTransitioning) return;
-            this._loaderTransitioning = true;
-
-            const bubble = this.currentStreamingMessage.querySelector('.message-bubble');
-
-            // Fade out
-            bubble.style.transition = 'opacity 0.5s ease-in-out';
-            bubble.style.opacity = '0';
-
-            setTimeout(() => {
-                loader.remove();
-                bubble.classList.remove('message-bubble--loading');
-                contentDiv.textContent = this._loaderTokenBuffer;
-                this._loaderTokenBuffer = '';
-                const timeDiv = this.currentStreamingMessage?.querySelector('.message-time');
-                if (timeDiv) timeDiv.style.display = '';
-
-                // Fade in
-                requestAnimationFrame(() => {
-                    bubble.style.transition = 'opacity 0.6s ease-in-out';
-                    bubble.style.opacity = '1';
-                    setTimeout(() => {
-                        bubble.style.transition = '';
-                        this._loaderTransitioning = false;
-                    }, 600);
-                });
-
-                this.scrollToBottom();
-            }, 500);
+            if (!this._loaderTransitioning) {
+                this._transitionLoaderToText(this._loaderTokenBuffer);
+            }
             return;
         }
 
@@ -396,15 +373,16 @@ class Dashboard {
     handleMessageComplete(data) {
         if (this.currentStreamingMessage) {
             const contentDiv = this.currentStreamingMessage.querySelector('.message-content');
-            // If still transitioning from loader, buffer the final text
-            if (this._loaderTransitioning) {
-                this._loaderTokenBuffer = data.full_text;
-            }
-            contentDiv.textContent = data.full_text;
-
             const lastMessage = this.currentMessages[this.currentMessages.length - 1];
             lastMessage.content = data.full_text;
             lastMessage.id = data.message_id;
+
+            // If still transitioning from loader, hold the final text until the transition ends
+            if (this._loaderTransitioning) {
+                this._loaderTokenBuffer = data.full_text;
+            } else {
+                contentDiv.textContent = data.full_text;
+            }
         }
 
         this.isStreaming = false;
@@ -449,9 +427,12 @@ class Dashboard {
         this.elements.messageInput.addEventListener('input', e => {
             e.target.style.height = 'auto';
             e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+            document.getElementById('chat-input-container')
+                .classList.toggle('has-text', e.target.value.trim().length > 0);
         });
 
         this.elements.voiceBtn.addEventListener('click', () => this.toggleVoiceRecording());
+        this.elements.cancelRecordingBtn.addEventListener('click', () => this.cancelVoiceRecording());
         this.elements.voiceChatBtn.addEventListener('click', () => this.openVoiceChat());
 
         if (this.elements.renameChatBtn) {
@@ -620,6 +601,94 @@ class Dashboard {
         console.log('Voice features initialized');
     }
 
+    initializeSpeechToText() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            console.warn('Speech recognition not supported in this browser');
+            if (this.elements.sttCheckbox) {
+                this.elements.sttCheckbox.closest('label')?.remove();
+                this.elements.sttCheckbox.remove();
+            }
+            return;
+        }
+
+        this.sttRecognition = new SpeechRecognition();
+        this.sttRecognition.continuous = true;
+        this.sttRecognition.interimResults = true;
+        this.sttRecognition.lang = 'en-US';
+
+        // Track the base text (what was typed before this STT session started)
+        this._sttBaseText = '';
+
+        this.sttRecognition.onstart = () => {
+            this._sttBaseText = this.elements.messageInput.value;
+        };
+
+        this.sttRecognition.onresult = (event) => {
+            let finalTranscript = '';
+            let interimTranscript = '';
+
+            for (let i = 0; i < event.results.length; i++) {
+                const t = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += t + ' ';
+                } else {
+                    interimTranscript += t;
+                }
+            }
+
+            const input = this.elements.messageInput;
+            if (finalTranscript) {
+                input.value = (this._sttBaseText + ' ' + finalTranscript).trim();
+                this._sttBaseText = input.value;
+            } else if (interimTranscript) {
+                input.value = (this._sttBaseText + ' ' + interimTranscript).trim();
+            }
+
+            input.style.height = 'auto';
+            input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+            document.getElementById('chat-input-container')
+                .classList.toggle('has-text', input.value.trim().length > 0);
+        };
+
+        const stopSTT = () => {
+            if (this.elements.sttCheckbox) this.elements.sttCheckbox.checked = false;
+            this.elements.messageInput.placeholder = 'Message Amanda...';
+        };
+
+        this.sttRecognition.onend = stopSTT;
+        this.sttRecognition.onerror = (event) => {
+            if (event.error !== 'no-speech') console.error('STT error:', event.error);
+            stopSTT();
+        };
+
+        this.elements.sttCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                try {
+                    this.elements.messageInput.placeholder = 'Listening...';
+                    this.sttRecognition.start();
+                } catch (err) {
+                    console.error('STT start error:', err);
+                    e.target.checked = false;
+                    this.elements.messageInput.placeholder = 'Message Amanda...';
+                }
+            } else {
+                this.sttRecognition.stop();
+                this.elements.messageInput.placeholder = 'Message Amanda...';
+            }
+        });
+
+        console.log('Speech-to-text initialized');
+    }
+
+    cancelVoiceRecording() {
+        if (!this.isRecording) return;
+        this._voiceCancelled = true;
+        this.voiceRecorder.cancelRecording();
+        this.isRecording = false;
+        this.resetVoiceUI();
+    }
+
     async toggleVoiceRecording() {
         if (this.isRecording) {
             this.voiceRecorder.stopRecording();
@@ -701,6 +770,10 @@ class Dashboard {
     }
 
     async handleRecordingComplete(audioBlob, format) {
+        if (this._voiceCancelled) {
+            this._voiceCancelled = false;
+            return;
+        }
         try {
             this.updateVoiceUI(false);
             this.isProcessingVoice = true;
@@ -736,6 +809,7 @@ class Dashboard {
             console.log('User transcript:', data.text);
 
             this.elements.voiceStatusText.textContent = 'Transcribed! Getting response...';
+            this.elements.emptyState.style.display = 'none';
 
             const userMessage = {
                 role: 'user',
@@ -757,6 +831,9 @@ class Dashboard {
 
             this.currentMessages.push(assistantMessage);
             this.currentStreamingMessage = this.renderMessage(assistantMessage);
+            this._loaderTransitioning = false;
+            this._loaderTokenBuffer = '';
+            this.scrollToBottom();
 
             this.isStreaming = true;
             return;
@@ -765,15 +842,56 @@ class Dashboard {
         if (data.role === 'assistant') {
             if (!this.currentStreamingMessage) return;
 
-            const contentDiv = this.currentStreamingMessage.querySelector('.message-content');
-            contentDiv.textContent = data.text || '';
-            this.scrollToBottom();
+            const text = data.text || '';
+            this._transitionLoaderToText(text, () => {
+                if (data.is_final) {
+                    this.isStreaming = false;
+                    this.currentStreamingMessage = null;
+                }
+            });
+        }
+    }
 
-            if (data.is_final) {
-                this.isStreaming = false;
-                this.currentStreamingMessage = null;
-                // DO NOT reset here. Let playback queue finishing handle it.
-            }
+    _transitionLoaderToText(text, onComplete) {
+        if (!this.currentStreamingMessage) return;
+
+        const loader = this.currentStreamingMessage.querySelector('.three-body');
+        const contentDiv = this.currentStreamingMessage.querySelector('.message-content');
+
+        if (loader) {
+            this._loaderTokenBuffer = text;
+
+            if (this._loaderTransitioning) return;
+            this._loaderTransitioning = true;
+
+            const bubble = this.currentStreamingMessage.querySelector('.message-bubble');
+            bubble.style.transition = 'opacity 0.5s ease-in-out';
+            bubble.style.opacity = '0';
+
+            setTimeout(() => {
+                loader.remove();
+                bubble.classList.remove('message-bubble--loading');
+                contentDiv.textContent = this._loaderTokenBuffer;
+                this._loaderTokenBuffer = '';
+                const timeDiv = this.currentStreamingMessage?.querySelector('.message-time');
+                if (timeDiv) timeDiv.style.display = '';
+
+                requestAnimationFrame(() => {
+                    bubble.style.transition = 'opacity 0.6s ease-in-out';
+                    bubble.style.opacity = '1';
+                    setTimeout(() => {
+                        bubble.style.transition = '';
+                        this._loaderTransitioning = false;
+                        if (onComplete) onComplete();
+                    }, 600);
+                });
+
+                this.scrollToBottom();
+            }, 500);
+        } else {
+            contentDiv.textContent = text;
+            this.scrollToBottom();
+            if (onComplete) onComplete();
         }
     }
 
