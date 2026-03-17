@@ -31,7 +31,6 @@ class Dashboard {
             newChatBtn: document.getElementById('new-chat-btn'),
             chatList: document.getElementById('chat-list'),
             chatTitle: document.getElementById('chat-title'),
-            voiceChatBtn: document.getElementById('voice-chat-btn'),
             renameChatBtn: document.getElementById('rename-chat-btn'),
             deleteChatBtn: document.getElementById('delete-chat-btn'),
             messagesContainer: document.getElementById('messages-container'),
@@ -51,7 +50,13 @@ class Dashboard {
             closeProfileBtn: document.getElementById('close-profile-btn'),
             logoutBtn: document.getElementById('logout-btn'),
             profileEmail: document.getElementById('profile-email'),
-            profileCreated: document.getElementById('profile-created')
+            profileCreated: document.getElementById('profile-created'),
+            orbVoiceBtn: document.getElementById('orb-voice-btn'),
+            orbHint: document.getElementById('orb-hint'),
+            orbCancelBtn: document.getElementById('orb-cancel-btn'),
+            toggleChatBtn: document.getElementById('toggle-chat-btn'),
+            orbInterface: document.getElementById('orb-interface'),
+            pillInterface: document.getElementById('pill-interface')
         };
     }
 
@@ -63,6 +68,17 @@ class Dashboard {
             this.initializeVoice();
             this.initializeSpeechToText();
             this.setupEventListeners();
+
+            // Orb is default mode
+            document.body.classList.add('orb-mode');
+
+            // Orb + input always available — auto-creates a chat if needed
+            if (this.elements.orbVoiceBtn) this.elements.orbVoiceBtn.disabled = false;
+            if (this.elements.toggleChatBtn) this.elements.toggleChatBtn.disabled = false;
+            this.elements.messageInput.disabled = false;
+            this.elements.sendBtn.disabled = false;
+            this.elements.voiceBtn.disabled = false;
+            if (this.elements.sttCheckbox) this.elements.sttCheckbox.disabled = false;
 
             console.log('Dashboard initialized');
         } catch (error) {
@@ -156,10 +172,12 @@ class Dashboard {
                 this.elements.sendBtn.disabled = false;
                 this.elements.voiceBtn.disabled = false;
                 if (this.elements.sttCheckbox) this.elements.sttCheckbox.disabled = false;
-                this.elements.voiceChatBtn.style.display = 'flex';
 
                 if (this.elements.renameChatBtn) this.elements.renameChatBtn.style.display = 'flex';
                 if (this.elements.deleteChatBtn) this.elements.deleteChatBtn.style.display = 'flex';
+
+                if (this.elements.orbVoiceBtn) this.elements.orbVoiceBtn.disabled = false;
+                if (this.elements.toggleChatBtn) this.elements.toggleChatBtn.disabled = false;
 
                 this.elements.messageInput.focus();
             }
@@ -252,10 +270,11 @@ class Dashboard {
                 this.elements.messagesContainer.innerHTML = '';
                 this.elements.messagesContainer.appendChild(this.elements.emptyState);
                 this.elements.emptyState.style.display = 'flex';
-                this.elements.messageInput.disabled = true;
-                this.elements.sendBtn.disabled = true;
-                this.elements.voiceBtn.disabled = true;
-                this.elements.voiceChatBtn.style.display = 'none';
+                this.elements.messageInput.disabled = false;
+                this.elements.sendBtn.disabled = false;
+                this.elements.voiceBtn.disabled = false;
+                if (this.elements.orbVoiceBtn) this.elements.orbVoiceBtn.disabled = false;
+                if (this.elements.toggleChatBtn) this.elements.toggleChatBtn.disabled = false;
                 if (this.elements.renameChatBtn) this.elements.renameChatBtn.style.display = 'none';
                 if (this.elements.deleteChatBtn) this.elements.deleteChatBtn.style.display = 'none';
             }
@@ -310,8 +329,11 @@ class Dashboard {
     async sendMessage() {
         const message = this.elements.messageInput.value.trim();
 
-        if (!message || !this.currentChatId || this.isStreaming || this.isProcessingVoice) {
-            return;
+        if (!message || this.isStreaming || this.isProcessingVoice) return;
+
+        if (!this.currentChatId) {
+            await this.createNewChat();
+            if (!this.currentChatId) return;
         }
 
         this.elements.messageInput.value = '';
@@ -431,9 +453,18 @@ class Dashboard {
                 .classList.toggle('has-text', e.target.value.trim().length > 0);
         });
 
-        this.elements.voiceBtn.addEventListener('click', () => this.toggleVoiceRecording());
+        this.elements.voiceBtn.addEventListener('click', () => this.showOrbMode());
         this.elements.cancelRecordingBtn.addEventListener('click', () => this.cancelVoiceRecording());
-        this.elements.voiceChatBtn.addEventListener('click', () => this.openVoiceChat());
+
+        if (this.elements.orbVoiceBtn) {
+            this.elements.orbVoiceBtn.addEventListener('click', () => this.toggleOrbVoiceRecording());
+        }
+        if (this.elements.toggleChatBtn) {
+            this.elements.toggleChatBtn.addEventListener('click', () => this.showChatMode());
+        }
+        if (this.elements.orbCancelBtn) {
+            this.elements.orbCancelBtn.addEventListener('click', () => this.cancelVoiceRecording());
+        }
 
         if (this.elements.renameChatBtn) {
             this.elements.renameChatBtn.addEventListener('click', () => this.renameChat(this.currentChatId));
@@ -532,13 +563,6 @@ class Dashboard {
         });
     }
 
-    openVoiceChat() {
-        if (this.currentChatId) {
-            sessionStorage.setItem('current_chat_id', this.currentChatId);
-        }
-        window.location.href = '/voice-chat/';
-    }
-
     // ======================
     // Voice Features
     // ======================
@@ -580,6 +604,7 @@ class Dashboard {
 
         this.voicePlayer.onPlayStart = () => {
             console.log('Playback started');
+            this._amandaPlayedAudio = true;
         };
 
         this.voicePlayer.onPlayEnd = () => {
@@ -757,6 +782,82 @@ class Dashboard {
 
         this.elements.messageInput.disabled = false;
         this.elements.sendBtn.disabled = false;
+
+        if (this.elements.orbVoiceBtn) {
+            this.elements.orbVoiceBtn.classList.remove('recording');
+        }
+        if (this.elements.orbHint) {
+            this.elements.orbHint.textContent = 'Tap to speak';
+        }
+        if (this.elements.toggleChatBtn) {
+            this.elements.toggleChatBtn.classList.remove('orb-busy');
+        }
+    }
+
+    showChatMode() {
+        document.body.classList.remove('orb-mode');
+        this.elements.orbInterface.classList.add('hidden');
+        this.elements.pillInterface.style.display = 'flex';
+        requestAnimationFrame(() => {
+            this.elements.pillInterface.classList.add('visible');
+        });
+        if (this.elements.emptyState) {
+            this.elements.emptyState.classList.remove('anim-slide-up');
+            void this.elements.emptyState.offsetWidth;
+            this.elements.emptyState.classList.add('anim-slide-down');
+        }
+        this.elements.messageInput.focus();
+    }
+
+    showOrbMode() {
+        document.body.classList.add('orb-mode');
+        this.elements.pillInterface.classList.remove('visible');
+        // Hide immediately so the layout reposition at t=350ms is invisible
+        if (this.elements.emptyState) {
+            this.elements.emptyState.classList.remove('anim-slide-down');
+            this.elements.emptyState.style.opacity = '0';
+        }
+        setTimeout(() => {
+            this.elements.pillInterface.style.display = 'none';
+            this.elements.orbInterface.classList.remove('hidden');
+            // Layout settled — animate in from new centered position
+            if (this.elements.emptyState) {
+                this.elements.emptyState.style.opacity = '';
+                void this.elements.emptyState.offsetWidth;
+                this.elements.emptyState.classList.add('anim-slide-up');
+            }
+        }, 350);
+    }
+
+    async toggleOrbVoiceRecording() {
+        if (this.isRecording) {
+            this.voiceRecorder.stopRecording();
+            this.isRecording = false;
+            this.elements.orbVoiceBtn.classList.remove('recording');
+            this.elements.orbHint.textContent = 'Tap to speak';
+        } else {
+            if (this.isStreaming || this.isProcessingVoice) return;
+            if (!this.currentChatId) {
+                await this.createNewChat();
+                if (!this.currentChatId) return;
+            }
+            try {
+                await this.voiceRecorder.startRecording();
+                this.isRecording = true;
+                this.elements.orbVoiceBtn.classList.add('recording');
+                this.elements.orbHint.textContent = 'Tap to stop';
+                if (this.elements.toggleChatBtn) {
+                    this.elements.toggleChatBtn.classList.add('orb-busy');
+                }
+                // show recording time in hint
+                this.voiceRecorder.onTimerUpdate = seconds => {
+                    this.elements.orbHint.textContent = `Tap to stop · ${VoiceRecorder.formatTime(seconds)}`;
+                };
+            } catch (error) {
+                console.error('Failed to start recording:', error);
+                alert(error.message || 'Failed to start recording');
+            }
+        }
     }
 
     finalizeVoiceResponse() {
@@ -765,7 +866,13 @@ class Dashboard {
         }
 
         this.voiceFinalizeTimer = setTimeout(() => {
+            const amandaSpoke = this._amandaPlayedAudio;
+            this._amandaPlayedAudio = false;
             this.resetVoiceUI();
+            // Auto-start listening only if Amanda actually played audio (not on clearQueue)
+            if (amandaSpoke && document.body.classList.contains('orb-mode') && !this._voiceCancelled) {
+                this.toggleOrbVoiceRecording();
+            }
         }, 250);
     }
 

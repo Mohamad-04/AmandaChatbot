@@ -296,6 +296,29 @@ input:not([type="checkbox"])::placeholder, textarea::placeholder { color: #a8929
   padding: 32px 24px !important;
   gap: 4px !important;
 }
+/* Empty state: absolute-centered so layout changes never move it */
+#messages-container:has(#empty-state:only-child) {
+  position: relative;
+}
+#messages-container:has(#empty-state:only-child) #empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 760px;
+}
+@keyframes emptySlideDown {
+  from { transform: translate(-50%, calc(-50% - 40px)); opacity: 0.4; }
+  to   { transform: translate(-50%, -50%);              opacity: 1;   }
+}
+@keyframes emptySlideUp {
+  from { transform: translate(-50%, calc(-50% + 40px)); opacity: 0; }
+  to   { transform: translate(-50%, -50%);              opacity: 1; }
+}
+#empty-state.anim-slide-down { animation: emptySlideDown 0.35s ease forwards; }
+#empty-state.anim-slide-up   { animation: emptySlideUp   0.35s ease forwards; }
+
 #messages-container > .message,
 #messages-container > .typing-indicator,
 #messages-container > #empty-state {
@@ -397,8 +420,8 @@ body.dark-theme .chat-header h2 { color: rgba(255, 255, 255, 0.92) !important; }
 /* --- Empty state: OpenAI-style greeting --- */
 .empty-state {
   text-align: center !important;
-  padding: 60px 16px !important;
-  display: flex !important;
+  padding: 40px 16px !important;
+  display: flex;
   flex-direction: column !important;
   align-items: center !important;
 }
@@ -598,11 +621,11 @@ body.dark-theme .input-box:focus-within {
 }
 /* Dark pill — glass on .container-ia-chat, textarea just changes text color */
 body.dark-theme .container-ia-chat {
-  background: rgba(50, 32, 28, 0.82) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(107, 80, 72, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
   box-shadow:
-    4px 8px 28px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+    4px 8px 28px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
 }
 body.dark-theme #message-input {
   background: transparent !important;
@@ -612,11 +635,11 @@ body.dark-theme #message-input {
 }
 body.dark-theme #message-input::placeholder { color: rgba(255, 255, 255, 0.38) !important; }
 body.dark-theme #voice-btn {
-  color: rgba(255, 255, 255, 0.55) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
 }
 body.dark-theme #voice-btn:hover:not(:disabled) {
-  color: rgba(255, 255, 255, 0.92) !important;
-  background: rgba(241, 227, 211, 0.08) !important;
+  color: rgba(255, 255, 255, 0.98) !important;
+  background: rgba(241, 227, 211, 0.12) !important;
 }
 
 /* --- Voice status --- */
@@ -686,7 +709,6 @@ body.dark-theme input:not([type="checkbox"])::placeholder,
 body.dark-theme textarea::placeholder { color: rgba(255, 255, 255, 0.40); }
 
 /* .input-text is transparent — dark glass is handled by body.dark-theme .container-ia-chat */
-body.dark-theme #voice-btn { color: rgba(241, 227, 211, 0.55); }
 
 /* Cancel recording button — dark mode */
 body.dark-theme .cancel-recording-btn {
@@ -698,13 +720,23 @@ body.dark-theme .cancel-recording-btn:hover {
 
 /* STT button — dark mode */
 body.dark-theme .stt-switch {
-  background: rgba(50, 32, 28, 0.82);
-  border-color: rgba(255, 255, 255, 0.10);
-  box-shadow: 2px 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.07);
-  color: rgba(241, 227, 211, 0.65);
+  background: rgba(107, 80, 72, 0.72);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 2px 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255,255,255,0.10);
+  color: rgba(255, 255, 255, 0.82);
 }
 body.dark-theme .stt-switch:hover {
-  background: rgba(70, 45, 38, 0.9);
+  background: rgba(120, 92, 84, 0.85);
+}
+
+/* Orb interface — dark mode */
+body.dark-theme .orb-hint {
+  color: rgba(241, 227, 211, 0.45);
+}
+/* toggle-chat-btn is already dark — no dark-mode override needed */
+/* Orb cancel button — dark mode */
+body.dark-theme .orb-cancel-btn {
+  color: rgba(224, 112, 96, 0.75);
 }
 
 /* --- Links --- */

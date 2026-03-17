@@ -145,7 +145,6 @@ body {
     text-align: center;
     color: var(--text-secondary);
     padding: 40px;
-    padding-bottom: 120px;
 }
 
 .empty-state h3 {
@@ -340,6 +339,7 @@ body {
     align-items: flex-end;
     justify-content: center;
     gap: 0;
+    position: relative;
 }
 
 /* ===== STT (Speech-to-Text) mic button ===== */
@@ -937,3 +937,329 @@ body {
     justify-content: space-between;
     gap: 16px;
 }
+
+/* ===== ORB INTERFACE (primary Siri-like voice mode) ===== */
+.orb-interface {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    padding-bottom: 8px;
+    /* transition for show/hide */
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.orb-interface.hidden {
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    position: absolute;
+}
+
+.orb-voice-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* size the orb */
+}
+
+.orb-voice-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.orb-voice-btn:not(:disabled):hover {
+    transform: scale(1.06);
+}
+
+.orb-voice-btn:not(:disabled):active {
+    transform: scale(0.96);
+}
+
+/* Override orb size for the standalone orb interface */
+.orb-interface .ai {
+    --s: 160px;
+}
+
+/* Recording state on standalone orb — more intense pulsing */
+.orb-voice-btn.recording .ai::before,
+.orb-voice-btn.recording .ai::after {
+    animation-duration: 1s;
+    border-color: rgba(255, 80, 150, 0.95);
+    box-shadow: 0 0 40px rgba(255, 0, 128, 1);
+}
+
+.orb-hint-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    width: 200px;
+    position: relative;
+}
+
+.orb-hint {
+    font-size: 13px;
+    font-family: inherit;
+    color: rgba(90, 52, 40, 0.55);
+    margin: 0;
+    letter-spacing: 0.02em;
+    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.05), opacity 0.35s ease;
+}
+
+.orb-cancel-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border: none;
+    background: transparent;
+    color: rgba(160, 48, 35, 0.80);
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 400;
+    cursor: pointer;
+    padding: 0;
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    transform: translateX(8px);
+    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.05), opacity 0.35s ease;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* Recording state — hint slides left, cancel fades in */
+.orb-interface:has(#orb-voice-btn.recording) .orb-hint {
+    transform: translateX(-44px);
+    opacity: 0.7;
+}
+
+.orb-interface:has(#orb-voice-btn.recording) .orb-cancel-btn {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+/* Type instead button — inactive during voice session */
+.toggle-chat-btn.orb-busy {
+    opacity: 0.28;
+    filter: blur(1px);
+    pointer-events: none;
+    transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+/* ===== "Type instead" animated button ===== */
+.tcb-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+.toggle-chat-btn {
+    --border-radius: 24px;
+    --padding: 4px;
+    --transition: 0.4s;
+    --button-color: rgba(20, 10, 8, 0.14);
+    --highlight-color-hue: 340deg;
+
+    position: relative;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5em 1.1em 0.5em 0.9em;
+    font-family: inherit;
+    font-size: 0.82em;
+    font-weight: 400;
+    background-color: var(--button-color);
+    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    box-shadow:
+        inset 0px 1px 1px rgba(255,255,255,0.2),
+        inset 0px 2px 2px rgba(255,255,255,0.15),
+        inset 0px 4px 4px rgba(255,255,255,0.1),
+        inset 0px 8px 8px rgba(255,255,255,0.05),
+        inset 0px 16px 16px rgba(255,255,255,0.05),
+        0px -1px 1px rgba(0,0,0,0.02),
+        0px -2px 2px rgba(0,0,0,0.03),
+        0px -4px 4px rgba(0,0,0,0.05),
+        0px -8px 8px rgba(0,0,0,0.06),
+        0px -16px 16px rgba(0,0,0,0.08);
+    border: solid 1px #fff2;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: box-shadow var(--transition), border var(--transition), background-color var(--transition);
+}
+
+.toggle-chat-btn::before {
+    content: "";
+    position: absolute;
+    top: calc(0px - var(--padding));
+    left: calc(0px - var(--padding));
+    width: calc(100% + var(--padding) * 2);
+    height: calc(100% + var(--padding) * 2);
+    border-radius: calc(var(--border-radius) + var(--padding));
+    pointer-events: none;
+    z-index: -1;
+    transition: box-shadow var(--transition), filter var(--transition);
+    box-shadow:
+        0 -8px 8px -6px #0000 inset,
+        0 -16px 16px -8px #00000000 inset,
+        1px 1px 1px #fff2,
+        2px 2px 2px #fff1,
+        -1px -1px 1px #0002,
+        -2px -2px 2px #0001;
+}
+
+.toggle-chat-btn::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image: linear-gradient(
+        0deg,
+        #fff,
+        hsl(var(--highlight-color-hue), 100%, 70%),
+        hsla(var(--highlight-color-hue), 100%, 70%, 50%),
+        8%,
+        transparent
+    );
+    opacity: 0;
+    transition: opacity var(--transition), filter var(--transition);
+}
+
+.toggle-chat-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Hover */
+.toggle-chat-btn:not(:disabled):hover {
+    border: solid 1px hsla(var(--highlight-color-hue), 100%, 80%, 40%);
+}
+.toggle-chat-btn:not(:disabled):hover::before {
+    box-shadow:
+        0 -8px 8px -6px #fffa inset,
+        0 -16px 16px -8px hsla(var(--highlight-color-hue), 100%, 70%, 30%) inset,
+        1px 1px 1px #fff2, 2px 2px 2px #fff1,
+        -1px -1px 1px #0002, -2px -2px 2px #0001;
+}
+.toggle-chat-btn:not(:disabled):hover::after {
+    opacity: 1;
+    mask-image: linear-gradient(0deg, #fff, transparent);
+}
+.toggle-chat-btn:not(:disabled):hover .tcb-svg {
+    stroke: #fff;
+    filter: drop-shadow(0 0 3px hsl(var(--highlight-color-hue), 100%, 70%));
+    animation: none;
+}
+
+/* Active */
+.toggle-chat-btn:not(:disabled):active {
+    border: solid 1px hsla(var(--highlight-color-hue), 100%, 80%, 70%);
+    background-color: hsla(var(--highlight-color-hue), 50%, 20%, 0.5);
+}
+.toggle-chat-btn:not(:disabled):active::before {
+    box-shadow:
+        0 -8px 12px -6px #fffa inset,
+        0 -16px 16px -8px hsla(var(--highlight-color-hue), 100%, 70%, 80%) inset,
+        1px 1px 1px #fff4, 2px 2px 2px #fff2,
+        -1px -1px 1px #0002, -2px -2px 2px #0001;
+}
+.toggle-chat-btn:not(:disabled):active::after {
+    opacity: 1;
+    mask-image: linear-gradient(0deg, #fff, transparent);
+    filter: brightness(200%);
+}
+
+/* SVG icon */
+.tcb-svg {
+    height: 18px;
+    width: 18px;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+    stroke: rgba(255,255,255,0.65);
+    animation: tcb-flicker 2s linear infinite;
+    animation-delay: 0.5s;
+    filter: drop-shadow(0 0 2px rgba(255,255,255,0.5));
+    transition: stroke var(--transition), filter var(--transition);
+}
+@keyframes tcb-flicker {
+    50% { opacity: 0.4; }
+}
+
+/* Text wrapper */
+.tcb-txt-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 1.2em;
+    white-space: nowrap;
+}
+.tcb-txt-1 {
+    position: relative;
+    white-space: nowrap;
+    animation: tcb-appear 1s ease-in-out forwards;
+}
+.tcb-txt-2 {
+    position: absolute;
+    white-space: nowrap;
+    opacity: 0;
+}
+
+@keyframes tcb-appear {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+/* Letters */
+.tcb-letter {
+    position: relative;
+    display: inline-block;
+    color: rgba(255,255,255,0.5);
+    animation: tcb-letter-anim 2s ease-in-out infinite;
+    transition: color var(--transition), text-shadow var(--transition);
+}
+@keyframes tcb-letter-anim {
+    50% { text-shadow: 0 0 3px rgba(255,255,255,0.7); color: #fff; }
+}
+
+/* Letter delays */
+.tcb-letter:nth-child(1)  { animation-delay: 0s; }
+.tcb-letter:nth-child(2)  { animation-delay: 0.08s; }
+.tcb-letter:nth-child(3)  { animation-delay: 0.16s; }
+.tcb-letter:nth-child(4)  { animation-delay: 0.24s; }
+.tcb-letter:nth-child(5)  { animation-delay: 0.32s; }
+.tcb-letter:nth-child(6)  { animation-delay: 0.40s; }
+.tcb-letter:nth-child(7)  { animation-delay: 0.48s; }
+.tcb-letter:nth-child(8)  { animation-delay: 0.56s; }
+.tcb-letter:nth-child(9)  { animation-delay: 0.64s; }
+.tcb-letter:nth-child(10) { animation-delay: 0.72s; }
+.tcb-letter:nth-child(11) { animation-delay: 0.80s; }
+.tcb-letter:nth-child(12) { animation-delay: 0.88s; }
+
+/* ===== PILL INTERFACE (secondary chat mode) ===== */
+.pill-interface {
+    display: none;
+    align-items: flex-end;
+    width: 100%;
+    max-width: 800px;
+    gap: 0;
+    /* transition for show/hide */
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.pill-interface.visible {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+

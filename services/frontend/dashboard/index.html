@@ -55,17 +55,7 @@
                     </button>
                 </div>
                 <h2 id="chat-title">Select a chat or start a new one</h2>
-                <div class="chat-header-right">
-                    <button id="voice-chat-btn" class="btn-voice-chat" title="Start voice chat" style="display: none;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                            <line x1="12" y1="19" x2="12" y2="23"></line>
-                            <line x1="8" y1="23" x2="16" y2="23"></line>
-                        </svg>
-                        Voice Chat
-                    </button>
-                </div>
+                <div class="chat-header-right"></div>
             </div>
             
             <div id="messages-container" class="messages-container">
@@ -84,36 +74,9 @@
             </div>
 
             <div class="input-area">
-                <input type="checkbox" id="stt-checkbox" disabled>
-                <label class="stt-switch" for="stt-checkbox">
-                    <div class="stt-mic-on">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/>
-                            <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/>
-                        </svg>
-                    </div>
-                    <div class="stt-mic-off">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M13 8c0 .564-.094 1.107-.266 1.613l-.814-.814A4.02 4.02 0 0 0 12 8V7a.5.5 0 0 1 1 0v1zm-5 4c.818 0 1.578-.245 2.212-.667l.718.719a4.973 4.973 0 0 1-2.43.923V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 1 0v1a4 4 0 0 0 4 4zm3-9v4.879L5.158 2.037A3.001 3.001 0 0 1 11 3z"/>
-                            <path d="M9.486 10.607 5 6.12V8a3 3 0 0 0 4.486 2.607zm-7.84-9.253 12 12 .708-.708-12-12-.708.708z"/>
-                        </svg>
-                    </div>
-                </label>
-                <div class="container-ia-chat" id="chat-input-container">
-                    <textarea
-                        id="message-input"
-                        class="input-text"
-                        placeholder="Message Amanda..."
-                        rows="1"
-                        disabled
-                    ></textarea>
-                    <button id="voice-btn" class="label-voice" title="Voice message" disabled>
-                        <svg id="voice-icon-mic" class="icon-voice" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" d="M12 4v16m4-13v10M8 7v10m12-6v2M4 11v2"></path>
-                        </svg>
-                        <svg id="voice-icon-stop" class="icon-voice" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display:none">
-                            <rect x="6" y="6" width="12" height="12" rx="2"></rect>
-                        </svg>
+                <!-- PRIMARY: Orb interface -->
+                <div class="orb-interface" id="orb-interface">
+                    <button id="orb-voice-btn" class="orb-voice-btn" disabled>
                         <div class="ai">
                             <div class="container">
                                 <div class="c c4"></div>
@@ -124,23 +87,88 @@
                             </div>
                             <div class="glass"></div>
                         </div>
-                        <div class="text-voice">
-                            <p>Listening...</p>
-                            <p>Press to stop</p>
+                    </button>
+                    <div class="orb-hint-row">
+                        <p class="orb-hint" id="orb-hint">Tap to speak</p>
+                        <button id="orb-cancel-btn" class="orb-cancel-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            Cancel
+                        </button>
+                    </div>
+                    <div class="tcb-wrapper">
+                    <button id="toggle-chat-btn" class="toggle-chat-btn" disabled>
+                        <svg class="tcb-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        <div class="tcb-txt-wrapper">
+                            <div class="tcb-txt-1">
+                                <span class="tcb-letter">T</span><span class="tcb-letter">y</span><span class="tcb-letter">p</span><span class="tcb-letter">e</span><span class="tcb-letter">&nbsp;</span><span class="tcb-letter">i</span><span class="tcb-letter">n</span><span class="tcb-letter">s</span><span class="tcb-letter">t</span><span class="tcb-letter">e</span><span class="tcb-letter">a</span><span class="tcb-letter">d</span>
+                            </div>
+                            <div class="tcb-txt-2">
+                                <span class="tcb-letter">C</span><span class="tcb-letter">h</span><span class="tcb-letter">a</span><span class="tcb-letter">t</span><span class="tcb-letter">&nbsp;</span><span class="tcb-letter">m</span><span class="tcb-letter">o</span><span class="tcb-letter">d</span><span class="tcb-letter">e</span>
+                            </div>
                         </div>
                     </button>
-                    <button id="send-btn" class="label-text" disabled>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12l7-7l7 7m-7 7V5"></path>
-                        </svg>
-                    </button>
-                    <button id="cancel-recording-btn" class="cancel-recording-btn">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
-                        Cancel
-                    </button>
+                    </div>
+                </div>
+
+                <!-- SECONDARY: Pill interface (hidden by default) -->
+                <div class="pill-interface" id="pill-interface">
+                    <input type="checkbox" id="stt-checkbox" disabled>
+                    <label class="stt-switch" for="stt-checkbox">
+                        <div class="stt-mic-on">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/>
+                                <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/>
+                            </svg>
+                        </div>
+                        <div class="stt-mic-off">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M13 8c0 .564-.094 1.107-.266 1.613l-.814-.814A4.02 4.02 0 0 0 12 8V7a.5.5 0 0 1 1 0v1zm-5 4c.818 0 1.578-.245 2.212-.667l.718.719a4.973 4.973 0 0 1-2.43.923V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 1 0v1a4 4 0 0 0 4 4zm3-9v4.879L5.158 2.037A3.001 3.001 0 0 1 11 3z"/>
+                                <path d="M9.486 10.607 5 6.12V8a3 3 0 0 0 4.486 2.607zm-7.84-9.253 12 12 .708-.708-12-12-.708.708z"/>
+                            </svg>
+                        </div>
+                    </label>
+                    <div class="container-ia-chat" id="chat-input-container">
+                        <textarea id="message-input" class="input-text" placeholder="Message Amanda..." rows="1" disabled></textarea>
+                        <button id="voice-btn" class="label-voice" title="Voice message" disabled>
+                            <svg id="voice-icon-mic" class="icon-voice" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" d="M12 4v16m4-13v10M8 7v10m12-6v2M4 11v2"></path>
+                            </svg>
+                            <svg id="voice-icon-stop" class="icon-voice" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+                                <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+                            </svg>
+                            <div class="ai">
+                                <div class="container">
+                                    <div class="c c4"></div>
+                                    <div class="c c1"></div>
+                                    <div class="c c2"></div>
+                                    <div class="c c3"></div>
+                                    <div class="rings"></div>
+                                </div>
+                                <div class="glass"></div>
+                            </div>
+                            <div class="text-voice">
+                                <p>Listening...</p>
+                                <p>Press to stop</p>
+                            </div>
+                        </button>
+                        <button id="send-btn" class="label-text" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12l7-7l7 7m-7 7V5"></path>
+                            </svg>
+                        </button>
+                        <button id="cancel-recording-btn" class="cancel-recording-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            Cancel
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
