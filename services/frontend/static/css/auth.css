@@ -97,6 +97,16 @@ body {
     color: #a89290;
 }
 
+.success-message {
+    padding: 12px;
+    background: rgba(39, 127, 82, 0.08);
+    border: 1px solid rgba(39, 127, 82, 0.30);
+    border-radius: 10px;
+    color: #1e6b44;
+    font-size: 0.88rem;
+    text-align: center;
+}
+
 .error-message {
     padding: 12px;
     background: rgba(192, 57, 43, 0.08);

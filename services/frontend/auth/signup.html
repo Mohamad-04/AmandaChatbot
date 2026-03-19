@@ -18,53 +18,63 @@
                 <p>Create Your Account</p>
             </div>
             
+            <div id="success-view" style="display:none;">
+                <div class="success-message" style="margin-bottom: 20px;">
+                    Account created! Check your inbox and click the verification link to activate your account.
+                </div>
+                <p style="font-size:0.85rem; color: var(--text-secondary, #666); text-align:center;">
+                    Didn't receive it? <a href="#" id="resend-link">Resend verification email</a>
+                </p>
+                <div id="resend-message" style="display:none; margin-top:12px;"></div>
+            </div>
+
             <form id="signup-form" class="auth-form">
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
                         placeholder="Enter your email"
-                        required 
+                        required
                         autocomplete="email"
                         autofocus
                     >
                 </div>
-                
+
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
                         placeholder="At least 8 characters"
                         required
                         minlength="8"
                         autocomplete="new-password"
                     >
                 </div>
-                
+
                 <div class="form-group">
                     <label for="confirm-password">Confirm Password</label>
-                    <input 
-                        type="password" 
-                        id="confirm-password" 
-                        name="confirm-password" 
+                    <input
+                        type="password"
+                        id="confirm-password"
+                        name="confirm-password"
                         placeholder="Re-enter your password"
                         required
                         minlength="8"
                         autocomplete="new-password"
                     >
                 </div>
-                
+
                 <div id="error-message" class="error-message" style="display: none;"></div>
-                
+
                 <button type="submit" class="btn btn-primary" id="signup-btn">
                     Sign Up
                 </button>
             </form>
-            
+
             <div class="auth-footer">
                 <p>Already have an account? <a href="/auth/login.html">Login</a></p>
             </div>
@@ -80,6 +90,11 @@
         const confirmPasswordInput = document.getElementById('confirm-password');
         const errorMessage = document.getElementById('error-message');
         const signupBtn = document.getElementById('signup-btn');
+        const successView = document.getElementById('success-view');
+        const resendLink = document.getElementById('resend-link');
+        const resendMessage = document.getElementById('resend-message');
+
+        let registeredEmail = '';
 
         function showError(message) {
             errorMessage.textContent = message;
@@ -103,26 +118,22 @@
             const password = passwordInput.value;
             const confirmPassword = confirmPasswordInput.value;
 
-            // Validation
             if (!email || !password || !confirmPassword) {
                 showError('Please fill in all fields');
                 return;
             }
 
-            // Email format validation
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 showError('Please enter a valid email address');
                 return;
             }
 
-            // Password length validation
             if (password.length < 8) {
                 showError('Password must be at least 8 characters long');
                 return;
             }
 
-            // Password match validation
             if (password !== confirmPassword) {
                 showError('Passwords do not match');
                 return;
@@ -134,8 +145,10 @@
                 const result = await api.signup(email, password);
 
                 if (result.success && result.data.success) {
-                    // Signup successful, redirect to dashboard
-                    window.location.href = '/dashboard/';
+                    registeredEmail = email;
+                    form.style.display = 'none';
+                    document.querySelector('.auth-footer').style.display = 'none';
+                    successView.style.display = 'block';
                 } else {
                     showError(result.data.message || 'Signup failed. Please try again.');
                     setLoading(false);
@@ -147,7 +160,24 @@
             }
         });
 
-        // Focus email input on load
+        resendLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            resendLink.textContent = 'Sending…';
+            try {
+                await api.request('/api/auth/resend-verification', {
+                    method: 'POST',
+                    body: JSON.stringify({ email: registeredEmail })
+                });
+                resendMessage.className = 'success-message';
+                resendMessage.textContent = 'Verification email resent. Check your inbox.';
+            } catch {
+                resendMessage.className = 'error-message';
+                resendMessage.textContent = 'Could not resend. Please try again.';
+            }
+            resendMessage.style.display = 'block';
+            resendLink.textContent = 'Resend verification email';
+        });
+
         emailInput.focus();
     </script>
 </body>

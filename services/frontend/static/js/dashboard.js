@@ -32,7 +32,6 @@ class Dashboard {
             chatList: document.getElementById('chat-list'),
             chatTitle: document.getElementById('chat-title'),
             renameChatBtn: document.getElementById('rename-chat-btn'),
-            deleteChatBtn: document.getElementById('delete-chat-btn'),
             messagesContainer: document.getElementById('messages-container'),
             emptyState: document.getElementById('empty-state'),
             messageInput: document.getElementById('message-input'),
@@ -132,13 +131,8 @@ class Dashboard {
             const titleDiv = document.createElement('div');
             titleDiv.className = 'chat-item-title';
             titleDiv.textContent = chat.title;
-
-            const timeDiv = document.createElement('div');
-            timeDiv.className = 'chat-item-time';
-            timeDiv.textContent = this.formatRelativeTime(chat.last_message_time);
-
             chatItem.appendChild(titleDiv);
-            chatItem.appendChild(timeDiv);
+
             chatItem.addEventListener('click', () => this.selectChat(chat.id));
 
             this.elements.chatList.appendChild(chatItem);
@@ -174,7 +168,6 @@ class Dashboard {
                 if (this.elements.sttCheckbox) this.elements.sttCheckbox.disabled = false;
 
                 if (this.elements.renameChatBtn) this.elements.renameChatBtn.style.display = 'flex';
-                if (this.elements.deleteChatBtn) this.elements.deleteChatBtn.style.display = 'flex';
 
                 if (this.elements.orbVoiceBtn) this.elements.orbVoiceBtn.disabled = false;
                 if (this.elements.toggleChatBtn) this.elements.toggleChatBtn.disabled = false;
@@ -253,35 +246,6 @@ class Dashboard {
             }
         } else {
             alert('Failed to rename chat');
-        }
-    }
-
-    async deleteChat(chatId) {
-        if (!confirm('Delete this chat and all its messages?')) return;
-
-        const result = await api.deleteChat(chatId);
-        if (result.success) {
-            this.chats = this.chats.filter(c => c.id !== chatId);
-
-            if (this.currentChatId === chatId) {
-                this.currentChatId = null;
-                this.currentMessages = [];
-                this.elements.chatTitle.textContent = 'Select a chat or start a new one';
-                this.elements.messagesContainer.innerHTML = '';
-                this.elements.messagesContainer.appendChild(this.elements.emptyState);
-                this.elements.emptyState.style.display = 'flex';
-                this.elements.messageInput.disabled = false;
-                this.elements.sendBtn.disabled = false;
-                this.elements.voiceBtn.disabled = false;
-                if (this.elements.orbVoiceBtn) this.elements.orbVoiceBtn.disabled = false;
-                if (this.elements.toggleChatBtn) this.elements.toggleChatBtn.disabled = false;
-                if (this.elements.renameChatBtn) this.elements.renameChatBtn.style.display = 'none';
-                if (this.elements.deleteChatBtn) this.elements.deleteChatBtn.style.display = 'none';
-            }
-
-            this.renderChatList();
-        } else {
-            alert('Failed to delete chat');
         }
     }
 
@@ -469,10 +433,6 @@ class Dashboard {
         if (this.elements.renameChatBtn) {
             this.elements.renameChatBtn.addEventListener('click', () => this.renameChat(this.currentChatId));
         }
-        if (this.elements.deleteChatBtn) {
-            this.elements.deleteChatBtn.addEventListener('click', () => this.deleteChat(this.currentChatId));
-        }
-
         this.elements.profileBtn.addEventListener('click', () => this.showProfile());
         this.elements.closeProfileBtn.addEventListener('click', () => this.hideProfile());
         this.elements.profileModal.addEventListener('click', e => {

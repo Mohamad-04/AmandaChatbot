@@ -111,13 +111,38 @@ a:hover { color: #2d1e1c; }
 
 .sidebar-footer { border-top-color: rgba(168, 122, 116, 0.18); }
 
-/* Profile icon button */
+/* Generic icon buttons */
 .btn-icon { color: #6b4e4b; }
 .btn-icon:hover {
   color: #2d1e1c;
   background: rgba(168, 122, 116, 0.10);
   border-radius: 8px;
 }
+
+/* Profile button – icon only */
+#profile-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#profile-btn:focus { outline: none; }
+.profile-btn-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-btn-inner svg {
+  width: 22px;
+  height: 22px;
+  fill: #6b3e38;
+  display: block;
+  transition: fill 0.2s ease;
+}
+#profile-btn:hover .profile-btn-inner svg { fill: #2d1e1c; }
 
 /* =========================================================
    MAIN CHAT AREA
@@ -582,6 +607,8 @@ body.dark-theme .btn-icon:hover {
   color: rgba(255, 255, 255, 0.92);
   background: rgba(241, 227, 211, 0.08);
 }
+body.dark-theme .profile-btn-inner svg { fill: rgba(255, 255, 255, 0.82); }
+body.dark-theme #profile-btn:hover .profile-btn-inner svg { fill: rgba(255, 255, 255, 1); }
 
 /* --- Chat header --- */
 body.dark-theme .chat-header {

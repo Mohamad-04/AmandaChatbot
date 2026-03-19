@@ -39,7 +39,7 @@ def send_verification_email(user_email, token):
         token (str): The verification token from User.generate_verification_token().
     """
     frontend_url = current_app.config.get('FRONTEND_BASE_URL', 'http://localhost:3000')
-    verify_link = f"{frontend_url}/verify-email?token={token}"
+    verify_link = f"{frontend_url}/auth/verify-email.html?token={token}"
 
     subject = "Verify your Amanda account"
     body = (
@@ -67,7 +67,7 @@ def send_password_reset_email(user_email, token):
         token (str): The reset token from User.generate_reset_token().
     """
     frontend_url = current_app.config.get('FRONTEND_BASE_URL', 'http://localhost:3000')
-    reset_link = f"{frontend_url}/reset-password?token={token}"
+    reset_link = f"{frontend_url}/auth/reset-password.html?token={token}"
 
     subject = "Reset your Amanda password"
     body = (
