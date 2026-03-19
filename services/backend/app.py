@@ -21,6 +21,7 @@ from routes.chat import chat_bp
 from routes.user import user_bp
 from routes.email_verification import email_verification_bp
 from routes.password_reset import password_reset_bp
+from routes.admin import admin_bp
 
 # Import WebSocket handlers
 from websocket.chat_handler import register_handlers
@@ -69,6 +70,7 @@ def create_app():
     app.register_blueprint(user_bp)
     app.register_blueprint(email_verification_bp)
     app.register_blueprint(password_reset_bp)
+    app.register_blueprint(admin_bp)
 
     # Initialize SocketIO for WebSocket support
     socketio = SocketIO(

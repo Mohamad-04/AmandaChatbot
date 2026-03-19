@@ -8,8 +8,12 @@ import json
 import sys
 from pathlib import Path
 from datetime import datetime
-from flask import Flask, render_template_string, jsonify, request
+from flask import Flask, Blueprint, render_template_string, jsonify, request
 
+# Blueprint for use inside the main backend
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+# Standalone app (for running independently)
 app = Flask(__name__)
 
 # Get monitoring logs path
@@ -357,6 +361,27 @@ DASHBOARD_TEMPLATE = """
 </body>
 </html>
 """
+
+
+@admin_bp.route('/')
+@admin_bp.route('')
+def admin_index():
+    return render_template_string(DASHBOARD_TEMPLATE)
+
+@admin_bp.route('/api/users')
+def admin_get_users():
+    if not MONITORING_LOGS.exists():
+        return jsonify([])
+    users = [d.name for d in MONITORING_LOGS.iterdir() if d.is_dir()]
+    return jsonify(sorted(users))
+
+@admin_bp.route('/api/chats/<path:user_email>')
+def admin_get_chats(user_email):
+    return get_chats(user_email)
+
+@admin_bp.route('/api/transcript/<path:user_email>/<path:chat_path>')
+def admin_get_transcript(user_email, chat_path):
+    return get_transcript(user_email, chat_path)
 
 
 @app.route('/')

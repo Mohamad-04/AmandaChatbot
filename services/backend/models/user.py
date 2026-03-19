@@ -26,6 +26,9 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
+    # Admin role
+    is_admin = db.Column(db.Boolean, default=False, nullable=False)
+
     # Email verification
     is_verified = db.Column(db.Boolean, default=False, nullable=False)
     verification_token = db.Column(db.String(64), nullable=True, index=True)
@@ -106,7 +109,8 @@ class User(db.Model):
             'id': self.id,
             'email': self.email,
             'created_at': self.created_at.isoformat(),
-            'is_verified': self.is_verified
+            'is_verified': self.is_verified,
+            'is_admin': self.is_admin
         }
     
     def __repr__(self):

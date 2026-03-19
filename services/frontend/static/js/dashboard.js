@@ -44,6 +44,7 @@ class Dashboard {
             voiceStatusText: document.getElementById('voice-status-text'),
             voiceIconMic: document.getElementById('voice-icon-mic'),
             voiceIconStop: document.getElementById('voice-icon-stop'),
+            adminDashboardBtn: document.getElementById('admin-dashboard-btn'),
             profileBtn: document.getElementById('profile-btn'),
             profileModal: document.getElementById('profile-modal'),
             closeProfileBtn: document.getElementById('close-profile-btn'),
@@ -95,6 +96,10 @@ class Dashboard {
 
         this.currentUser = result.data.user;
         this.elements.userEmail.textContent = this.currentUser.email;
+
+        if (this.currentUser.is_admin && this.elements.adminDashboardBtn) {
+            this.elements.adminDashboardBtn.style.display = 'inline-flex';
+        }
     }
 
     async loadChats() {

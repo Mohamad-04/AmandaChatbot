@@ -221,11 +221,13 @@ def check():
     """
     try:
         if 'user_id' in session:
+            user = User.query.get(session['user_id'])
             return jsonify({
                 'authenticated': True,
                 'user': {
                     'id': session['user_id'],
-                    'email': session.get('email')
+                    'email': session.get('email'),
+                    'is_admin': user.is_admin if user else False
                 }
             }), 200
         else:
