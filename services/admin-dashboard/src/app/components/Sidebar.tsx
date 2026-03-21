@@ -1,5 +1,5 @@
 import { NavLink } from "react-router";
-import { LayoutDashboard, Users, MessageSquare, AlertTriangle, Settings } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, AlertTriangle, Settings, ArrowLeft } from "lucide-react";
 
 export function Sidebar() {
   const navItems = [
@@ -38,6 +38,16 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      <div className="p-4 border-t border-sidebar-border">
+        <button
+          onClick={() => window.location.href = 'http://localhost:3000/dashboard'}
+          className="flex items-center gap-3 px-4 py-3 rounded-lg w-full transition-all text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>Back to Amanda</span>
+        </button>
+      </div>
     </aside>
   );
 }
