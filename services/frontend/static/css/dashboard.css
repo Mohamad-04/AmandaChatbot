@@ -73,7 +73,16 @@ body {
     cursor: pointer;
     transition: background-color 0.2s;
     border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
+
+.chat-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
 
 .chat-item:hover {
     background-color: var(--bg-hover);
@@ -103,7 +112,10 @@ body {
     border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: center;
+    align-items: center;
+    gap: 16px;
 }
+
 
 /* ===== MAIN CHAT AREA ===== */
 .main-chat {
@@ -125,6 +137,28 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.admin-dashboard-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    background: rgba(168, 122, 116, 0.15);
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+.admin-dashboard-btn svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+.admin-dashboard-btn:hover {
+    background: rgba(168, 122, 116, 0.35);
 }
 
 .messages-container {
@@ -192,6 +226,13 @@ body {
     word-wrap: break-word;
 }
 
+.message-bubble--loading {
+    padding: 10px 12px;
+    display: inline-flex;
+    align-items: center;
+}
+
+
 .message.user .message-bubble {
     background-color: var(--user-message-bg);
     color: var(--user-message-text);
@@ -229,29 +270,90 @@ body {
     color: var(--text-light);
 }
 
-/* Typing Indicator */
-.typing-indicator {
-    display: flex;
-    gap: 4px;
-    padding: 8px;
+/* Three-body loader (Amanda thinking) */
+.three-body {
+    --uib-size: 28px;
+    --uib-speed: 0.8s;
+    --uib-color: #2d1e1c;
+    position: relative;
+    display: inline-block;
+    height: var(--uib-size);
+    width: var(--uib-size);
+    animation: spin78236 calc(var(--uib-speed) * 2.5) infinite linear;
+    margin: 4px 0;
 }
 
-.typing-indicator span {
-    width: 8px;
-    height: 8px;
-    background-color: var(--text-light);
+.three-body__dot {
+    position: absolute;
+    height: 100%;
+    width: 30%;
+}
+
+.three-body__dot:after {
+    content: '';
+    position: absolute;
+    height: 0%;
+    width: 100%;
+    padding-bottom: 100%;
+    background-color: var(--uib-color);
     border-radius: 50%;
-    animation: typing 1.4s infinite;
 }
 
-.typing-indicator span:nth-child(2) {
-    animation-delay: 0.2s;
+.three-body__dot:nth-child(1) {
+    bottom: 5%;
+    left: 0;
+    transform: rotate(60deg);
+    transform-origin: 50% 85%;
 }
 
-.typing-indicator span:nth-child(3) {
-    animation-delay: 0.4s;
+.three-body__dot:nth-child(1)::after {
+    bottom: 0;
+    left: 0;
+    animation: wobble1 var(--uib-speed) infinite ease-in-out;
+    animation-delay: calc(var(--uib-speed) * -0.3);
 }
 
+.three-body__dot:nth-child(2) {
+    bottom: 5%;
+    right: 0;
+    transform: rotate(-60deg);
+    transform-origin: 50% 85%;
+}
+
+.three-body__dot:nth-child(2)::after {
+    bottom: 0;
+    left: 0;
+    animation: wobble1 var(--uib-speed) infinite calc(var(--uib-speed) * -0.15) ease-in-out;
+}
+
+.three-body__dot:nth-child(3) {
+    bottom: -5%;
+    left: 0;
+    transform: translateX(116.666%);
+}
+
+.three-body__dot:nth-child(3)::after {
+    top: 0;
+    left: 0;
+    animation: wobble2 var(--uib-speed) infinite ease-in-out;
+}
+
+@keyframes spin78236 {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes wobble1 {
+    0%, 100% { transform: translateY(0%) scale(1); opacity: 1; }
+    50%       { transform: translateY(-66%) scale(0.65); opacity: 0.8; }
+}
+
+@keyframes wobble2 {
+    0%, 100% { transform: translateY(0%) scale(1); opacity: 1; }
+    50%       { transform: translateY(66%) scale(0.65); opacity: 0.8; }
+}
+
+/* Keep old keyframe name to avoid breaking anything */
 @keyframes typing {
     0%, 60%, 100% {
         opacity: 0.3;
@@ -263,63 +365,448 @@ body {
     }
 }
 
-/* Input Area */
+/* ===== INPUT AREA ===== */
 .input-area {
-    padding: 20px 24px;
-    border-top: 1px solid var(--border-color);
-    background-color: var(--bg-primary);
+    padding: 12px 24px 28px;
+    background: transparent;
     display: flex;
-    gap: 12px;
     align-items: flex-end;
+    justify-content: center;
+    gap: 0;
+    position: relative;
 }
 
-#message-input {
-    flex: 1;
-    min-height: 44px;
-    max-height: 120px;
-    padding: 12px 16px;
-    border: 2px solid var(--border-color);
-    border-radius: var(--border-radius-lg);
-    resize: none;
-    font-family: inherit;
-    font-size: 1rem;
-    line-height: 1.5;
-    transition: border-color 0.2s;
-}
+/* ===== STT (Speech-to-Text) mic button ===== */
+#stt-checkbox { display: none; }
 
-#message-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-}
-
-#message-input:disabled {
-    background-color: var(--bg-secondary);
-    cursor: not-allowed;
-}
-
-.btn-send {
+.stt-switch {
+    position: relative;
+    flex-shrink: 0;
     width: 44px;
     height: 44px;
-    padding: 0;
-    border: none;
-    background-color: var(--primary-color);
-    color: white;
-    border-radius: var(--border-radius-lg);
+    margin-bottom: 4px;
+    margin-right: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(241, 227, 211, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.52);
+    box-shadow: 2px 4px 14px rgba(90, 52, 40, 0.18), inset 0 1px 0 rgba(255,255,255,0.78);
+    color: rgba(90, 52, 40, 0.75);
+    border-radius: 50%;
     cursor: pointer;
+    transition: all .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.stt-mic-on, .stt-mic-off {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all .3s ease-in-out;
+}
+
+.stt-mic-on { z-index: 4; }
+
+.stt-mic-off {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    opacity: 0;
+}
+
+.stt-switch:hover {
+    background: rgba(241, 227, 211, 0.95);
+    transform: scale(1.06);
+}
+
+#stt-checkbox:checked + .stt-switch {
+    background: linear-gradient(135deg, #ff0080, #ff4040);
+    border-color: rgba(255, 100, 80, 0.4);
+    box-shadow: 2px 4px 16px rgba(255, 0, 100, 0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    color: #fff;
+}
+
+#stt-checkbox:checked + .stt-switch .stt-mic-off { opacity: 1; }
+
+#stt-checkbox:disabled + .stt-switch {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ── Glass pill container — glass lives here, NOT on the textarea ── */
+.container-ia-chat {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 720px;
+    min-height: 52px;
+    border-radius: 26px;
+    background: rgba(241, 227, 211, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.52);
+    box-shadow:
+        4px 8px 28px rgba(90, 52, 40, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.78);
+    transition:
+        min-height 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.05),
+        border-radius 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.05);
+}
+
+.container-ia-chat:has(#voice-btn.recording) {
+    min-height: 180px;
+    border-radius: 1.5rem;
+}
+
+/* ── Textarea — transparent so the container glass shows through ── */
+.input-text {
+    width: 100%;
+    padding: 0.875rem 52px 0.875rem 1.25rem;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #2d1e1c;
+    font-size: 0.95rem;
+    font-family: inherit;
+    font-weight: 400;
+    resize: none;
+    min-height: 52px;
+    max-height: 120px;
+    line-height: 1.5;
+    position: relative;
+    z-index: 2;
+}
+
+.input-text::placeholder { color: rgba(90, 62, 58, 0.55); }
+.input-text:focus        { outline: none; }
+.input-text:disabled     { opacity: 0.55; cursor: not-allowed; }
+
+/* ── Voice button (mic icon) ── */
+#voice-btn {
+    position: absolute;
+    top: 50%;
+    right: 0.375rem;
+    transform: translateY(-50%);
+    width: 38px;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.2s;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    color: rgba(90, 62, 58, 0.65);
+    cursor: pointer;
+    border-radius: 50%;
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.05);
+    z-index: 10;
+}
+
+#voice-btn:hover:not(:disabled) {
+    color: #2d1e1c;
+    background: rgba(90, 62, 58, 0.10);
+}
+#voice-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.icon-voice {
+    position: absolute;
+    transition: opacity 0.3s;
     flex-shrink: 0;
 }
 
-.btn-send:hover:not(:disabled) {
-    background-color: var(--primary-hover);
+/* Recording — button expands to fill pill, container provides the glass */
+#voice-btn.recording {
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    transform: none;
+    border-radius: 1.5rem;
+    background: transparent;
 }
 
-.btn-send:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+#voice-btn.recording .icon-voice          { opacity: 0; pointer-events: none; }
+#voice-btn:not(.recording) .ai,
+#voice-btn:not(.recording) .text-voice    { display: none; }
+#voice-btn.recording .text-voice p        { opacity: 1; }
+
+.text-voice {
+    position: absolute;
+    inset: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.text-voice p {
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+}
+
+.text-voice p:first-child {
+    font-size: 18px;
+    font-weight: 500;
+    color: transparent;
+    background-image: linear-gradient(
+        -40deg,
+        rgba(45,28,25,0.55) 0% 35%,
+        #A87A74 40%,
+        #DDD0C4 50%,
+        #A87A74 60%,
+        rgba(45,28,25,0.55) 65% 100%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    background-size: 900px;
+    animation: text-light 6s ease infinite;
+}
+
+.text-voice p:last-child {
+    font-size: 12px;
+    color: var(--text-secondary);
+    align-self: flex-start;
+}
+
+@keyframes text-light {
+    0%   { background-position: 0px; }
+    100% { background-position: 900px; }
+}
+
+/* ── Send button (hidden by default, shown when typing) ── */
+#send-btn {
+    position: absolute;
+    top: 50%;
+    right: 0.375rem;
+    transform: translateY(-50%) scale(0.25);
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border: none;
+    cursor: pointer;
+    color: #EDE3D9;
+    background: linear-gradient(to top right, #2d1e1c, #A87A74);
+    box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.05);
+    z-index: 20;
+}
+
+#send-btn:hover:not(:disabled) { box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.6); }
+#send-btn:active                { scale: 0.9; }
+
+/* ── Cancel recording button ── */
+.cancel-recording-btn {
+    display: none;
+    position: absolute;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: rgba(160, 48, 35, 0.80);
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 400;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    z-index: 30;
+    white-space: nowrap;
+}
+
+.cancel-recording-btn:hover {
+    color: rgba(160, 48, 35, 1);
+}
+
+.container-ia-chat:has(#voice-btn.recording) .cancel-recording-btn {
+    display: flex;
+}
+
+/* Hide textarea content during recording */
+.container-ia-chat:has(#voice-btn.recording) .input-text {
+    visibility: hidden;
+}
+
+/* Show send / hide voice when typing */
+.container-ia-chat.has-text #send-btn {
+    transform: translateY(-50%) scale(1);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all;
+}
+
+.container-ia-chat.has-text #voice-btn {
+    transform: translateY(-50%) scale(0.25);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* ===== AI ORB (voice recording visual) ===== */
+.ai {
+    --z: 0;
+    --s: 300px;
+    --p: calc(var(--s) / 4);
+    width: var(--s);
+    aspect-ratio: 1;
+    padding: var(--p);
+    display: grid;
+    place-items: center;
+    position: relative;
+    animation: circle1 5s ease-in-out infinite;
+}
+
+.ai::before, .ai::after {
+    content: "";
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 50%; height: 50%;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 120, 200, 0.8);
+    box-shadow: 0 0 30px rgba(255, 0, 128, 0.95);
+    filter: blur(5px);
+    transform: translate(-50%, -50%);
+    animation: wave 1.5s linear infinite;
+}
+
+.ai::after { animation-delay: 0.4s; }
+
+.label-voice.recording .ai {
+    --s: 130px;
+}
+
+@keyframes wave {
+    0%   { transform: translate(-50%,-50%) scale(1); opacity: 0; box-shadow: 0 0 50px rgba(255,0,128,0.95); }
+    35%  { transform: translate(-50%,-50%) scale(1.3); opacity: 1; }
+    70%, 100% { transform: translate(-50%,-50%) scale(1.6); opacity: 0; box-shadow: 0 0 60px rgba(255,140,0,0.5); }
+}
+
+@keyframes circle1 {
+    0%  { transform: scale(0.97); }
+    15% { transform: scale(1); }
+    30% { transform: scale(0.98); }
+    45% { transform: scale(1); }
+    60% { transform: scale(0.97); }
+    85% { transform: scale(1); }
+    100%{ transform: scale(0.97); }
+}
+
+.ai .container {
+    overflow: hidden;
+    background: #6A1428;
+    width: 100%;
+    border-radius: 50%;
+    aspect-ratio: 1;
+    position: relative;
+    display: grid;
+    place-items: center;
+}
+
+.glass {
+    overflow: hidden;
+    position: absolute;
+    inset: calc(var(--p) - 4px);
+    border-radius: 50%;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 50px rgba(255,0,128,0.45), 0 50px 50px rgba(0,0,0,0.35), 0 0 25px rgba(255,255,255,0.9);
+    background: radial-gradient(75px at 70% 30%, rgba(255,200,230,0.75), transparent);
+}
+
+.rings {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    position: absolute;
+    inset: 0;
+    perspective: 11rem;
+    opacity: 0.9;
+}
+
+.rings::before, .rings::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 6px solid transparent;
+    mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    background: linear-gradient(#ff0080, #ff8c00, #E83050, #9020A0, #ff0080, #FF4060) border-box;
+    mask-composite: exclude;
+    -webkit-mask-composite: destination-out;
+}
+
+.rings::before { animation: ring180 10s ease-in-out infinite; }
+.rings::after  { animation: ring90 10s ease-in-out infinite; }
+
+@keyframes ring180 {
+    0%,25%  { transform: rotateY(180deg) rotateX(180deg) rotateZ(180deg); }
+    50%,80% { transform: rotateY(360deg) rotateX(360deg) rotateZ(360deg); }
+    100%    { transform: rotateY(540deg) rotateX(540deg) rotateZ(540deg); }
+}
+
+@keyframes ring90 {
+    0%     { transform: rotateY(90deg) rotateX(90deg) rotateZ(90deg); }
+    25%    { transform: rotateY(90deg) rotateX(90deg) rotateZ(90deg) scale(1.1); }
+    50%,75%{ transform: rotateY(270deg) rotateX(270deg) rotateZ(270deg); }
+    100%   { transform: rotateY(450deg) rotateX(450deg) rotateZ(450deg); }
+}
+
+.c {
+    position: absolute;
+    width: 300px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+}
+
+.c1 { background: radial-gradient(50% 50% at center, #ff0080, #ff8c00); width: 200px; animation: ai1 5.5s linear infinite; }
+.c2 { background: radial-gradient(50% 50% at center, #FFAAC8, #E84070); width: 100px; animation: ai2 6s linear infinite; }
+.c3 { background: radial-gradient(50% 50% at center, #ff0080, transparent); width: 150px; opacity: 0.85; animation: ai3 4.8s linear infinite; }
+.c4 { background: #3A0830; animation: ai4 5.2s linear infinite; }
+
+@keyframes ai1 {
+    0%   { transform: rotate(0deg) translate(50%) scale(0.9); opacity: 0; }
+    25%  { transform: rotate(90deg) translate(50%) scale(1.8); opacity: 1; }
+    50%  { transform: rotate(180deg) translate(50%) scale(0.7); opacity: 0.4; }
+    75%  { transform: rotate(270deg) translate(50%) scale(1.2); opacity: 1; }
+    100% { transform: rotate(360deg) translate(50%) scale(0.9); opacity: 0; }
+}
+
+@keyframes ai2 {
+    0%   { transform: rotate(90deg) translate(50%) scale(0.5); }
+    25%  { transform: rotate(180deg) translate(50%) scale(1.7); opacity: 0; }
+    50%  { transform: rotate(270deg) translate(50%) scale(1); opacity: 0; }
+    75%  { transform: rotate(360deg) translate(50%) scale(0.8); opacity: 0; }
+    100% { transform: rotate(450deg) translate(50%) scale(0.5); opacity: 1; }
+}
+
+@keyframes ai3 {
+    0%   { transform: rotate(180deg) translate(50%) scale(0.8); opacity: 0.8; }
+    25%  { transform: rotate(270deg) translate(50%) scale(1.5); }
+    50%  { transform: rotate(360deg) translate(50%) scale(0.6); opacity: 0.4; }
+    75%  { transform: rotate(450deg) translate(50%) scale(1.3); opacity: 0.7; }
+    100% { transform: rotate(540deg) translate(50%) scale(0.8); opacity: 0.8; }
+}
+
+@keyframes ai4 {
+    0%   { transform: rotate(270deg) translate(50%) scale(1); opacity: 1; }
+    25%  { transform: rotate(360deg) translate(50%) scale(0.7); }
+    50%  { transform: rotate(450deg) translate(50%) scale(1.6); opacity: 0.5; }
+    75%  { transform: rotate(540deg) translate(50%) scale(0.9); opacity: 0.8; }
+    100% { transform: rotate(630deg) translate(50%) scale(1); opacity: 1; }
 }
 
 /* Profile Modal */
@@ -484,3 +971,329 @@ body {
     justify-content: space-between;
     gap: 16px;
 }
+
+/* ===== ORB INTERFACE (primary Siri-like voice mode) ===== */
+.orb-interface {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    padding-bottom: 8px;
+    /* transition for show/hide */
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.orb-interface.hidden {
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    position: absolute;
+}
+
+.orb-voice-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* size the orb */
+}
+
+.orb-voice-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.orb-voice-btn:not(:disabled):hover {
+    transform: scale(1.06);
+}
+
+.orb-voice-btn:not(:disabled):active {
+    transform: scale(0.96);
+}
+
+/* Override orb size for the standalone orb interface */
+.orb-interface .ai {
+    --s: 160px;
+}
+
+/* Recording state on standalone orb — more intense pulsing */
+.orb-voice-btn.recording .ai::before,
+.orb-voice-btn.recording .ai::after {
+    animation-duration: 1s;
+    border-color: rgba(255, 80, 150, 0.95);
+    box-shadow: 0 0 40px rgba(255, 0, 128, 1);
+}
+
+.orb-hint-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    width: 200px;
+    position: relative;
+}
+
+.orb-hint {
+    font-size: 13px;
+    font-family: inherit;
+    color: rgba(90, 52, 40, 0.55);
+    margin: 0;
+    letter-spacing: 0.02em;
+    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.05), opacity 0.35s ease;
+}
+
+.orb-cancel-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border: none;
+    background: transparent;
+    color: rgba(160, 48, 35, 0.80);
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 400;
+    cursor: pointer;
+    padding: 0;
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    transform: translateX(8px);
+    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.05), opacity 0.35s ease;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* Recording state — hint slides left, cancel fades in */
+.orb-interface:has(#orb-voice-btn.recording) .orb-hint {
+    transform: translateX(-44px);
+    opacity: 0.7;
+}
+
+.orb-interface:has(#orb-voice-btn.recording) .orb-cancel-btn {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+/* Type instead button — inactive during voice session */
+.toggle-chat-btn.orb-busy {
+    opacity: 0.28;
+    filter: blur(1px);
+    pointer-events: none;
+    transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+/* ===== "Type instead" animated button ===== */
+.tcb-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+.toggle-chat-btn {
+    --border-radius: 24px;
+    --padding: 4px;
+    --transition: 0.4s;
+    --button-color: rgba(20, 10, 8, 0.14);
+    --highlight-color-hue: 340deg;
+
+    position: relative;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5em 1.1em 0.5em 0.9em;
+    font-family: inherit;
+    font-size: 0.82em;
+    font-weight: 400;
+    background-color: var(--button-color);
+    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    box-shadow:
+        inset 0px 1px 1px rgba(255,255,255,0.2),
+        inset 0px 2px 2px rgba(255,255,255,0.15),
+        inset 0px 4px 4px rgba(255,255,255,0.1),
+        inset 0px 8px 8px rgba(255,255,255,0.05),
+        inset 0px 16px 16px rgba(255,255,255,0.05),
+        0px -1px 1px rgba(0,0,0,0.02),
+        0px -2px 2px rgba(0,0,0,0.03),
+        0px -4px 4px rgba(0,0,0,0.05),
+        0px -8px 8px rgba(0,0,0,0.06),
+        0px -16px 16px rgba(0,0,0,0.08);
+    border: solid 1px #fff2;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: box-shadow var(--transition), border var(--transition), background-color var(--transition);
+}
+
+.toggle-chat-btn::before {
+    content: "";
+    position: absolute;
+    top: calc(0px - var(--padding));
+    left: calc(0px - var(--padding));
+    width: calc(100% + var(--padding) * 2);
+    height: calc(100% + var(--padding) * 2);
+    border-radius: calc(var(--border-radius) + var(--padding));
+    pointer-events: none;
+    z-index: -1;
+    transition: box-shadow var(--transition), filter var(--transition);
+    box-shadow:
+        0 -8px 8px -6px #0000 inset,
+        0 -16px 16px -8px #00000000 inset,
+        1px 1px 1px #fff2,
+        2px 2px 2px #fff1,
+        -1px -1px 1px #0002,
+        -2px -2px 2px #0001;
+}
+
+.toggle-chat-btn::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image: linear-gradient(
+        0deg,
+        #fff,
+        hsl(var(--highlight-color-hue), 100%, 70%),
+        hsla(var(--highlight-color-hue), 100%, 70%, 50%),
+        8%,
+        transparent
+    );
+    opacity: 0;
+    transition: opacity var(--transition), filter var(--transition);
+}
+
+.toggle-chat-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Hover */
+.toggle-chat-btn:not(:disabled):hover {
+    border: solid 1px hsla(var(--highlight-color-hue), 100%, 80%, 40%);
+}
+.toggle-chat-btn:not(:disabled):hover::before {
+    box-shadow:
+        0 -8px 8px -6px #fffa inset,
+        0 -16px 16px -8px hsla(var(--highlight-color-hue), 100%, 70%, 30%) inset,
+        1px 1px 1px #fff2, 2px 2px 2px #fff1,
+        -1px -1px 1px #0002, -2px -2px 2px #0001;
+}
+.toggle-chat-btn:not(:disabled):hover::after {
+    opacity: 1;
+    mask-image: linear-gradient(0deg, #fff, transparent);
+}
+.toggle-chat-btn:not(:disabled):hover .tcb-svg {
+    stroke: #fff;
+    filter: drop-shadow(0 0 3px hsl(var(--highlight-color-hue), 100%, 70%));
+    animation: none;
+}
+
+/* Active */
+.toggle-chat-btn:not(:disabled):active {
+    border: solid 1px hsla(var(--highlight-color-hue), 100%, 80%, 70%);
+    background-color: hsla(var(--highlight-color-hue), 50%, 20%, 0.5);
+}
+.toggle-chat-btn:not(:disabled):active::before {
+    box-shadow:
+        0 -8px 12px -6px #fffa inset,
+        0 -16px 16px -8px hsla(var(--highlight-color-hue), 100%, 70%, 80%) inset,
+        1px 1px 1px #fff4, 2px 2px 2px #fff2,
+        -1px -1px 1px #0002, -2px -2px 2px #0001;
+}
+.toggle-chat-btn:not(:disabled):active::after {
+    opacity: 1;
+    mask-image: linear-gradient(0deg, #fff, transparent);
+    filter: brightness(200%);
+}
+
+/* SVG icon */
+.tcb-svg {
+    height: 18px;
+    width: 18px;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+    stroke: rgba(255,255,255,0.65);
+    animation: tcb-flicker 2s linear infinite;
+    animation-delay: 0.5s;
+    filter: drop-shadow(0 0 2px rgba(255,255,255,0.5));
+    transition: stroke var(--transition), filter var(--transition);
+}
+@keyframes tcb-flicker {
+    50% { opacity: 0.4; }
+}
+
+/* Text wrapper */
+.tcb-txt-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 1.2em;
+    white-space: nowrap;
+}
+.tcb-txt-1 {
+    position: relative;
+    white-space: nowrap;
+    animation: tcb-appear 1s ease-in-out forwards;
+}
+.tcb-txt-2 {
+    position: absolute;
+    white-space: nowrap;
+    opacity: 0;
+}
+
+@keyframes tcb-appear {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+/* Letters */
+.tcb-letter {
+    position: relative;
+    display: inline-block;
+    color: rgba(255,255,255,0.5);
+    animation: tcb-letter-anim 2s ease-in-out infinite;
+    transition: color var(--transition), text-shadow var(--transition);
+}
+@keyframes tcb-letter-anim {
+    50% { text-shadow: 0 0 3px rgba(255,255,255,0.7); color: #fff; }
+}
+
+/* Letter delays */
+.tcb-letter:nth-child(1)  { animation-delay: 0s; }
+.tcb-letter:nth-child(2)  { animation-delay: 0.08s; }
+.tcb-letter:nth-child(3)  { animation-delay: 0.16s; }
+.tcb-letter:nth-child(4)  { animation-delay: 0.24s; }
+.tcb-letter:nth-child(5)  { animation-delay: 0.32s; }
+.tcb-letter:nth-child(6)  { animation-delay: 0.40s; }
+.tcb-letter:nth-child(7)  { animation-delay: 0.48s; }
+.tcb-letter:nth-child(8)  { animation-delay: 0.56s; }
+.tcb-letter:nth-child(9)  { animation-delay: 0.64s; }
+.tcb-letter:nth-child(10) { animation-delay: 0.72s; }
+.tcb-letter:nth-child(11) { animation-delay: 0.80s; }
+.tcb-letter:nth-child(12) { animation-delay: 0.88s; }
+
+/* ===== PILL INTERFACE (secondary chat mode) ===== */
+.pill-interface {
+    display: none;
+    align-items: flex-end;
+    width: 100%;
+    max-width: 800px;
+    gap: 0;
+    /* transition for show/hide */
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.pill-interface.visible {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+

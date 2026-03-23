@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - Amanda</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Lexend+Deca:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/common.css">
+    <link rel="stylesheet" href="/static/css/auth.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Amanda</h1>
+                <p>Email Verification</p>
+            </div>
+
+            <div id="loading-message" style="text-align:center; color: var(--text-secondary, #666); font-size: 0.9rem;">
+                Verifying your email…
+            </div>
+
+            <div id="success-message" class="success-message" style="display:none;"></div>
+            <div id="error-message" class="error-message" style="display:none;"></div>
+
+            <div id="action-area" style="display:none; margin-top: 20px;">
+                <a href="/auth/login.html" class="btn btn-primary" style="display:block; text-align:center; text-decoration:none;">
+                    Go to Login
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { api } from '/static/js/api.js';
+
+        const loadingEl = document.getElementById('loading-message');
+        const successEl = document.getElementById('success-message');
+        const errorEl = document.getElementById('error-message');
+        const actionArea = document.getElementById('action-area');
+
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+
+        async function verify() {
+            if (!token) {
+                loadingEl.style.display = 'none';
+                errorEl.textContent = 'No verification token found. Please check your email link.';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            try {
+                const result = await api.request('/api/auth/verify-email', {
+                    method: 'POST',
+                    body: JSON.stringify({ token })
+                });
+
+                loadingEl.style.display = 'none';
+                actionArea.style.display = 'block';
+
+                if (result.data && result.data.success) {
+                    successEl.textContent = result.data.message || 'Email verified! You can now log in.';
+                    successEl.style.display = 'block';
+                } else {
+                    errorEl.textContent = result.data?.message || 'Verification failed. The link may have expired.';
+                    errorEl.style.display = 'block';
+                }
+            } catch (error) {
+                loadingEl.style.display = 'none';
+                errorEl.textContent = 'An error occurred. Please try again.';
+                errorEl.style.display = 'block';
+            }
+        }
+
+        verify();
+    </script>
+</body>
+</html>

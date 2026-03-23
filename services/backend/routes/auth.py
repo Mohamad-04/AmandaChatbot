@@ -79,22 +79,20 @@ def signup():
                 'message': 'Email already registered'
             }), 409
         
-        # Create new user
+        # Create new user with a verification token
         user = User(email=email)
         user.set_password(password)
-        
+        token = user.generate_verification_token()
+
         db.session.add(user)
         db.session.commit()
-        
-        # Auto-login after signup
-        session.clear()
-        session.permanent = True
-        session['user_id'] = user.id
-        session['email'] = user.email
-        
+
+        from services.email_service import send_verification_email
+        send_verification_email(user.email, token)
+
         return jsonify({
             'success': True,
-            'message': 'Account created successfully',
+            'message': 'Account created. Please check your email to verify your account before logging in.',
             'user_id': user.id
         }), 201
         
@@ -151,7 +149,14 @@ def login():
                 'success': False,
                 'message': 'Invalid email or password'
             }), 401
-        
+
+        # Require email verification before allowing login
+        if not user.is_verified:
+            return jsonify({
+                'success': False,
+                'message': 'Please verify your email address before logging in. Check your inbox or request a new link.'
+            }), 403
+
         # Create session
         session.clear()
         session.permanent = True
@@ -216,11 +221,13 @@ def check():
     """
     try:
         if 'user_id' in session:
+            user = User.query.get(session['user_id'])
             return jsonify({
                 'authenticated': True,
                 'user': {
                     'id': session['user_id'],
-                    'email': session.get('email')
+                    'email': session.get('email'),
+                    'is_admin': user.is_admin if user else False
                 }
             }), 200
         else:

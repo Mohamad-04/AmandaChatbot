@@ -111,13 +111,38 @@ a:hover { color: #2d1e1c; }
 
 .sidebar-footer { border-top-color: rgba(168, 122, 116, 0.18); }
 
-/* Profile icon button */
+/* Generic icon buttons */
 .btn-icon { color: #6b4e4b; }
 .btn-icon:hover {
   color: #2d1e1c;
   background: rgba(168, 122, 116, 0.10);
   border-radius: 8px;
 }
+
+/* Profile button – icon only */
+#profile-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#profile-btn:focus { outline: none; }
+.profile-btn-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-btn-inner svg {
+  width: 22px;
+  height: 22px;
+  fill: #6b3e38;
+  display: block;
+  transition: fill 0.2s ease;
+}
+#profile-btn:hover .profile-btn-inner svg { fill: #2d1e1c; }
 
 /* =========================================================
    MAIN CHAT AREA
@@ -162,15 +187,19 @@ a:hover { color: #2d1e1c; }
   padding: 14px 20px;
 }
 
+/* Glass lives on .container-ia-chat — textarea is just transparent text */
 #message-input {
-  background: transparent;
-  border-color: transparent;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   color: #2d1e1c;
-  border-radius: 14px;
+  border-radius: 0;
 }
-#message-input:focus        { border-color: transparent; }
-#message-input:disabled     { background: transparent; cursor: not-allowed; }
-#message-input::placeholder { color: #a89290; }
+#message-input:focus        { outline: none; }
+#message-input:disabled     { opacity: 0.55; cursor: not-allowed; }
+#message-input::placeholder { color: rgba(90, 62, 58, 0.55); }
 
 /* Send button */
 .btn-send {
@@ -220,6 +249,9 @@ a:hover { color: #2d1e1c; }
   box-shadow: none;
   color: #2d1e1c;
   font-family: inherit;
+  border-radius: 50px;
+  align-self: center;
+  line-height: 1;
 }
 .btn-voice-chat:hover {
   background: rgba(45, 30, 28, 0.18);
@@ -289,6 +321,29 @@ input:not([type="checkbox"])::placeholder, textarea::placeholder { color: #a8929
   padding: 32px 24px !important;
   gap: 4px !important;
 }
+/* Empty state: absolute-centered so layout changes never move it */
+#messages-container:has(#empty-state:only-child) {
+  position: relative;
+}
+#messages-container:has(#empty-state:only-child) #empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 760px;
+}
+@keyframes emptySlideDown {
+  from { transform: translate(-50%, calc(-50% - 40px)); opacity: 0.4; }
+  to   { transform: translate(-50%, -50%);              opacity: 1;   }
+}
+@keyframes emptySlideUp {
+  from { transform: translate(-50%, calc(-50% + 40px)); opacity: 0; }
+  to   { transform: translate(-50%, -50%);              opacity: 1; }
+}
+#empty-state.anim-slide-down { animation: emptySlideDown 0.35s ease forwards; }
+#empty-state.anim-slide-up   { animation: emptySlideUp   0.35s ease forwards; }
+
 #messages-container > .message,
 #messages-container > .typing-indicator,
 #messages-container > #empty-state {
@@ -347,7 +402,10 @@ input:not([type="checkbox"])::placeholder, textarea::placeholder { color: #a8929
   color: #2d1e1c !important;
   font-size: 1.1rem;
   font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
 }
+body.dark-theme .chat-header h2 { color: rgba(255, 255, 255, 0.92) !important; }
 
 /* --- Input area: centered pill --- */
 .input-area {
@@ -376,70 +434,19 @@ input:not([type="checkbox"])::placeholder, textarea::placeholder { color: #a8929
   border-color: rgba(168, 122, 116, 0.40);
   background: rgba(241, 227, 211, 0.72);
 }
-#message-input {
-  border: none !important;
-  background: transparent !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  min-height: 24px !important;
-  max-height: 160px !important;
-  box-shadow: none !important;
-  color: #2d1e1c !important;
-}
 .input-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-#send-btn {
-  width: 34px !important;
-  height: 34px !important;
-  min-width: 34px;
-  border-radius: 8px !important;
-  background: rgba(45, 30, 28, 0.12) !important;
-  border: 1px solid rgba(45, 30, 28, 0.12) !important;
-  color: #2d1e1c !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 !important;
-}
-#send-btn:hover:not(:disabled) { background: rgba(45, 30, 28, 0.20) !important; }
-#send-btn:disabled              { opacity: 0.35 !important; }
-
-#voice-btn {
-  width: 34px !important;
-  height: 34px !important;
-  background: transparent !important;
-  border: none !important;
-  color: #6b4e4b !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 !important;
-  border-radius: 8px !important;
-}
-#voice-btn:hover:not(:disabled) {
-  color: #2d1e1c !important;
-  background: rgba(45, 30, 28, 0.08) !important;
-}
-#voice-btn:disabled  { opacity: 0.3 !important; }
-#voice-btn.recording {
-  color: #c0392b !important;
-  background: rgba(192, 57, 43, 0.10) !important;
-}
-
-/* --- Voice status: float above input --- */
-#voice-status {
-  margin: 0 24px 6px;
-  border-radius: 10px;
-}
+/* Voice status bar hidden — recording state is shown via expanded pill */
+#voice-status { display: none !important; }
 
 /* --- Empty state: OpenAI-style greeting --- */
 .empty-state {
   text-align: center !important;
-  padding: 60px 16px !important;
-  display: flex !important;
+  padding: 40px 16px !important;
+  display: flex;
   flex-direction: column !important;
   align-items: center !important;
 }
@@ -600,6 +607,8 @@ body.dark-theme .btn-icon:hover {
   color: rgba(255, 255, 255, 0.92);
   background: rgba(241, 227, 211, 0.08);
 }
+body.dark-theme .profile-btn-inner svg { fill: rgba(255, 255, 255, 0.82); }
+body.dark-theme #profile-btn:hover .profile-btn-inner svg { fill: rgba(255, 255, 255, 1); }
 
 /* --- Chat header --- */
 body.dark-theme .chat-header {
@@ -626,6 +635,7 @@ body.dark-theme .message.assistant .message-bubble {
 body.dark-theme .message.user .message-time      { color: rgba(255, 255, 255, 0.50); }
 body.dark-theme .message.assistant .message-time { color: rgba(255, 255, 255, 0.40); }
 body.dark-theme .typing-indicator span { background-color: rgba(241, 227, 211, 0.35); }
+body.dark-theme .three-body { --uib-color: #DDD0C4; }
 
 /* --- Input --- */
 body.dark-theme .input-box {
@@ -636,25 +646,27 @@ body.dark-theme .input-box:focus-within {
   border-color: rgba(241, 227, 211, 0.25);
   background: rgba(30, 18, 16, 0.70);
 }
+/* Dark pill — glass on .container-ia-chat, textarea just changes text color */
+body.dark-theme .container-ia-chat {
+  background: rgba(107, 80, 72, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow:
+    4px 8px 28px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
+}
 body.dark-theme #message-input {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   color: rgba(255, 255, 255, 0.92) !important;
 }
-body.dark-theme #message-input::placeholder { color: rgba(255, 255, 255, 0.40); }
-
-body.dark-theme #send-btn {
-  background: rgba(241, 227, 211, 0.12) !important;
-  border-color: rgba(241, 227, 211, 0.14) !important;
-  color: rgba(255, 255, 255, 0.88) !important;
-}
-body.dark-theme #send-btn:hover:not(:disabled) {
-  background: rgba(241, 227, 211, 0.20) !important;
-}
+body.dark-theme #message-input::placeholder { color: rgba(255, 255, 255, 0.38) !important; }
 body.dark-theme #voice-btn {
-  color: rgba(255, 255, 255, 0.55) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
 }
 body.dark-theme #voice-btn:hover:not(:disabled) {
-  color: rgba(255, 255, 255, 0.92) !important;
-  background: rgba(241, 227, 211, 0.08) !important;
+  color: rgba(255, 255, 255, 0.98) !important;
+  background: rgba(241, 227, 211, 0.12) !important;
 }
 
 /* --- Voice status --- */
@@ -667,6 +679,8 @@ body.dark-theme .btn-voice-chat {
   background: rgba(241, 227, 211, 0.10);
   border-color: rgba(241, 227, 211, 0.14);
   color: rgba(255, 255, 255, 0.88);
+  border-radius: 50px;
+  align-self: center;
 }
 
 /* --- Suggestion chips --- */
@@ -720,6 +734,37 @@ body.dark-theme select:focus {
 }
 body.dark-theme input:not([type="checkbox"])::placeholder,
 body.dark-theme textarea::placeholder { color: rgba(255, 255, 255, 0.40); }
+
+/* .input-text is transparent — dark glass is handled by body.dark-theme .container-ia-chat */
+
+/* Cancel recording button — dark mode */
+body.dark-theme .cancel-recording-btn {
+  color: rgba(224, 112, 96, 0.75);
+}
+body.dark-theme .cancel-recording-btn:hover {
+  color: rgba(224, 112, 96, 1);
+}
+
+/* STT button — dark mode */
+body.dark-theme .stt-switch {
+  background: rgba(107, 80, 72, 0.72);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 2px 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255,255,255,0.10);
+  color: rgba(255, 255, 255, 0.82);
+}
+body.dark-theme .stt-switch:hover {
+  background: rgba(120, 92, 84, 0.85);
+}
+
+/* Orb interface — dark mode */
+body.dark-theme .orb-hint {
+  color: rgba(241, 227, 211, 0.45);
+}
+/* toggle-chat-btn is already dark — no dark-mode override needed */
+/* Orb cancel button — dark mode */
+body.dark-theme .orb-cancel-btn {
+  color: rgba(224, 112, 96, 0.75);
+}
 
 /* --- Links --- */
 body.dark-theme a       { color: rgba(255, 255, 255, 0.70); }

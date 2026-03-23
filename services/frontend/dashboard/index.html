@@ -28,13 +28,16 @@
             <div id="chat-list" class="chat-list">
                 <!-- Chat items will be dynamically inserted here -->
             </div>
-            
+
             <div class="sidebar-footer">
-                <button id="profile-btn" class="btn-icon" title="Profile">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
+                <button id="profile-btn" title="Profile">
+                    <div class="profile-btn-inner">
+                        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <g data-name="Layer 2" id="Layer_2">
+                                <path d="m15.626 11.769a6 6 0 1 0 -7.252 0 9.008 9.008 0 0 0 -5.374 8.231 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 9.008 9.008 0 0 0 -5.374-8.231zm-7.626-4.769a4 4 0 1 1 4 4 4 4 0 0 1 -4-4zm10 14h-12a1 1 0 0 1 -1-1 7 7 0 0 1 14 0 1 1 0 0 1 -1 1z"></path>
+                            </g>
+                        </svg>
+                    </div>
                 </button>
             </div>
         </div>
@@ -48,23 +51,18 @@
                             <path d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z"></path>
                         </svg>
                     </button>
-                    <button id="delete-chat-btn" class="chat-delete-btn" title="Delete chat" style="display: none;">
-                        <svg class="chat-delete-icon" viewBox="0 0 448 512">
-                            <path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"></path>
-                        </svg>
-                    </button>
                 </div>
                 <h2 id="chat-title">Select a chat or start a new one</h2>
                 <div class="chat-header-right">
-                    <button id="voice-chat-btn" class="btn-voice-chat" title="Start voice chat" style="display: none;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                            <line x1="12" y1="19" x2="12" y2="23"></line>
-                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                    <a id="admin-dashboard-btn" href="http://localhost:5000/admin" target="_blank" class="admin-dashboard-btn" style="display:none;" title="Admin Dashboard">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"/>
+                            <rect x="14" y="3" width="7" height="7"/>
+                            <rect x="14" y="14" width="7" height="7"/>
+                            <rect x="3" y="14" width="7" height="7"/>
                         </svg>
-                        Voice Chat
-                    </button>
+                        Admin
+                    </a>
                 </div>
             </div>
             
@@ -73,11 +71,6 @@
                 <div id="empty-state" class="empty-state">
                     <h3>What can I help with?</h3>
                     <p>Amanda is here to listen, support, and guide you.</p>
-                    <div class="suggestion-chips">
-                        <button class="suggestion-chip" onclick="document.getElementById('message-input').value='How are you feeling today?'; document.getElementById('message-input').focus()">How are you feeling today?</button>
-                        <button class="suggestion-chip" onclick="document.getElementById('message-input').value='I need someone to talk to'; document.getElementById('message-input').focus()">I need someone to talk to</button>
-                        <button class="suggestion-chip" onclick="document.getElementById('message-input').value='Help me process my emotions'; document.getElementById('message-input').focus()">Help me process my emotions</button>
-                    </div>
                 </div>
             </div>
             
@@ -89,33 +82,100 @@
             </div>
 
             <div class="input-area">
-                <div class="input-wrapper">
-                    <div class="input-box">
-                        <textarea
-                            id="message-input"
-                            placeholder="Message Amanda..."
-                            rows="1"
-                            disabled
-                        ></textarea>
-                        <div class="input-actions">
-                            <button id="voice-btn" class="btn btn-voice" title="Voice message" disabled>
-                                <svg id="voice-icon-mic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                                    <line x1="12" y1="19" x2="12" y2="23"></line>
-                                    <line x1="8" y1="23" x2="16" y2="23"></line>
-                                </svg>
-                                <svg id="voice-icon-stop" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
-                                    <rect x="6" y="6" width="12" height="12" rx="2"></rect>
-                                </svg>
-                            </button>
-                            <button id="send-btn" class="btn btn-send" disabled>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                </svg>
-                            </button>
+                <!-- PRIMARY: Orb interface -->
+                <div class="orb-interface" id="orb-interface">
+                    <button id="orb-voice-btn" class="orb-voice-btn" disabled>
+                        <div class="ai">
+                            <div class="container">
+                                <div class="c c4"></div>
+                                <div class="c c1"></div>
+                                <div class="c c2"></div>
+                                <div class="c c3"></div>
+                                <div class="rings"></div>
+                            </div>
+                            <div class="glass"></div>
                         </div>
+                    </button>
+                    <div class="orb-hint-row">
+                        <p class="orb-hint" id="orb-hint">Tap to speak</p>
+                        <button id="orb-cancel-btn" class="orb-cancel-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            Cancel
+                        </button>
+                    </div>
+                    <div class="tcb-wrapper">
+                    <button id="toggle-chat-btn" class="toggle-chat-btn" disabled>
+                        <svg class="tcb-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        <div class="tcb-txt-wrapper">
+                            <div class="tcb-txt-1">
+                                <span class="tcb-letter">T</span><span class="tcb-letter">y</span><span class="tcb-letter">p</span><span class="tcb-letter">e</span><span class="tcb-letter">&nbsp;</span><span class="tcb-letter">i</span><span class="tcb-letter">n</span><span class="tcb-letter">s</span><span class="tcb-letter">t</span><span class="tcb-letter">e</span><span class="tcb-letter">a</span><span class="tcb-letter">d</span>
+                            </div>
+                            <div class="tcb-txt-2">
+                                <span class="tcb-letter">C</span><span class="tcb-letter">h</span><span class="tcb-letter">a</span><span class="tcb-letter">t</span><span class="tcb-letter">&nbsp;</span><span class="tcb-letter">m</span><span class="tcb-letter">o</span><span class="tcb-letter">d</span><span class="tcb-letter">e</span>
+                            </div>
+                        </div>
+                    </button>
+                    </div>
+                </div>
+
+                <!-- SECONDARY: Pill interface (hidden by default) -->
+                <div class="pill-interface" id="pill-interface">
+                    <input type="checkbox" id="stt-checkbox" disabled>
+                    <label class="stt-switch" for="stt-checkbox">
+                        <div class="stt-mic-on">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M5 3a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V3z"/>
+                                <path d="M3.5 6.5A.5.5 0 0 1 4 7v1a4 4 0 0 0 8 0V7a.5.5 0 0 1 1 0v1a5 5 0 0 1-4.5 4.975V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 .5-.5z"/>
+                            </svg>
+                        </div>
+                        <div class="stt-mic-off">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M13 8c0 .564-.094 1.107-.266 1.613l-.814-.814A4.02 4.02 0 0 0 12 8V7a.5.5 0 0 1 1 0v1zm-5 4c.818 0 1.578-.245 2.212-.667l.718.719a4.973 4.973 0 0 1-2.43.923V15h3a.5.5 0 0 1 0 1h-7a.5.5 0 0 1 0-1h3v-2.025A5 5 0 0 1 3 8V7a.5.5 0 0 1 1 0v1a4 4 0 0 0 4 4zm3-9v4.879L5.158 2.037A3.001 3.001 0 0 1 11 3z"/>
+                                <path d="M9.486 10.607 5 6.12V8a3 3 0 0 0 4.486 2.607zm-7.84-9.253 12 12 .708-.708-12-12-.708.708z"/>
+                            </svg>
+                        </div>
+                    </label>
+                    <div class="container-ia-chat" id="chat-input-container">
+                        <textarea id="message-input" class="input-text" placeholder="Message Amanda..." rows="1" disabled></textarea>
+                        <button id="voice-btn" class="label-voice" title="Voice message" disabled>
+                            <svg id="voice-icon-mic" class="icon-voice" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" d="M12 4v16m4-13v10M8 7v10m12-6v2M4 11v2"></path>
+                            </svg>
+                            <svg id="voice-icon-stop" class="icon-voice" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+                                <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+                            </svg>
+                            <div class="ai">
+                                <div class="container">
+                                    <div class="c c4"></div>
+                                    <div class="c c1"></div>
+                                    <div class="c c2"></div>
+                                    <div class="c c3"></div>
+                                    <div class="rings"></div>
+                                </div>
+                                <div class="glass"></div>
+                            </div>
+                            <div class="text-voice">
+                                <p>Listening...</p>
+                                <p>Press to stop</p>
+                            </div>
+                        </button>
+                        <button id="send-btn" class="label-text" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12l7-7l7 7m-7 7V5"></path>
+                            </svg>
+                        </button>
+                        <button id="cancel-recording-btn" class="cancel-recording-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            Cancel
+                        </button>
                     </div>
                 </div>
             </div>
