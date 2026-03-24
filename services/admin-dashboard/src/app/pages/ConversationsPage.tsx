@@ -1,3 +1,49 @@
+// =============================================================================
+// BACKEND INTEGRATION — ConversationsPage
+// =============================================================================
+// All conversation/message data below is currently hardcoded (fake). Replace with API calls.
+//
+// ── Conversation list ────────────────────────────────────────────────────────
+// Suggested endpoint:  GET /api/admin/conversations?user_id=<optional>
+// Auth:                Admin-only
+//
+// Expected JSON response shape (array):
+// [
+//   {
+//     "id":            <int>,
+//     "user":          <string email>,   -- JOIN users ON conversations.user_id = users.id
+//     "title":         <string>,         -- conversations.title (first message content or auto-generated)
+//     "date":          <string ISO date>,-- conversations.created_at
+//     "message_count": <int>             -- COUNT(*) FROM messages WHERE conversation_id = conversations.id
+//   },
+//   ...
+// ]
+//
+// ── Individual conversation messages ─────────────────────────────────────────
+// Suggested endpoint:  GET /api/admin/conversations/<id>/messages
+// Auth:                Admin-only
+//
+// Expected JSON response shape (array):
+// [
+//   {
+//     "id":        <int>,
+//     "content":   <string>,
+//     "sender":    "user" | "amanda",   -- messages.sender (or derive from role column)
+//     "timestamp": <string>             -- messages.created_at (formatted as "10:23 AM" or raw for frontend to format)
+//   },
+//   ...
+// ]
+//
+// ── Auto-refresh (Switch toggle, line ~68) ───────────────────────────────────
+// When autoRefresh is true, poll GET /api/admin/conversations every N seconds
+// (suggested interval: 15–30s). Use setInterval in a useEffect.
+//
+// DB tables needed:
+//   users          — id, email
+//   conversations  — id, user_id, title, created_at
+//   messages       — id, conversation_id, content, sender ('user'|'amanda'), created_at
+// =============================================================================
+
 import { useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +70,8 @@ export function ConversationsPage() {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState("1");
 
+  // TODO: replace with fetch('/api/admin/conversations') and store in state
+  // TODO: on selectedChatId change, fetch('/api/admin/conversations/<id>/messages')
   const chats: Chat[] = [
     {
       id: "1", user: "sarah.johnson@email.com", title: "Relationship conflict resolution",

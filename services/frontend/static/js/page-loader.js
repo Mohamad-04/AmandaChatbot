@@ -83,18 +83,20 @@
     }
   });
 
-  // Show loader on every link click (page transition)
+  // Show loader only when navigating to login, dashboard, or admin dashboard
+  const LOADER_PATHS = ['/auth/login.html', '/dashboard', 'localhost:5173', 'localhost:5174'];
   document.addEventListener('click', function (e) {
     const link = e.target.closest('a[href]');
     if (!link) return;
     const href = link.getAttribute('href');
-    // Only intercept same-origin, non-hash, non-external links
-    if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto')) return;
+    if (!href) return;
     if (link.target === '_blank') return;
+    const shouldLoad = LOADER_PATHS.some(p => href.includes(p));
+    if (!shouldLoad) return;
 
     const overlay = document.createElement('div');
     overlay.id = 'amanda-loader';
-    overlay.innerHTML = `<div class="spinner"><div class="spinner1"></div></div>`;
+    overlay.innerHTML = `<span class="loader"></span>`;
     document.body.appendChild(overlay);
   });
 })();

@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Amanda Admin</title>
+    <script>
+      (function(){
+        var t = localStorage.getItem('amanda-theme') || 'light';
+        var bg = t === 'dark' ? '#1C1A1C' : '#DDD0C4';
+        document.documentElement.style.backgroundColor = bg;
+        document.documentElement.style.margin = '0';
+        if (t === 'dark') document.documentElement.classList.add('dark');
+      })();
+    </script>
     <style>
       #amanda-loader {
         position: fixed;
@@ -60,7 +69,11 @@
           var l = document.getElementById('amanda-loader');
           if (l) {
             l.classList.add('hidden');
-            setTimeout(function () { l.remove(); }, 400);
+            setTimeout(function () {
+              l.remove();
+              window.amandaLoaderDone = true;
+              window.dispatchEvent(new CustomEvent('amanda-ready'));
+            }, 400);
           }
         }, remaining);
       }

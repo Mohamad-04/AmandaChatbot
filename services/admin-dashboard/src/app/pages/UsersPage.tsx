@@ -1,3 +1,33 @@
+// =============================================================================
+// BACKEND INTEGRATION — UsersPage
+// =============================================================================
+// All user data below is currently hardcoded (fake). Replace with API calls.
+//
+// Suggested endpoint:  GET /api/admin/users?search=<email>&filter=<all|admin|verified>
+// Auth:                Admin-only
+//
+// Expected JSON response shape (array):
+// [
+//   {
+//     "id":          <int>,
+//     "email":       <string>,
+//     "join_date":   <string ISO date>,  -- users.created_at
+//     "total_chats": <int>,              -- COUNT(*) FROM conversations WHERE user_id = users.id
+//     "last_active": <string>,           -- users.last_active_at (formatted as relative time on backend, or raw datetime to format on frontend)
+//     "is_admin":    <bool>              -- users.is_admin
+//   },
+//   ...
+// ]
+//
+// DB tables needed:
+//   users          — id, email, is_admin, is_verified, created_at, last_active_at
+//   conversations  — id, user_id  (for the total_chats count JOIN)
+//
+// "View Chats" button (Eye icon, line 102) should link to ConversationsPage
+// filtered by this user's ID. Suggested: navigate to /conversations?user_id=<id>
+// which requires GET /api/admin/conversations?user_id=<id> (see ConversationsPage).
+// =============================================================================
+
 import { useState } from "react";
 import { Search, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +47,7 @@ export function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
 
+  // TODO: replace with fetch('/api/admin/users') and store in state
   const users: User[] = [
     { id: "1", email: "sarah.johnson@email.com",  joinDate: "2026-01-15", totalChats: 23, lastActive: "2 hours ago",  isAdmin: false },
     { id: "2", email: "mike.rodriguez@email.com", joinDate: "2026-02-03", totalChats: 18, lastActive: "5 hours ago",  isAdmin: false },
