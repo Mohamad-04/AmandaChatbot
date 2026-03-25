@@ -25,6 +25,7 @@ class User(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    last_active_at = db.Column(db.DateTime, nullable=True)
 
     # Admin role
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
@@ -109,6 +110,7 @@ class User(db.Model):
             'id': self.id,
             'email': self.email,
             'created_at': self.created_at.isoformat(),
+            'last_active_at': self.last_active_at.isoformat() if self.last_active_at else None,
             'is_verified': self.is_verified,
             'is_admin': self.is_admin
         }
