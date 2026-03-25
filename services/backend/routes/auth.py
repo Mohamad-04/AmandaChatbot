@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify, session
 from database import db
 from models.user import User
 from utils.rate_limiter import rate_limit, RateLimit
+from datetime import datetime
 import re
 
 # Create blueprint
@@ -176,6 +177,10 @@ def login():
                 'success': False,
                 'message': 'Please verify your email address before logging in. Check your inbox or request a new link.'
             }), 403
+
+        # Update last active timestamp
+        user.last_active_at = datetime.utcnow()
+        db.session.commit()
 
         # Create session
         session.clear()
