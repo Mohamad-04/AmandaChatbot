@@ -1,33 +1,37 @@
+// Sliding settings panel that opens from within the chat sidebar.
+// Shows account info, app navigation, support links, and sign out.
+
 import React, { useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Animated, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { profileStyles as ps, SIDEBAR_WIDTH } from '../styles/chatSidebar.styles';
+import { profileStyles as ps, SIDEBAR_WIDTH } from '../styles/chat-sidebar.styles';
 
-import { FLASK_BASE } from '../constants/api';
+// ── Types ──────────────────────────────────────────────────────────────────
 
-// ─── TYPES ───────────────────────────────────────────────────────────────────
-type SectionProps = {
-  label: string;
+interface SectionProps {
+  label:    string;
   children: React.ReactNode;
-};
+}
 
-type RowProps = {
-  icon: string;
-  label: string;
-  value?: string;
+interface RowProps {
+  icon:     string;
+  label:    string;
+  value?:   string;
   onPress?: () => void;
-  right?: React.ReactNode;
-};
+  right?:   React.ReactNode;
+}
 
-export type ProfilePanelProps = {
-  onClose: () => void;
+export interface ProfilePanelProps {
+  onClose:         () => void;
   onCloseSidebar?: () => void;
-  userEmail?: string;
-  aiModel?: string;
-  onSignOut: () => void;
-};
+  userEmail?:      string;
+  aiModel?:        string;
+  onSignOut:       () => void;
+}
 
-// ─── SECTION ─────────────────────────────────────────────────────────────────
+// ── Small layout components — only used inside this file ───────────────────
+
+// Groups related settings rows under a labelled section header
 const Section = ({ label, children }: SectionProps) => (
   <View style={ps.section}>
     <Text style={ps.sectionLabel}>{label}</Text>
@@ -35,7 +39,7 @@ const Section = ({ label, children }: SectionProps) => (
   </View>
 );
 
-// ─── ROW ─────────────────────────────────────────────────────────────────────
+// A single tappable settings row with icon, label, and optional value or right element
 const Row = ({ icon, label, value, onPress, right }: RowProps) => (
   <TouchableOpacity
     style={ps.row}
@@ -45,37 +49,39 @@ const Row = ({ icon, label, value, onPress, right }: RowProps) => (
   >
     <Text style={ps.rowIcon}>{icon}</Text>
     <Text style={ps.rowLabel}>{label}</Text>
-    {value  ? <Text style={ps.rowValue}>{value}</Text> : null}
+    {value   ? <Text style={ps.rowValue}>{value}</Text>  : null}
     {right  ?? null}
     {onPress && !right ? <Text style={ps.rowChevron}>›</Text> : null}
   </TouchableOpacity>
 );
 
-// ─── PROFILE PANEL ───────────────────────────────────────────────────────────
+// ── Main component ─────────────────────────────────────────────────────────
+
 export default function ProfilePanel({
-  onClose, onCloseSidebar, userEmail, aiModel = 'gpt-5.1', onSignOut,
+  onClose, onCloseSidebar, userEmail, onSignOut,
 }: ProfilePanelProps) {
   const router    = useRouter();
   const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
 
-  // Slide in on mount
+  // Slides in from the right on mount
   useEffect(() => {
     Animated.timing(slideAnim, {
-      toValue:  0,
-      duration: 260,
+      toValue:         0,
+      duration:        260,
       useNativeDriver: true,
     }).start();
   }, []);
 
-  // Slide out then unmount
+  // Slides back out before unmounting
   const handleClose = () => {
     Animated.timing(slideAnim, {
-      toValue:  SIDEBAR_WIDTH,
-      duration: 220,
+      toValue:         SIDEBAR_WIDTH,
+      duration:        220,
       useNativeDriver: true,
     }).start(() => onClose());
   };
 
+  // Closes both panels then navigates after animation completes
   const navigate = (path: string) => {
     onClose();
     onCloseSidebar?.();
@@ -85,7 +91,7 @@ export default function ProfilePanel({
   return (
     <Animated.View style={[ps.panel, { transform: [{ translateX: slideAnim }] }]}>
 
-      {/* Header */}
+      {/* Header with back button */}
       <View style={ps.header}>
         <TouchableOpacity onPress={handleClose} style={ps.backBtn} activeOpacity={0.7}>
           <Text style={ps.backBtnText}>‹</Text>
@@ -96,30 +102,21 @@ export default function ProfilePanel({
 
       <ScrollView showsVerticalScrollIndicator={false}>
 
-        {/* Account */}
         <Section label="Account">
           <Row icon="✉️" label="Email" value={userEmail || '—'} />
         </Section>
 
-        {/* AI */}
-        <Section label="AI">
-          <Row icon="🤖" label="Model" value={aiModel} />
-        </Section>
-
-        {/* App */}
         <Section label="App">
           <Row icon="🏠" label="Home"            onPress={() => navigate('/')} />
           <Row icon="🗺️" label="Replay App Tour" onPress={() => navigate('/about')} />
         </Section>
 
-        {/* Support */}
         <Section label="Support">
           <Row icon="✉️" label="Contact us"     onPress={() => navigate('/contact')} />
           <Row icon="💬" label="Share feedback" onPress={() => navigate('/feedback')} />
           <Row icon="🐛" label="Report a bug"   onPress={() => navigate('/bugreport')} />
         </Section>
 
-        {/* Legal */}
         <Section label="Legal">
           <Row icon="📄" label="Terms & Conditions" onPress={() => navigate('/terms')} />
           <Row icon="🔒" label="Privacy Policy"     onPress={() => navigate('/privacy')} />
@@ -127,10 +124,10 @@ export default function ProfilePanel({
 
       </ScrollView>
 
-      {/* Sign out — always at bottom */}
+      {/* Sign out — pinned to the bottom */}
       <View style={ps.signOutWrapper}>
         <TouchableOpacity style={ps.signOutBtn} onPress={onSignOut} activeOpacity={0.8}>
-          <Text style={ps.signOutIcon}>'→'</Text>
+          <Text style={ps.signOutIcon}>→</Text>
           <Text style={ps.signOutText}>Sign out</Text>
         </TouchableOpacity>
       </View>

@@ -1,65 +1,35 @@
-import React, { useState, useRef, useEffect } from 'react';
+// Signup screen — renders the registration form and animations only.
+// All validation and API logic is delegated to useAuth hook.
+
+import React, { useRef, useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
-  KeyboardAvoidingView,
-  Platform,
-  Animated,
-  ActivityIndicator,
-  ScrollView,
+  View, Text, TextInput, TouchableOpacity,
+  SafeAreaView, KeyboardAvoidingView, Platform,
+  Animated, ActivityIndicator, ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { styles, C } from '../styles/login.styles';
+import Background from '../components/background';
 import Navbar from '../components/navbar';
+import InputField from '../components/input-field';
+import { useAuth } from '../hooks/use-auth';
+import { styles } from '../styles/signup.styles';
+import { theme } from '../constants/theme';
 
-import { FLASK_BASE as API_BASE } from '../constants/api';
-
-
-function InputField({ icon, placeholder, value, onChangeText, secureTextEntry = false, keyboardType = 'default', returnKeyType = 'next', onSubmitEditing = undefined, inputRef = undefined }) {
-  const [focused, setFocused] = useState(false);
-
-  return (
-    <View style={[styles.inputWrapper, focused && styles.inputWrapperFocused]}>
-      <Text style={styles.inputIcon}>{icon}</Text>
-      <TextInput
-        ref={inputRef}
-        style={styles.input}
-        placeholder={placeholder}
-        placeholderTextColor={C.placeholder}
-        value={value}
-        onChangeText={onChangeText}
-        secureTextEntry={secureTextEntry}
-        keyboardType={keyboardType}
-        autoCapitalize="none"
-        autoCorrect={false}
-        returnKeyType={returnKeyType}
-        onSubmitEditing={onSubmitEditing}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-      />
-    </View>
-  );
-}
-
-export default function LoginScreen() {
+export default function SignupScreen() {
   const router = useRouter();
+  const { loading, error, handleSignup } = useAuth();
 
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail]                     = useState('');
+  const [password, setPassword]               = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError]       = useState('');
-  const [loading, setLoading]   = useState(false);
 
-  const passwordRef = useRef<TextInput>(null);
+  const passwordRef        = useRef<TextInput>(null);
   const confirmPasswordRef = useRef<TextInput>(null);
-  const shakeAnim   = useRef(new Animated.Value(0)).current;
-  const fadeAnim    = useRef(new Animated.Value(0)).current;
-  const slideAnim   = useRef(new Animated.Value(30)).current;
+  const shakeAnim          = useRef(new Animated.Value(0)).current;
+  const fadeAnim           = useRef(new Animated.Value(0)).current;
+  const slideAnim          = useRef(new Animated.Value(30)).current;
 
+  // Fade + slide in the form on first render
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim,  { toValue: 1, duration: 500, useNativeDriver: true }),
@@ -67,8 +37,7 @@ export default function LoginScreen() {
     ]).start();
   }, []);
 
- 
-  
+  // Shakes the card to signal a failed signup attempt
   const shake = () => {
     Animated.sequence([
       Animated.timing(shakeAnim, { toValue: 10,  duration: 60, useNativeDriver: true }),
@@ -78,155 +47,117 @@ export default function LoginScreen() {
     ]).start();
   };
 
-  const showError = (msg: string) => { setError(msg); shake(); };
-
-  const handleLogin = async () => {
-    setError('');
-    if (!email.trim() || !password) { showError('Please fill in both fields'); return; }
-
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-if (!emailRegex.test(email.trim())) {
-  showError('Please enter a valid email address'); return;
-}
-if (password.length < 8) {
-  showError('Password must be at least 8 characters'); return;
-}
-if (password !== confirmPassword) {
-  showError('Passwords do not match'); return;
-}
-    
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/auth/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        router.replace('/chat');
-      } else {
-        showError(data.message || 'Login failed. Please try again.');
-      }
-    } catch {
-      showError('Could not connect. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  const onPressSignup = async () => {
+    const err = await handleSignup(email, password, confirmPassword);
+    if (err) shake();
   };
 
   return (
-    <View style={styles.screen}>
-      <SafeAreaView style={styles.safe}>
-        <StatusBar barStyle="dark-content" />
+    <Background>
+      <View style={styles.screen}>
+        <SafeAreaView style={{ flex: 1 }}>
+          <Navbar showBack backTo="/" />
 
-        <Navbar showBack backTo="/" />
-
-        <KeyboardAvoidingView
-          style={styles.keyboardView}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
+          <KeyboardAvoidingView
+            style={styles.keyboardView}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           >
-            <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
 
-              <View style={styles.heroText}>
-                <Text style={styles.heroGreeting}>Join us today</Text>
-                <Text style={styles.heroTitle}>
-                  Create your{'\n'}account 
-                  <Text style={styles.heroTitleAccent}> ♡</Text>
-                </Text>
-              </View>
-
-              <Animated.View style={[styles.card, { transform: [{ translateX: shakeAnim }] }]}>
-
-                <View style={styles.formGroup}>
-                  <Text style={styles.label}>Email</Text>
-                  <InputField
-                    icon="✉️"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    returnKeyType="next"
-                    onSubmitEditing={() => passwordRef.current?.focus()}
-                  />
+                <View style={styles.heroText}>
+                  <Text style={styles.heroGreeting}>Join us today</Text>
+                  <Text style={styles.heroTitle}>
+                    Create your{'\n'}account
+                    <Text style={styles.heroTitleAccent}> ♡</Text>
+                  </Text>
                 </View>
 
-                <View style={styles.formGroup}>
-                  <Text style={styles.label}>Password</Text>
-                  <InputField
-                    icon="🔒"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={true}
-                    returnKeyType="done"
-                    onSubmitEditing={handleLogin}
-                    inputRef={passwordRef}
-                  />
-                </View>
-                
+                <Animated.View style={[styles.card, { transform: [{ translateX: shakeAnim }] }]}>
 
-                <View style={styles.formGroup}>
-                  <Text style={styles.label}>Password</Text>
-                  <InputField
-                    icon="🔒"
-                    placeholder="Re-enter your password"
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry={true}
-                    returnKeyType="done"
-                    onSubmitEditing={handleLogin}
-                    inputRef={passwordRef}
-                  />
-                </View>
-
-
-                {error !== '' && (
-                  <View style={styles.errorBox}>
-                    <Text style={styles.errorIcon}>⚠️</Text>
-                    <Text style={styles.errorText}>{error}</Text>
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Email</Text>
+                    <InputField
+                      icon="✉️"
+                      placeholder="your@email.com"
+                      value={email}
+                      onChangeText={setEmail}
+                      keyboardType="email-address"
+                      returnKeyType="next"
+                      onSubmitEditing={() => passwordRef.current?.focus()}
+                    />
                   </View>
-                )}
 
-                <TouchableOpacity
-                  style={[styles.btn, loading && styles.btnDisabled]}
-                  onPress={handleLogin}
-                  disabled={loading}
-                  activeOpacity={0.85}
-                >
-                  {loading
-                    ? <ActivityIndicator color={C.white} size="small" />
-                    : <Text style={styles.btnText}>Create account</Text>
-                  }
-                </TouchableOpacity>
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Password</Text>
+                    <InputField
+                      icon="🔒"
+                      placeholder="At least 8 characters"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry
+                      returnKeyType="next"
+                      onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+                      inputRef={passwordRef}
+                    />
+                  </View>
 
-                <View style={styles.divider}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>or</Text>
-                  <View style={styles.dividerLine} />
-                </View>
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Confirm password</Text>
+                    <InputField
+                      icon="🔒"
+                      placeholder="Re-enter your password"
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      secureTextEntry
+                      returnKeyType="done"
+                      onSubmitEditing={onPressSignup}
+                      inputRef={confirmPasswordRef}
+                    />
+                  </View>
 
-                <View style={styles.footer}>
-                  <Text style={styles.footerText}>Already have an account?</Text>
-                  <TouchableOpacity onPress={() => router.push('/login')} activeOpacity={0.7}>
-                    <Text style={styles.footerLink}> Sign in</Text>
+                  {error !== '' && (
+                    <View style={styles.errorBox}>
+                      <Text style={styles.errorIcon}>⚠️</Text>
+                      <Text style={styles.errorText}>{error}</Text>
+                    </View>
+                  )}
+
+                  <TouchableOpacity
+                    style={[styles.btn, loading && styles.btnDisabled]}
+                    onPress={onPressSignup}
+                    disabled={loading}
+                    activeOpacity={0.85}
+                  >
+                    {loading
+                      ? <ActivityIndicator color={theme.colors.white} size="small" />
+                      : <Text style={styles.btnText}>Create account</Text>
+                    }
                   </TouchableOpacity>
-                </View>
 
+                  <View style={styles.divider}>
+                    <View style={styles.dividerLine} />
+                    <Text style={styles.dividerText}>or</Text>
+                    <View style={styles.dividerLine} />
+                  </View>
+
+                  <View style={styles.footer}>
+                    <Text style={styles.footerText}>Already have an account?</Text>
+                    <TouchableOpacity onPress={() => router.push('/login')} activeOpacity={0.7}>
+                      <Text style={styles.footerLink}> Sign in</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                </Animated.View>
               </Animated.View>
-            </Animated.View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-
-      </SafeAreaView>
-
-         
-    </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </View>
+    </Background>
   );
 }

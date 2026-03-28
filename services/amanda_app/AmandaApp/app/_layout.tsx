@@ -8,7 +8,6 @@ export default function RootLayout() {
       <Stack.Screen name="signup" />
       <Stack.Screen name="chat" />
       <Stack.Screen name="about" />
-      <Stack.Screen name="voice" />
     </Stack>
   );
 }
