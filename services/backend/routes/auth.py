@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify, session
 from database import db
 from models.user import User
 from utils.rate_limiter import rate_limit, RateLimit
+from datetime import datetime
 import re
 
 # Create blueprint
@@ -14,15 +15,34 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 def is_valid_email(email):
     """
     Validate email format using regex.
-    
+
     Args:
         email (str): Email address to validate
-        
+
     Returns:
         bool: True if valid email format
     """
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None
+
+
+def is_strong_password(password):
+    """
+    Validate password strength.
+    Returns (True, None) on pass, or (False, error_message) on fail.
+    Rules: 8+ chars, uppercase, lowercase, digit, special character.
+    """
+    if len(password) < 8:
+        return False, 'Password must be at least 8 characters long'
+    if not re.search(r'[A-Z]', password):
+        return False, 'Password must contain at least one uppercase letter'
+    if not re.search(r'[a-z]', password):
+        return False, 'Password must contain at least one lowercase letter'
+    if not re.search(r'\d', password):
+        return False, 'Password must contain at least one number'
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>\[\]\\/_\-+=~`\';]', password):
+        return False, 'Password must contain at least one special character (!@#$%^&* etc.)'
+    return True, None
 
 
 @auth_bp.route('/signup', methods=['POST'])
@@ -64,11 +84,12 @@ def signup():
                 'message': 'Invalid email format'
             }), 400
         
-        # Validate password length
-        if len(password) < 8:
+        # Validate password strength
+        is_valid, pw_error = is_strong_password(password)
+        if not is_valid:
             return jsonify({
                 'success': False,
-                'message': 'Password must be at least 8 characters long'
+                'message': pw_error
             }), 400
         
         # Check if user already exists
@@ -156,6 +177,10 @@ def login():
                 'success': False,
                 'message': 'Please verify your email address before logging in. Check your inbox or request a new link.'
             }), 403
+
+        # Update last active timestamp
+        user.last_active_at = datetime.utcnow()
+        db.session.commit()
 
         # Create session
         session.clear()

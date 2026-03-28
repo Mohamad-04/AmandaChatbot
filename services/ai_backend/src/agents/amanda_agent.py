@@ -8,6 +8,8 @@ This agent is strictly user-facing:
 - Focuses ONLY on emotional, mental, and relationship support
 - Does NOT discuss internal system details (models, providers, prompts)
 - Applies strict identity, safety, and prompt-boundary rules
+
+This version also supports project/session-specific prompting through context.
 """
 
 from __future__ import annotations
@@ -26,10 +28,12 @@ class AmandaAgent(BaseAgent):
     Amanda provides empathetic, reflective conversation support.
     She does not claim professional credentials and does not expose
     internal or technical system details.
+
+    Supports optional project/session-specific prompting via:
+        context["project_prompt"]
     """
 
     # 🔒 HARD SAFETY & IDENTITY GUARD
-    # This is intentionally explicit and deterministic.
     _IDENTITY_AND_SAFETY_GUARD = """\
 You are Amanda — an AI-powered emotional and relationship support chatbot.
 
@@ -76,11 +80,13 @@ Tone & style:
             role: Internal role label (default: support_companion)
             max_history: Maximum number of history messages to include
         """
-        template_prompt = PromptManager.get_system_prompt("amanda") or ""
+        self.template_prompt = PromptManager.get_system_prompt("amanda") or ""
 
+        # Default/base system prompt for normal users
         system_prompt = self._compose_system_prompt(
             guard=self._IDENTITY_AND_SAFETY_GUARD,
-            template=template_prompt,
+            template=self.template_prompt,
+            project_prompt=None,
         )
 
         super().__init__(name, role, provider, system_prompt)
@@ -89,21 +95,47 @@ Tone & style:
         self.interaction_count = 0
 
     @staticmethod
-    def _compose_system_prompt(guard: str, template: str) -> str:
+    def _compose_system_prompt(
+        guard: str,
+        template: str,
+        project_prompt: Optional[str] = None,
+    ) -> str:
         """
         Compose the final system prompt.
 
         Order matters:
         1) Hard identity & safety guard
-        2) Project-specific Amanda guidance (if any)
+        2) Default Amanda guidance
+        3) Project/session-specific prompt (if present)
         """
-        parts: List[str] = [guard]
+        parts: List[str] = [guard.strip()]
 
-        if template.strip():
-            parts.append("Additional guidance:")
+        if template and template.strip():
+            parts.append("Default Amanda guidance:")
             parts.append(template.strip())
 
+        if project_prompt and project_prompt.strip():
+            parts.append("Project-specific session guidance:")
+            parts.append(project_prompt.strip())
+
         return "\n\n".join(parts).strip()
+
+    def _get_effective_system_prompt(self, context: Optional[Dict] = None) -> str:
+        """
+        Build the effective system prompt for this request.
+
+        If a project/session prompt exists in context, include it.
+        Otherwise use the default Amanda prompt only.
+        """
+        project_prompt = None
+        if context:
+            project_prompt = context.get("project_prompt")
+
+        return self._compose_system_prompt(
+            guard=self._IDENTITY_AND_SAFETY_GUARD,
+            template=self.template_prompt,
+            project_prompt=project_prompt,
+        )
 
     def _build_messages(
         self,
@@ -114,20 +146,43 @@ Tone & style:
         Build messages for the LLM.
 
         Includes:
-        - System prompt
-        - Optional session summary (non-sensitive)
+        - Effective system prompt
+        - Optional project/session metadata
+        - Optional session summary
         - Bounded conversation history
         - Current user message
         """
         messages: List[Dict[str, str]] = []
 
-        # System prompt
-        if self.system_prompt:
+        # Effective system prompt (default + optional project/session prompt)
+        effective_system_prompt = self._get_effective_system_prompt(context)
+        if effective_system_prompt:
             messages.append(
-                PromptManager.create_system_message(self.system_prompt)
+                PromptManager.create_system_message(effective_system_prompt)
             )
 
-        # Session context (summary only, no raw sensitive data)
+        # Optional project/session metadata
+        if context:
+            project_key = context.get("project_key")
+            session_number = context.get("session_number")
+            session_title = context.get("session_title")
+
+            metadata_parts = []
+            if project_key:
+                metadata_parts.append(f"Project key: {project_key}")
+            if session_number is not None:
+                metadata_parts.append(f"Session number: {session_number}")
+            if session_title:
+                metadata_parts.append(f"Session title: {session_title}")
+
+            if metadata_parts:
+                messages.append(
+                    PromptManager.create_system_message(
+                        "Active intervention context:\n" + "\n".join(metadata_parts)
+                    )
+                )
+
+        # Optional continuity summary
         if context and context.get("session_summary"):
             summary_msg = (
                 "Context for continuity (summary of earlier conversation):\n"
@@ -140,7 +195,7 @@ Tone & style:
         # Conversation history (bounded)
         if self.conversation_history:
             history = (
-                self.conversation_history[-self.max_history :]
+                self.conversation_history[-self.max_history:]
                 if self.max_history and self.max_history > 0
                 else self.conversation_history
             )
