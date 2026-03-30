@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Amanda Admin</title>
+    <script>
+      (function(){
+        var t = localStorage.getItem('amanda-theme') || 'light';
+        var bg = t === 'dark' ? '#1C1A1C' : '#DDD0C4';
+        document.documentElement.style.backgroundColor = bg;
+        document.documentElement.style.margin = '0';
+        if (t === 'dark') document.documentElement.classList.add('dark');
+      })();
+    </script>
+    <style>
+      #amanda-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #C8A9A4;
+        transition: opacity 0.4s ease, visibility 0.4s ease;
+      }
+      #amanda-loader.hidden {
+        opacity: 0;
+        visibility: hidden;
+      }
+      .loader {
+        display: block;
+        width: 84px;
+        height: 84px;
+        position: relative;
+      }
+      .loader:before, .loader:after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: #6b3e38;
+        transform: translate(-50%, -100%) scale(0);
+        animation: push_401 1.2s infinite linear;
+      }
+      .loader:after {
+        animation-delay: 0.6s;
+      }
+      @keyframes push_401 {
+        0%, 50% { transform: translate(-50%, 0%) scale(1); }
+        100%     { transform: translate(-50%, -100%) scale(0); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="amanda-loader"><span class="loader"></span></div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      var MIN_MS = 3000;
+      var startTime = Date.now();
+      function hideLoader() {
+        var elapsed = Date.now() - startTime;
+        var remaining = Math.max(0, MIN_MS - elapsed);
+        setTimeout(function () {
+          var l = document.getElementById('amanda-loader');
+          if (l) {
+            l.classList.add('hidden');
+            setTimeout(function () {
+              l.remove();
+              window.amandaLoaderDone = true;
+              window.dispatchEvent(new CustomEvent('amanda-ready'));
+            }, 400);
+          }
+        }, remaining);
+      }
+      window.addEventListener('load', hideLoader);
+      window.addEventListener('pageshow', function (e) {
+        if (e.persisted) {
+          var l = document.getElementById('amanda-loader');
+          if (l) l.remove();
+        }
+      });
+    </script>
+  </body>
+</html>
