@@ -1,13 +1,20 @@
 #!/usr/bin/env python
 """
-Amanda Admin Dashboard - Real-time Chat Monitoring
+Amanda Admin Dashboard - Real-time Chat Monitoring + Study Session Management
 
-View real-time chat transcripts organized by user email and chat ID.
+Features:
+- View real-time chat transcripts organized by user email and chat ID
+- Update study users' session number
+- Update last_session_date for automation
+- See current study assignments
+- Works both as a standalone app and as a Flask blueprint
 """
-import json
-import sys
+
 from pathlib import Path
 from datetime import datetime
+import re
+import yaml
+
 from flask import Flask, Blueprint, render_template_string, jsonify, request
 
 # Blueprint for use inside the main backend
@@ -16,10 +23,101 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 # Standalone app (for running independently)
 app = Flask(__name__)
 
-# Get monitoring logs path
+# Paths
 MONITORING_LOGS = Path(__file__).parent / "monitoring_logs"
+PROJECT_ASSIGNMENTS_PATH = Path(__file__).parent / "config" / "project_assignments.yaml"
 
-# Dashboard HTML template
+
+# ============================================================
+# HELPERS
+# ============================================================
+
+def load_project_assignments():
+    """Load study assignments YAML."""
+    if not PROJECT_ASSIGNMENTS_PATH.exists():
+        return {"users": {}}
+
+    with open(PROJECT_ASSIGNMENTS_PATH, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {"users": {}}
+
+
+def save_project_assignments(data):
+    """Save study assignments YAML."""
+    PROJECT_ASSIGNMENTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(PROJECT_ASSIGNMENTS_PATH, "w", encoding="utf-8") as f:
+        yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False)
+
+
+def list_monitoring_users():
+    """List all monitoring-log user folders."""
+    if not MONITORING_LOGS.exists():
+        return []
+
+    users = [d.name for d in MONITORING_LOGS.iterdir() if d.is_dir()]
+    return sorted(users)
+
+
+def list_user_chats(user_email):
+    """Get all chats for a user from monitoring logs."""
+    user_dir = MONITORING_LOGS / user_email
+
+    if not user_dir.exists():
+        return []
+
+    chats = []
+    for chat_dir in user_dir.iterdir():
+        if chat_dir.is_dir() and chat_dir.name.startswith('chat_'):
+            # Parse folder name: chat_{id}_{title}_{date}
+            parts = chat_dir.name.split('_', 3)
+            chat_id = parts[1] if len(parts) > 1 else 'unknown'
+
+            if len(parts) > 3:
+                rest = parts[3]
+                date_match = re.search(r'(\d{8})$', rest)
+                if date_match:
+                    date_str = date_match.group(1)
+                    title = rest[:date_match.start()].strip('_')
+                else:
+                    date_str = 'unknown'
+                    title = rest
+            else:
+                title = parts[2] if len(parts) > 2 else 'Untitled'
+                date_str = parts[3] if len(parts) > 3 else 'unknown'
+
+            try:
+                if len(date_str) == 8:
+                    formatted_date = f"{date_str[0:4]}-{date_str[4:6]}-{date_str[6:8]}"
+                else:
+                    formatted_date = date_str
+            except Exception:
+                formatted_date = date_str
+
+            chats.append({
+                "path": chat_dir.name,
+                "chat_id": chat_id,
+                "title": title,
+                "date": formatted_date
+            })
+
+    chats.sort(key=lambda x: x["date"], reverse=True)
+    return chats
+
+
+def load_transcript_text(user_email, chat_path):
+    """Load a transcript text file."""
+    transcript_file = MONITORING_LOGS / user_email / chat_path / "transcript.txt"
+
+    if not transcript_file.exists():
+        return None
+
+    with open(transcript_file, "r", encoding="utf-8") as f:
+        return f.read()
+
+
+# ============================================================
+# DASHBOARD HTML
+# ============================================================
+
 DASHBOARD_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -34,6 +132,7 @@ DASHBOARD_TEMPLATE = """
             background: #f5f5f5;
             padding: 20px;
         }
+
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -45,14 +144,19 @@ DASHBOARD_TEMPLATE = """
         .header h1 { font-size: 28px; margin-bottom: 10px; }
         .header p { opacity: 0.9; }
 
-        .controls {
+        .controls, .study-panel {
             background: white;
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .controls select, .controls button {
+
+        .controls select,
+        .controls button,
+        .study-panel input,
+        .study-panel select,
+        .study-panel button {
             padding: 10px 15px;
             border-radius: 5px;
             border: 1px solid #ddd;
@@ -60,16 +164,33 @@ DASHBOARD_TEMPLATE = """
             margin-right: 10px;
             margin-bottom: 10px;
         }
+
         .controls select {
             min-width: 250px;
         }
-        .controls button {
+
+        .controls button,
+        .study-panel button {
             background: #667eea;
             color: white;
             border: none;
             cursor: pointer;
         }
-        .controls button:hover { background: #5568d3; }
+        .controls button:hover,
+        .study-panel button:hover {
+            background: #5568d3;
+        }
+
+        .study-panel h2 {
+            margin-bottom: 12px;
+            color: #333;
+        }
+
+        .study-panel .subtext {
+            margin-bottom: 15px;
+            color: #666;
+            font-size: 14px;
+        }
 
         .stats {
             display: grid;
@@ -86,13 +207,14 @@ DASHBOARD_TEMPLATE = """
         .stat-card .label { color: #666; font-size: 12px; text-transform: uppercase; margin-bottom: 5px; }
         .stat-card .value { font-size: 24px; font-weight: bold; color: #333; }
 
-        .transcript-container {
+        .transcript-container, .assignment-container {
             background: white;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             overflow: hidden;
+            margin-bottom: 20px;
         }
-        .transcript-header {
+        .transcript-header, .assignment-header {
             background: #f8f9fa;
             padding: 15px 20px;
             border-bottom: 1px solid #e0e0e0;
@@ -108,42 +230,30 @@ DASHBOARD_TEMPLATE = """
             white-space: pre-wrap;
         }
 
+        .assignment-content {
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .assignment-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .assignment-table th,
+        .assignment-table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .assignment-table th {
+            background: #fafafa;
+            font-weight: 600;
+        }
+
         .no-data {
             text-align: center;
             padding: 60px 20px;
             color: #999;
-        }
-
-        .chat-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .chat-item {
-            padding: 12px;
-            border-bottom: 1px solid #f0f0f0;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .chat-item:hover {
-            background: #f8f9fa;
-        }
-
-        .chat-item.selected {
-            background: #e3f2fd;
-            border-left: 3px solid #667eea;
-        }
-
-        .chat-title {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 4px;
-        }
-
-        .chat-meta {
-            font-size: 12px;
-            color: #666;
         }
 
         .highlight-user {
@@ -164,12 +274,84 @@ DASHBOARD_TEMPLATE = """
             border-radius: 3px;
             color: #666;
         }
+
+        .success-message {
+            color: #155724;
+            background: #d4edda;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .error-message {
+            color: #721c24;
+            background: #f8d7da;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>🔍 Amanda Admin Dashboard</h1>
-        <p>Real-time chat transcript monitoring - organized by user and chat</p>
+        <p>Real-time chat transcript monitoring + study session management</p>
+    </div>
+
+    <div class="study-panel">
+        <h2>Study User Management</h2>
+        <p class="subtext">
+            Update a user's session assignment and session start date without touching the database.
+        </p>
+
+        <div style="margin-bottom: 12px;">
+            <label style="display:block; margin-bottom:5px; font-weight:600;">User Email</label>
+            <input id="studyEmail" type="email" placeholder="user@example.com" style="width:100%; max-width:400px;">
+        </div>
+
+        <div style="margin-bottom: 12px;">
+            <label style="display:block; margin-bottom:5px; font-weight:600;">Session Number</label>
+            <select id="studySession" style="width:100%; max-width:220px;">
+                <option value="1">Session 1</option>
+                <option value="2">Session 2</option>
+                <option value="3">Session 3</option>
+                <option value="4">Session 4</option>
+                <option value="5">Session 5</option>
+                <option value="6">Session 6</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+            <label style="display:block; margin-bottom:5px; font-weight:600;">Last Session Date</label>
+            <input id="lastSessionDate" type="date" style="width:100%; max-width:220px;">
+        </div>
+
+        <button onclick="updateStudyUser()">💾 Update Study User</button>
+        <button onclick="loadAssignments()">🔄 Refresh Assignments</button>
+
+        <div id="studySuccess" class="success-message"></div>
+        <div id="studyError" class="error-message"></div>
+    </div>
+
+    <div class="assignment-container">
+        <div class="assignment-header">Current Study Assignments</div>
+        <div class="assignment-content">
+            <table class="assignment-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Project</th>
+                        <th>Session</th>
+                        <th>Last Session Date</th>
+                    </tr>
+                </thead>
+                <tbody id="assignmentsTableBody">
+                    <tr><td colspan="4">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="controls">
@@ -229,9 +411,101 @@ DASHBOARD_TEMPLATE = """
         let currentUser = '';
         let currentChat = '';
 
+        function showSuccess(message) {
+            const successEl = document.getElementById('studySuccess');
+            const errorEl = document.getElementById('studyError');
+            errorEl.style.display = 'none';
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+        }
+
+        function showError(message) {
+            const successEl = document.getElementById('studySuccess');
+            const errorEl = document.getElementById('studyError');
+            successEl.style.display = 'none';
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        async function loadAssignments() {
+            try {
+                const response = await fetch('api/study-assignments');
+                const data = await response.json();
+                const tbody = document.getElementById('assignmentsTableBody');
+                tbody.innerHTML = '';
+
+                const users = data.users || {};
+
+                if (Object.keys(users).length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4">No study users configured</td></tr>';
+                    return;
+                }
+
+                Object.entries(users).forEach(([email, config]) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${email}</td>
+                        <td>${config.project_key || '-'}</td>
+                        <td>${config.session_number || '-'}</td>
+                        <td>${config.last_session_date || '-'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading assignments:', error);
+                showError('Failed to load study assignments');
+            }
+        }
+
+        async function updateStudyUser() {
+            const email = document.getElementById('studyEmail').value.trim();
+            const sessionNumber = parseInt(document.getElementById('studySession').value, 10);
+            const lastSessionDate = document.getElementById('lastSessionDate').value;
+
+            if (!email) {
+                showError('Please enter a user email');
+                return;
+            }
+
+            if (!sessionNumber || sessionNumber < 1 || sessionNumber > 6) {
+                showError('Session number must be between 1 and 6');
+                return;
+            }
+
+            try {
+                const response = await fetch('api/study-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        session_number: sessionNumber,
+                        last_session_date: lastSessionDate
+                    })
+                });
+
+                const contentType = response.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    const raw = await response.text();
+                    throw new Error('Non-JSON response received: ' + raw.slice(0, 120));
+                }
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to update user');
+                }
+
+                showSuccess(`Updated ${email} to session ${sessionNumber}`);
+                loadAssignments();
+            } catch (error) {
+                console.error('Error updating study user:', error);
+                showError(error.message || 'Failed to update study user');
+            }
+        }
+
         async function loadUsers() {
             try {
-                const response = await fetch('/api/users');
+                const response = await fetch('api/users');
                 const users = await response.json();
                 const select = document.getElementById('userSelect');
                 select.innerHTML = '<option value="">Select a user email...</option>';
@@ -248,7 +522,7 @@ DASHBOARD_TEMPLATE = """
 
         async function loadChats(userEmail) {
             try {
-                const response = await fetch(`/api/chats/${encodeURIComponent(userEmail)}`);
+                const response = await fetch(`api/chats/${encodeURIComponent(userEmail)}`);
                 const chats = await response.json();
                 const select = document.getElementById('chatSelect');
                 select.innerHTML = '<option value="">Select a chat...</option>';
@@ -268,24 +542,20 @@ DASHBOARD_TEMPLATE = """
 
         async function loadTranscript(userEmail, chatPath) {
             try {
-                const response = await fetch(`/api/transcript/${encodeURIComponent(userEmail)}/${encodeURIComponent(chatPath)}`);
+                const response = await fetch(`api/transcript/${encodeURIComponent(userEmail)}/${encodeURIComponent(chatPath)}`);
                 const data = await response.json();
 
                 const contentDiv = document.getElementById('transcriptContent');
 
                 if (data.transcript) {
-                    // Apply syntax highlighting
                     let highlightedText = data.transcript
-                        .replace(/\[([^\]]+)\] USER:/g, '<span class="highlight-user">[$1] USER:</span>')
-                        .replace(/\[([^\]]+)\] AMANDA:/g, '<span class="highlight-amanda">[$1] AMANDA:</span>')
-                        .replace(/\[([^\]]+)\] (AGENT|SUPERVISOR|RISK|MODE|ASSESSMENT):/g, '<span class="highlight-system">[$1] $2:</span>');
+                        .replace(/\\[([^\\]]+)\\] USER:/g, '<span class="highlight-user">[$1] USER:</span>')
+                        .replace(/\\[([^\\]]+)\\] AMANDA:/g, '<span class="highlight-amanda">[$1] AMANDA:</span>')
+                        .replace(/\\[([^\\]]+)\\] (AGENT|SUPERVISOR|RISK|MODE|ASSESSMENT):/g, '<span class="highlight-system">[$1] $2:</span>');
 
                     contentDiv.innerHTML = highlightedText;
-
-                    // Auto-scroll to bottom
                     contentDiv.scrollTop = contentDiv.scrollHeight;
 
-                    // Update stats
                     document.getElementById('selectedUser').textContent = userEmail.split('@')[0];
                     document.getElementById('selectedChat').textContent = chatPath.split('_')[1] || '-';
                     document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
@@ -297,7 +567,8 @@ DASHBOARD_TEMPLATE = """
                 }
             } catch (error) {
                 console.error('Error loading transcript:', error);
-                document.getElementById('transcriptContent').innerHTML = '<div class="no-data"><h3>Error loading transcript</h3><p>' + error.message + '</p></div>';
+                document.getElementById('transcriptContent').innerHTML =
+                    '<div class="no-data"><h3>Error loading transcript</h3><p>' + error.message + '</p></div>';
             }
         }
 
@@ -355,124 +626,169 @@ DASHBOARD_TEMPLATE = """
             }
         });
 
-        // Load users on page load
         loadUsers();
+        loadAssignments();
     </script>
 </body>
 </html>
 """
 
 
-@admin_bp.route('/')
-@admin_bp.route('')
-def admin_index():
-    return render_template_string(DASHBOARD_TEMPLATE)
+# ============================================================
+# CORE VIEW FUNCTIONS
+# ============================================================
 
-@admin_bp.route('/api/users')
-def admin_get_users():
-    if not MONITORING_LOGS.exists():
-        return jsonify([])
-    users = [d.name for d in MONITORING_LOGS.iterdir() if d.is_dir()]
-    return jsonify(sorted(users))
-
-@admin_bp.route('/api/chats/<path:user_email>')
-def admin_get_chats(user_email):
-    return get_chats(user_email)
-
-@admin_bp.route('/api/transcript/<path:user_email>/<path:chat_path>')
-def admin_get_transcript(user_email, chat_path):
-    return get_transcript(user_email, chat_path)
-
-
-@app.route('/')
-def index():
-    """Dashboard homepage."""
+def dashboard_index():
     return render_template_string(DASHBOARD_TEMPLATE)
 
 
-@app.route('/api/users')
-def get_users():
-    """Get list of all users (email-based folders)."""
-    if not MONITORING_LOGS.exists():
-        return jsonify([])
-
-    users = []
-    for user_dir in MONITORING_LOGS.iterdir():
-        if user_dir.is_dir():
-            users.append(user_dir.name)
-
-    return jsonify(sorted(users))
+def dashboard_get_users():
+    return jsonify(list_monitoring_users())
 
 
-@app.route('/api/chats/<path:user_email>')
-def get_chats(user_email):
-    """Get all chats for a user."""
-    user_dir = MONITORING_LOGS / user_email
-
-    if not user_dir.exists():
-        return jsonify([])
-
-    chats = []
-    for chat_dir in user_dir.iterdir():
-        if chat_dir.is_dir() and chat_dir.name.startswith('chat_'):
-            # Parse chat folder name: chat_{id}_{title}_{date}
-            parts = chat_dir.name.split('_', 3)
-            chat_id = parts[1] if len(parts) > 1 else 'unknown'
-
-            # Extract title and date
-            if len(parts) > 3:
-                rest = parts[3]
-                # Try to find date pattern at the end
-                import re
-                date_match = re.search(r'(\d{8})$', rest)
-                if date_match:
-                    date_str = date_match.group(1)
-                    title = rest[:date_match.start()].strip('_')
-                else:
-                    date_str = 'unknown'
-                    title = rest
-            else:
-                title = parts[2] if len(parts) > 2 else 'Untitled'
-                date_str = parts[3] if len(parts) > 3 else 'unknown'
-
-            # Format date
-            try:
-                if len(date_str) == 8:
-                    formatted_date = f"{date_str[0:4]}-{date_str[4:6]}-{date_str[6:8]}"
-                else:
-                    formatted_date = date_str
-            except:
-                formatted_date = date_str
-
-            chats.append({
-                'path': chat_dir.name,
-                'chat_id': chat_id,
-                'title': title,
-                'date': formatted_date
-            })
-
-    # Sort by date (newest first)
-    chats.sort(key=lambda x: x['date'], reverse=True)
-
-    return jsonify(chats)
+def dashboard_get_chats(user_email):
+    return jsonify(list_user_chats(user_email))
 
 
-@app.route('/api/transcript/<path:user_email>/<path:chat_path>')
-def get_transcript(user_email, chat_path):
-    """Get transcript for a specific chat."""
-    transcript_file = MONITORING_LOGS / user_email / chat_path / "transcript.txt"
-
-    if not transcript_file.exists():
-        return jsonify({'transcript': None})
-
+def dashboard_get_transcript(user_email, chat_path):
     try:
-        with open(transcript_file, 'r', encoding='utf-8') as f:
-            transcript = f.read()
-
+        transcript = load_transcript_text(user_email, chat_path)
         return jsonify({'transcript': transcript})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+def dashboard_get_study_assignments():
+    try:
+        data = load_project_assignments()
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+def dashboard_update_study_user():
+    try:
+        data = request.get_json() or {}
+        email = (data.get("email") or "").strip()
+        session_number = int(data.get("session_number", 1))
+        last_session_date = (data.get("last_session_date") or "").strip()
+
+        if not email:
+            return jsonify({
+                "success": False,
+                "message": "Email is required"
+            }), 400
+
+        if session_number < 1 or session_number > 6:
+            return jsonify({
+                "success": False,
+                "message": "Session number must be between 1 and 6"
+            }), 400
+
+        config = load_project_assignments()
+        config.setdefault("users", {})
+        config["users"].setdefault(email, {})
+
+        config["users"][email]["project_key"] = config["users"][email].get("project_key", "romanian_adhd_parents")
+        config["users"][email]["session_number"] = session_number
+
+        if last_session_date:
+            config["users"][email]["last_session_date"] = last_session_date
+        else:
+            config["users"][email]["last_session_date"] = datetime.now().strftime("%Y-%m-%d")
+
+        save_project_assignments(config)
+
+        return jsonify({
+            "success": True,
+            "message": f"Updated {email}",
+            "user": config["users"][email]
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+# ============================================================
+# BLUEPRINT ROUTES
+# These become /admin/... because of url_prefix='/admin'
+# ============================================================
+
+@admin_bp.route('/')
+@admin_bp.route('')
+def admin_index():
+    return dashboard_index()
+
+
+@admin_bp.route('/api/users')
+def admin_get_users():
+    return dashboard_get_users()
+
+
+@admin_bp.route('/api/chats/<path:user_email>')
+def admin_get_chats(user_email):
+    return dashboard_get_chats(user_email)
+
+
+@admin_bp.route('/api/transcript/<path:user_email>/<path:chat_path>')
+def admin_get_transcript(user_email, chat_path):
+    return dashboard_get_transcript(user_email, chat_path)
+
+
+@admin_bp.route('/api/study-assignments', methods=['GET'])
+def admin_get_study_assignments():
+    return dashboard_get_study_assignments()
+
+
+@admin_bp.route('/api/study-user', methods=['POST'])
+def admin_update_study_user():
+    return dashboard_update_study_user()
+
+
+# ============================================================
+# STANDALONE APP ROUTES
+# These stay /api/... for localhost:5001
+# ============================================================
+
+@app.route('/')
+def index():
+    return dashboard_index()
+
+
+@app.route('/api/users')
+def get_users():
+    return dashboard_get_users()
+
+
+@app.route('/api/chats/<path:user_email>')
+def get_chats(user_email):
+    return dashboard_get_chats(user_email)
+
+
+@app.route('/api/transcript/<path:user_email>/<path:chat_path>')
+def get_transcript(user_email, chat_path):
+    return dashboard_get_transcript(user_email, chat_path)
+
+
+@app.route('/api/study-assignments', methods=['GET'])
+def get_study_assignments():
+    return dashboard_get_study_assignments()
+
+
+@app.route('/api/study-user', methods=['POST'])
+def update_study_user():
+    return dashboard_update_study_user()
+
+
+# ============================================================
+# MAIN
+# ============================================================
 
 def main(port=5001):
     """Start the admin dashboard."""
@@ -481,10 +797,10 @@ def main(port=5001):
     print("=" * 60)
     print(f"Dashboard URL: http://localhost:{port}")
     print("=" * 60)
-    print(f"\nMonitoring logs: {MONITORING_LOGS}")
-    print("Folder structure: monitoring_logs/{email}/chat_{id}_{title}_{date}/")
-    print("\nDashboard shows real-time chat transcripts as they happen")
-    print("\nPress Ctrl+C to stop")
+    print(f"Monitoring logs: {MONITORING_LOGS}")
+    print(f"Project assignments: {PROJECT_ASSIGNMENTS_PATH}")
+    print("Dashboard shows real-time chat transcripts and study session controls")
+    print("Press Ctrl+C to stop")
     print("=" * 60)
 
     app.run(host='0.0.0.0', port=port, debug=False)
@@ -492,6 +808,7 @@ def main(port=5001):
 
 if __name__ == '__main__':
     import argparse
+
     parser = argparse.ArgumentParser(description="Amanda Admin Dashboard")
     parser.add_argument('--port', type=int, default=5001, help="Port to run dashboard on")
     args = parser.parse_args()

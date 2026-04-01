@@ -3,48 +3,76 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Lexend+Deca:wght@100..900&display=swap"
-    >
-
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&family=Lexend+Deca:wght@100..900&display=swap">
     <title>About – Amanda</title>
     <link rel="stylesheet" href="./css/style.css">
   </head>
 
-  <body>
+  <body class="content-page">
     <div class="page">
 
       <header class="navbar">
-        <a class="brand" href="./landing.html">Amanda</a>
+        <span class="brand"><img src="./images/amanda-logo.png" alt="Amanda" class="brand-logo"></span>
         <nav class="navlinks" aria-label="Primary">
           <a href="./landing.html">Home</a>
           <a href="./about.html">About</a>
           <a href="./contact.html">Contact</a>
-          <a href="./terms.html">User Terms &amp; Conditions</a>
+          <a href="./terms.html">Terms</a>
+          <a href="/auth/login.html">Sign in</a>
         </nav>
       </header>
 
-      <main class="hero">
-        <div class="hero-card">
+      <main class="content-body">
+
+        <div class="content-hero">
           <p class="eyebrow">How it works</p>
           <h1>About Amanda</h1>
           <p class="tagline">
             Amanda is a private AI companion designed to help you feel heard.
             She listens without judgement and is available whenever you need her.
           </p>
-          <div class="cta">
-            <a class="u-btn" href="./dashboard/index.html">
-              <svg class="u-sparkle" width="20" height="20" fill="#FFFFFF" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M10,21.236,6.755,14.745.264,11.5,6.755,8.255,10,1.764l3.245,6.491L19.736,11.5l-6.491,3.245ZM18,21l1.5,3L21,21l3-1.5L21,18l-1.5-3L18,18l-3,1.5Z"/>
-              </svg>
-              <span class="u-text">Talk to me!</span>
-            </a>
+        </div>
+
+        <div class="content-grid">
+          <div class="content-card">
+            <span class="card-icon">🔒</span>
+            <h3>Private by design</h3>
+            <p>Your conversations are stored securely and never shared. You are always in control of what you share.</p>
+          </div>
+          <div class="content-card">
+            <span class="card-icon">🕐</span>
+            <h3>Always available</h3>
+            <p>Amanda is here 24/7 whenever you need someone to talk to — no appointments, no waiting rooms.</p>
+          </div>
+          <div class="content-card">
+            <span class="card-icon">💬</span>
+            <h3>Judgement-free</h3>
+            <p>Share anything on your mind freely. Amanda listens with empathy and without criticism.</p>
           </div>
         </div>
+
+        <div class="content-block">
+          <h2>What Amanda can help with</h2>
+          <p>Amanda is designed to support people navigating relationship challenges, emotional stress, and everyday life difficulties. She can help you process your feelings, explore your thoughts, and feel less alone.</p>
+          <p>She is not a replacement for professional mental health care, but a compassionate starting point — a space where you can be honest without fear of judgement.</p>
+        </div>
+
+        <div class="content-block">
+          <h2>Who built Amanda?</h2>
+          <p>Amanda is a final-year Computer Science project built by a team of four students passionate about using technology to support emotional wellbeing. She combines modern AI with a thoughtful, human-centred design.</p>
+        </div>
+
+        <div class="cta" style="margin-top: 8px;">
+          <a class="u-btn" href="/auth/login.html">
+            <svg class="u-sparkle" width="20" height="20" fill="#FFFFFF" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M10,21.236,6.755,14.745.264,11.5,6.755,8.255,10,1.764l3.245,6.491L19.736,11.5l-6.491,3.245ZM18,21l1.5,3L21,21l3-1.5L21,18l-1.5-3L18,18l-3,1.5Z"/>
+            </svg>
+            <span class="u-text">Talk to Amanda</span>
+          </a>
+        </div>
+
       </main>
 
       <footer class="page-footer">
