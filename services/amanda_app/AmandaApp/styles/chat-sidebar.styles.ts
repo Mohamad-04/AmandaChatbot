@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from 'react-native';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
 
 export const SIDEBAR_WIDTH = Dimensions.get('window').width * 0.78;
 
@@ -71,6 +71,42 @@ export const sidebarStyles = StyleSheet.create({
   chatItemTitle:  { fontSize: 14, fontWeight: '500', color: C.text, marginBottom: 2 },
   chatItemTime:   { fontSize: 12, color: C.textLight },
   chatItemDot:    { width: 7, height: 7, borderRadius: 4, backgroundColor: C.bg3, marginLeft: 8 },
+});
+
+export const supportSheetStyles = StyleSheet.create({
+  kvWrapper:  { position: 'absolute', bottom: 0, left: 0, right: 0 },
+  backdrop:   { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(45,30,28,0.45)' },
+  sheet: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: '#FDFAF7',
+    borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    padding: 28, paddingBottom: Platform.OS === 'ios' ? 40 : 28,
+    shadowColor: '#2d1e1c', shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.10, shadowRadius: 20, elevation: 16,
+  },
+  closeBtn: {
+    position: 'absolute', top: 16, right: 16,
+    width: 32, height: 32, borderRadius: 8,
+    backgroundColor: 'rgba(168,122,116,0.12)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  closeBtnText:      { fontSize: 14, color: C.textMuted, fontWeight: '600' },
+  title:             { fontSize: 20, fontWeight: '700', color: C.text, marginBottom: 8, marginTop: 8, paddingRight: 40 },
+  subtitle:          { fontSize: 14, color: C.textMuted, lineHeight: 20, marginBottom: 20 },
+  stars:             { flexDirection: 'row', gap: 12, backgroundColor: 'rgba(168,122,116,0.08)', borderRadius: 14, padding: 16, marginBottom: 14, justifyContent: 'center' },
+  star:              { fontSize: 36, color: 'rgba(168,122,116,0.30)' },
+  starFilled:        { color: '#C8860A' },
+  textArea:          { backgroundColor: 'rgba(168,122,116,0.08)', borderRadius: 14, padding: 14, fontSize: 15, color: C.text, minHeight: 100, marginBottom: 20 },
+  actions:           { flexDirection: 'row', gap: 12 },
+  cancelBtn:         { flex: 1, paddingVertical: 14, borderRadius: 28, borderWidth: 1, borderColor: 'rgba(168,122,116,0.28)', alignItems: 'center' },
+  cancelBtnText:     { fontSize: 15, fontWeight: '600', color: C.textMuted },
+  submitBtn:         { flex: 2, paddingVertical: 14, borderRadius: 28, backgroundColor: C.bg3, alignItems: 'center' },
+  submitBtnDisabled: { opacity: 0.45 },
+  submitBtnText:     { fontSize: 15, fontWeight: '600', color: 'white' },
+  confirmBox:        { alignItems: 'center', paddingTop: 16, paddingBottom: 8, gap: 12 },
+  confirmEmoji:      { fontSize: 48 },
+  confirmTitle:      { fontSize: 20, fontWeight: '700', color: C.text, textAlign: 'center' },
+  confirmSub:        { fontSize: 14, color: C.textMuted, textAlign: 'center', lineHeight: 20 },
 });
 
 export const profileStyles = StyleSheet.create({

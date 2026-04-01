@@ -5,7 +5,6 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { useVAD } from './use-vad';
 import { useVoiceWS, VoiceWSMessage } from './use-voice-ws';
 import { useAudioQueue } from './use-audio-queue';
-import voice from '@/app/voice';
 
 type VoicePhase = 'idle' | 'listening' | 'thinking' | 'speaking';
 

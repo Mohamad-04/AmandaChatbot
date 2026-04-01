@@ -49,11 +49,11 @@ export default function LoginModal({ visible, onLogin, onSignup, onClose }: Logi
           <Text style={s.modalTitle}>Meet Amanda</Text>
           <Text style={s.modalSubtitle}>
             Your personal space to talk, reflect, and feel heard.{'\n\n'}
-            Create an account to save your conversations and pick up where you left off.
+            Log in or create an account to start talking with Amanda.
           </Text>
 
           <TouchableOpacity style={s.modalBtnPrimary} onPress={handleSignup} activeOpacity={0.85}>
-            <Text style={s.modalBtnPrimaryText}>Create a free account</Text>
+            <Text style={s.modalBtnPrimaryText}>Create an account</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={s.modalBtnSecondary} onPress={handleLogin} activeOpacity={0.85}>

@@ -14,6 +14,7 @@ import InputField from '../components/input-field';
 import { useAuth } from '../hooks/use-auth';
 import { styles } from '../styles/login.styles';
 import { theme } from '../constants/theme';
+import { PasswordRequirements } from '../components/password-requirements';
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -95,7 +96,7 @@ export default function ResetPasswordScreen() {
                     <>
                       <View style={styles.successBox}>
                         <Text style={styles.successText}>
-                          Password reset successfully. You can now sign in with your new password.
+                          Password reset successfully. You can now log in with your new password.
                         </Text>
                       </View>
                       <TouchableOpacity style={styles.btn} onPress={() => router.push('/login')}>
@@ -117,6 +118,7 @@ export default function ResetPasswordScreen() {
                           returnKeyType="next"
                           onSubmitEditing={() => confirmRef.current?.focus()}
                         />
+                        <PasswordRequirements password={password} />
                       </View>
 
                       <View style={styles.formGroup}>

@@ -1,11 +1,16 @@
-// Forgot password screen — shows an email form or success message.
-// All validation and API logic is delegated to useAuth hook.
+// Forgot password screen.
+// Users request a reset link, then paste the token from their email.
+// On success, navigates to reset-password to set a new password.
+//
+// Views:
+//   'email' — default: enter email + send reset link
+//   'token' — paste token + verify
 
 import React, { useRef, useEffect, useState } from 'react';
 import {
   View, Text, TouchableOpacity, SafeAreaView,
-  KeyboardAvoidingView, Platform, Animated,
-  ActivityIndicator, ScrollView,
+  Animated, ActivityIndicator, ScrollView,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import Background from '../components/background';
@@ -15,18 +20,26 @@ import { useAuth } from '../hooks/use-auth';
 import { styles } from '../styles/login.styles';
 import { theme } from '../constants/theme';
 
+type View       = 'email' | 'token';
+type SendState  = 'idle' | 'loading';
+type TokenState = 'idle' | 'loading' | 'error';
+
 export default function ForgotPasswordScreen() {
   const router = useRouter();
-  const { loading, error, handleForgotPassword } = useAuth();
+  const { handleForgotPassword, handleVerifyResetToken } = useAuth();
 
-  const [email, setEmail]     = useState('');
-  const [success, setSuccess] = useState(false);
+  const [view,       setView]       = useState<View>('email');
+  const [email,      setEmail]      = useState('');
+  const [sendState,  setSendState]  = useState<SendState>('idle');
+  const [sendError,  setSendError]  = useState('');
+  const [tokenInput, setTokenInput] = useState('');
+  const [tokenState, setTokenState] = useState<TokenState>('idle');
+  const [tokenError, setTokenError] = useState('');
 
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
-  // Fade + slide in on first render
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim,  { toValue: 1, duration: 500, useNativeDriver: true }),
@@ -34,7 +47,6 @@ export default function ForgotPasswordScreen() {
     ]).start();
   }, []);
 
-  // Shakes the card to signal invalid input
   const shake = () => {
     Animated.sequence([
       Animated.timing(shakeAnim, { toValue: 10,  duration: 60, useNativeDriver: true }),
@@ -44,10 +56,28 @@ export default function ForgotPasswordScreen() {
     ]).start();
   };
 
-  const onPressSubmit = async () => {
+  const onPressSend = async () => {
+    if (!email.trim()) return;
+    setSendState('loading');
+    setSendError('');
     const err = await handleForgotPassword(email);
-    if (err) shake();
-    else setSuccess(true);
+    setSendState('idle');
+    if (err) { setSendError(err); shake(); return; }
+    setView('token');
+  };
+
+  const onPressVerify = async () => {
+    if (!tokenInput.trim()) return;
+    setTokenState('loading');
+    setTokenError('');
+    const result = await handleVerifyResetToken(tokenInput.trim());
+    if (result.success) {
+      router.push({ pathname: '/reset-password', params: { token: tokenInput.trim() } });
+    } else {
+      setTokenState('error');
+      setTokenError(result.message);
+      shake();
+    }
   };
 
   return (
@@ -62,8 +92,8 @@ export default function ForgotPasswordScreen() {
           >
             <ScrollView
               contentContainerStyle={styles.scrollContent}
-              keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             >
               <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
 
@@ -74,27 +104,21 @@ export default function ForgotPasswordScreen() {
 
                 <Animated.View style={[styles.card, { transform: [{ translateX: shakeAnim }] }]}>
 
-                  {success ? (
-                    // Reset link sent — always shown regardless of whether email exists
+                  {/* ── Email view ── */}
+                  {view === 'email' && (
                     <>
-                      <View style={styles.successBox}>
-                        <Text style={styles.successText}>
-                          If that email is registered, a reset link has been sent. Check your inbox.
-                        </Text>
-                      </View>
-                      <TouchableOpacity style={styles.btn} onPress={() => router.push('/login')}>
-                        <Text style={styles.btnText}>Back to Login</Text>
-                      </TouchableOpacity>
-                    </>
-                  ) : (
-                    // Email input form
-                    <>
-                      <Text style={styles.label}>
-                        Enter the email address linked to your account and we'll send you a reset link.
+                      <Text style={styles.footerText}>
+                        Enter the email linked to your account and we'll send you a reset link.
                       </Text>
 
+                      {sendError !== '' && (
+                        <View style={styles.errorBox}>
+                          <Text style={styles.errorText}>{sendError}</Text>
+                        </View>
+                      )}
+
                       <View style={styles.formGroup}>
-                        <Text style={styles.label}>Email</Text>
+                        <Text style={styles.label}>Email address</Text>
                         <InputField
                           icon="✉️"
                           placeholder="your@email.com"
@@ -102,22 +126,17 @@ export default function ForgotPasswordScreen() {
                           onChangeText={setEmail}
                           keyboardType="email-address"
                           returnKeyType="done"
-                          onSubmitEditing={onPressSubmit}
+                          onSubmitEditing={onPressSend}
                         />
                       </View>
 
-                      {error !== '' && (
-                        <View style={styles.errorBox}>
-                          <Text style={styles.errorText}>{error}</Text>
-                        </View>
-                      )}
-
                       <TouchableOpacity
-                        style={[styles.btn, loading && styles.btnDisabled]}
-                        onPress={onPressSubmit}
-                        disabled={loading}
+                        style={[styles.btn, (sendState === 'loading' || !email.trim()) && styles.btnDisabled]}
+                        onPress={onPressSend}
+                        disabled={sendState === 'loading' || !email.trim()}
+                        activeOpacity={0.85}
                       >
-                        {loading
+                        {sendState === 'loading'
                           ? <ActivityIndicator color={theme.colors.white} size="small" />
                           : <Text style={styles.btnText}>Send Reset Link</Text>
                         }
@@ -125,10 +144,53 @@ export default function ForgotPasswordScreen() {
 
                       <View style={styles.footer}>
                         <Text style={styles.footerText}>Remember your password?</Text>
-                        <TouchableOpacity onPress={() => router.push('/login')}>
+                        <TouchableOpacity onPress={() => router.push('/login')} activeOpacity={0.7}>
                           <Text style={styles.footerLink}> Sign in</Text>
                         </TouchableOpacity>
                       </View>
+                    </>
+                  )}
+
+                  {/* ── Token view ── */}
+                  {view === 'token' && (
+                    <>
+                      <Text style={styles.footerText}>
+                        Check your inbox for a reset link. Copy the token at the end of the link and paste it below.
+                      </Text>
+
+                      {tokenState === 'error' && (
+                        <View style={styles.errorBox}>
+                          <Text style={styles.errorText}>{tokenError}</Text>
+                        </View>
+                      )}
+
+                      <View style={styles.formGroup}>
+                        <Text style={styles.label}>Reset token</Text>
+                        <InputField
+                          icon="🔑"
+                          placeholder="Paste your token here"
+                          value={tokenInput}
+                          onChangeText={setTokenInput}
+                          returnKeyType="done"
+                          onSubmitEditing={onPressVerify}
+                        />
+                      </View>
+
+                      <TouchableOpacity
+                        style={[styles.btn, (tokenState === 'loading' || !tokenInput.trim()) && styles.btnDisabled]}
+                        onPress={onPressVerify}
+                        disabled={tokenState === 'loading' || !tokenInput.trim()}
+                        activeOpacity={0.85}
+                      >
+                        {tokenState === 'loading'
+                          ? <ActivityIndicator color={theme.colors.white} size="small" />
+                          : <Text style={styles.btnText}>Verify token</Text>
+                        }
+                      </TouchableOpacity>
+
+                      <TouchableOpacity onPress={() => setView('email')} activeOpacity={0.7} style={{ alignItems: 'center', paddingTop: 4 }}>
+                        <Text style={styles.forgotText}>Didn't get the email? Go back</Text>
+                      </TouchableOpacity>
                     </>
                   )}
 

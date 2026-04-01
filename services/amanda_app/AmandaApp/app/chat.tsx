@@ -9,7 +9,8 @@ import {
   StatusBar, SafeAreaView, Modal, Image, Animated,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Audio } from 'expo-av';
+import { Feather } from '@expo/vector-icons';
+import { Audio } from 'expo-av'; 
 import ChatSidebar    from '../components/chat-sidebar';
 import LoginModal     from '../components/login-modal';
 import ChatBubble     from '../components/chat-bubble';
@@ -95,7 +96,6 @@ export default function ChatScreen() {
     sendMessage,
     loadChat,
     handleRename,
-    handleDelete,
     handleNewChat,
   } = useChat();
 
@@ -128,6 +128,25 @@ export default function ChatScreen() {
   useEffect(() => {
     if (isAnonymous) setShowLoginModal(true);
   }, [isAnonymous]);
+
+  // Enter voice mode automatically once the connection is ready
+  useEffect(() => {
+    if (isReady && !isAnonymous) enterVoiceMode();
+  }, [isReady]);
+
+  // Re-enter voice mode after switching to a different chat
+  const handleSelectChat = async (chatId: number, title?: string) => {
+    exitVoiceMode();
+    await loadChat(chatId, title);
+    enterVoiceMode();
+  };
+
+  // Re-enter voice mode after creating a new chat
+  const handleNewChatWithVoice = async () => {
+    exitVoiceMode();
+    await handleNewChat();
+    enterVoiceMode();
+  };
 
   // Scroll to bottom whenever messages or streaming text updates
   useEffect(() => {
@@ -188,8 +207,8 @@ export default function ChatScreen() {
           visible={showSidebar}
           onClose={() => setShowSidebar(false)}
           currentChatId={currentChatId}
-          onSelectChat={loadChat}
-          onNewChat={handleNewChat}
+          onSelectChat={handleSelectChat}
+          onNewChat={handleNewChatWithVoice}
           userEmail={userEmail}
           aiModel="GPT-5.1"
         />
@@ -222,6 +241,8 @@ export default function ChatScreen() {
               <Text style={s.menuRowIcon}>✏️</Text>
               <Text style={s.menuRowText}>Rename</Text>
             </TouchableOpacity>
+
+            <View style={s.menuSeparator} />
 
           </View>
         </TouchableOpacity>
@@ -340,7 +361,7 @@ export default function ChatScreen() {
             activeOpacity={0.8}
           >
             <Text style={s.anonBannerText}>
-              💬 Chatting anonymously — messages won't be saved.{' '}
+              💬 Amanda is ready to talk - are you? {' '}
               <Text style={s.anonBannerLink}>Create an account</Text>
             </Text>
           </TouchableOpacity>
@@ -430,13 +451,23 @@ export default function ChatScreen() {
 
             ) : (
 
-              // Normal text input
-              <View style={[s.inputBox, inputText.length > 0 && s.inputBoxFocused]}>
+              // Normal text input — pill layout: mic | text | send/wave
+              <View style={[s.inputPill, inputText.length > 0 && s.inputPillFocused]}>
+
+                {/* Mic button — left side */}
+                <TouchableOpacity
+                  style={s.pillMicBtn}
+                  onPress={startRecording}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="mic" size={18} color={C.textMuted} />
+                </TouchableOpacity>
+
                 <TextInput
-                  style={s.input}
+                  style={s.pillInput}
                   value={inputText}
                   onChangeText={setInputText}
-                  placeholder="Type a message…"
+                  placeholder="Message Amanda..."
                   placeholderTextColor={C.textLight}
                   multiline
                   maxLength={2000}
@@ -445,40 +476,27 @@ export default function ChatScreen() {
                   blurOnSubmit={false}
                 />
 
-                <View style={s.inputActions}>
-                  <View style={{ flex: 1 }} />
+                {inputText.trim().length > 0 ? (
+                  // Send button — shown when there is text to send
+                  <TouchableOpacity
+                    style={[s.pillSendBtn, (isStreaming || !isReady) && s.sendBtnDisabled]}
+                    onPress={() => sendMessage(inputText)}
+                    disabled={isStreaming || !isReady}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={s.sendBtnIcon}>↑</Text>
+                  </TouchableOpacity>
+                ) : (
+                  // Voice chat button — right side
+                  <TouchableOpacity
+                    style={s.pillVoiceBtn}
+                    onPress={enterVoiceMode}
+                    activeOpacity={0.7}
+                  >
+                    <VoiceChatIcon />
+                  </TouchableOpacity>
+                )}
 
-                  {inputText.trim().length > 0 ? (
-                    // Send button — shown when there is text to send
-                    <TouchableOpacity
-                      style={[s.sendBtn, (isStreaming || !isReady) && s.sendBtnDisabled]}
-                      onPress={() => sendMessage(inputText)}
-                      disabled={isStreaming || !isReady}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={s.sendBtnIcon}>↑</Text>
-                    </TouchableOpacity>
-                  ) : (
-                    // Voice buttons — shown when input is empty
-                    <View style={s.voiceBtns}>
-                      <TouchableOpacity
-                        style={s.voiceToTextBtn}
-                        onPress={startRecording}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={s.voiceToTextIcon}>🎤</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={s.voiceChatBtn}
-                        onPress={enterVoiceMode}
-                        activeOpacity={0.7}
-                      >
-                        <VoiceChatIcon />
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </View>
               </View>
             )}
 

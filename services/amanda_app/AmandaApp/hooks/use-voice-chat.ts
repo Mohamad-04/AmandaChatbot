@@ -10,105 +10,101 @@ import { useState, useRef, useCallback } from 'react';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system/legacy';
 import { VOICE_SERVER_URL, VAD_THRESHOLD, SILENCE_DURATION, MIN_SPEECH_MS } from '../constants/config';
-import { saveMessage } from '../services/api-client';
 import { VoicePhase } from '../components/voice-indicator';
 
 // Everything the chat screen needs from this hook
 interface UseVoiceChatReturn {
-  voiceMode: boolean;
-  voicePhase: VoicePhase;
-  voiceStatus: string;
+  voiceMode:      boolean;
+  voicePhase:     VoicePhase;
+  voiceStatus:    string;
   voiceConnected: boolean;
   enterVoiceMode: () => void;
-  exitVoiceMode: () => void;
+  exitVoiceMode:  () => void;
   handleIndicatorTap: () => Promise<void>;
-  setMessages: (updater: (prev: any[]) => any[]) => void;
-  flatListRef: React.MutableRefObject<any>;
+  setMessages:    (updater: (prev: any[]) => any[]) => void;
+  flatListRef:    React.MutableRefObject<any>;
 }
 
 interface UseVoiceChatOptions {
   // Current chat ID so voice transcripts can be saved to the right conversation
   currentChatIdRef: React.MutableRefObject<number | null>;
   // Shared flatListRef from use-chat so voice transcripts trigger the same scroll
-  flatListRef: React.MutableRefObject<any>;
+  flatListRef:      React.MutableRefObject<any>;
   // Shared setMessages from use-chat so transcripts appear in the message list
-  setMessages: React.Dispatch<React.SetStateAction<any[]>>;
-  // Passed-in user email
-  userEmail?: string | null;
+  setMessages:      React.Dispatch<React.SetStateAction<any[]>>;
 }
 
 export function useVoiceChat({
   currentChatIdRef,
   flatListRef,
   setMessages,
-  userEmail,
 }: UseVoiceChatOptions) {
   // ── Voice mode state ───────────────────────────────────────────────────
-  const [voiceMode, setVoiceMode] = useState(false);
-  const [voicePhase, setVoicePhase] = useState<VoicePhase>('idle');
-  const [voiceStatus, setVoiceStatus] = useState('Tap the indicator to start');
+  const [voiceMode,      setVoiceMode]      = useState(false);
+  const [voicePhase,     setVoicePhase]     = useState<VoicePhase>('idle');
+  const [voiceStatus,    setVoiceStatus]    = useState('Tap the indicator to start');
   const [voiceConnected, setVoiceConnected] = useState(false);
 
   // ── Voice refs ─────────────────────────────────────────────────────────
-  const voiceWsRef = useRef<WebSocket | null>(null);
-  const voiceRecRef = useRef<Audio.Recording | null>(null);
-  const voiceSoundRef = useRef<Audio.Sound | null>(null);
+  const voiceWsRef        = useRef<WebSocket | null>(null);
+  const voiceRecRef       = useRef<Audio.Recording | null>(null);
+  const voiceSoundRef     = useRef<Audio.Sound | null>(null);
 
   // Audio chunks waiting to be played — played sequentially, never interrupted
-  const voiceQueueRef = useRef<Array<{ data: string; format: string }>>([]);
-  const voicePlayingRef = useRef(false);
+  const voiceQueueRef     = useRef<Array<{ data: string; format: string }>>([]);
+  const voicePlayingRef   = useRef(false);
 
   // Prevents double-sending audio in the same VAD cycle
-  const voiceHasSentRef = useRef(false);
+  const voiceHasSentRef   = useRef(false);
 
   // VAD timing refs — track when speech starts and ends
-  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const silenceTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const speechStartRef = useRef<number | null>(null);
-  const lastSpeechRef = useRef<number | null>(null);
+  const speechStartRef    = useRef<number | null>(null);
+  const lastSpeechRef     = useRef<number | null>(null);
 
   // Generation counter — used to discard stale audio playback callbacks
-  const audioGenRef = useRef(0);
+  const audioGenRef       = useRef(0);
 
   // ── Recording config ───────────────────────────────────────────────────
   // 16kHz mono WAV — required by the voice server
   const RECORDING_OPTIONS = {
     android: {
-      extension: '.wav',
-      outputFormat: Audio.AndroidOutputFormat.DEFAULT,
-      audioEncoder: Audio.AndroidAudioEncoder.DEFAULT,
-      sampleRate: 16000,
+      extension:        '.wav',
+      outputFormat:     Audio.AndroidOutputFormat.DEFAULT,
+      audioEncoder:     Audio.AndroidAudioEncoder.DEFAULT,
+      sampleRate:       16000,
       numberOfChannels: 1,
-      bitRate: 128000,
+      bitRate:          128000,
     },
     ios: {
-      extension: '.wav',
-      audioQuality: Audio.IOSAudioQuality.HIGH,
-      sampleRate: 16000,
-      numberOfChannels: 1,
-      bitRate: 128000,
-      linearPCMBitDepth: 16,
+      extension:            '.wav',
+      audioQuality:         Audio.IOSAudioQuality.HIGH,
+      sampleRate:           16000,
+      numberOfChannels:     1,
+      bitRate:              128000,
+      linearPCMBitDepth:    16,
       linearPCMIsBigEndian: false,
-      linearPCMIsFloat: false,
+      linearPCMIsFloat:     false,
     },
     web: {},
   };
 
   // ── Cleanup — stops all audio, closes socket, resets all refs ─────────
   const voiceCleanup = () => {
-    if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
+    if (silenceTimerRef.current)   { clearTimeout(silenceTimerRef.current);   silenceTimerRef.current   = null; }
     if (reconnectTimerRef.current) { clearTimeout(reconnectTimerRef.current); reconnectTimerRef.current = null; }
 
-    voiceRecRef.current?.stopAndUnloadAsync().catch(() => { });
+    voiceRecRef.current?.stopAndUnloadAsync().catch(() => {});
     voiceRecRef.current = null;
 
-    voiceSoundRef.current?.unloadAsync().catch(() => { });
+    voiceSoundRef.current?.unloadAsync().catch(() => {});
     voiceSoundRef.current = null;
 
-    voiceQueueRef.current = [];
+    voiceQueueRef.current   = [];
     voicePlayingRef.current = false;
-    speechStartRef.current = null;
-    lastSpeechRef.current = null;
+    speechStartRef.current  = null;
+    lastSpeechRef.current   = null;
 
     voiceWsRef.current?.close();
     voiceWsRef.current = null;
@@ -141,7 +137,7 @@ export function useVoiceChat({
     // Skip if already open or connecting
     if (voiceWsRef.current &&
       (voiceWsRef.current.readyState === WebSocket.OPEN ||
-        voiceWsRef.current.readyState === WebSocket.CONNECTING)) return;
+       voiceWsRef.current.readyState === WebSocket.CONNECTING)) return;
 
     const ws = new WebSocket(
       `ws://${VOICE_SERVER_URL.replace(/^https?:\/\//, '')}/voice-stream`
@@ -151,15 +147,15 @@ export function useVoiceChat({
     ws.onopen = () => {
       setVoiceConnected(true);
       ws.send(JSON.stringify({
-        type: 'start',
-        user_id: userEmail || 'anonymous',
-        chat_id: currentChatIdRef.current ? String(currentChatIdRef.current) : `voice_${Date.now()}`,
+        type:       'start',
+        user_id:    'app_user',
+        chat_id:    `voice_${Date.now()}`,
         session_id: `vs_${Date.now()}`,
       }));
     };
 
     ws.onmessage = (e) => {
-      try { handleVoiceMessage(JSON.parse(e.data)); } catch { }
+      try { handleVoiceMessage(JSON.parse(e.data)); } catch {}
     };
 
     // Auto-reconnect on close
@@ -229,7 +225,7 @@ export function useVoiceChat({
       setVoiceStatus('Tap the indicator to speak');
       voiceHasSentRef.current = false;
       await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
+        allowsRecordingIOS:   true,
         playsInSilentModeIOS: true,
       });
       return;
@@ -240,10 +236,10 @@ export function useVoiceChat({
 
     try {
       await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
-        shouldDuckAndroid: true,
+        allowsRecordingIOS:       false,
+        playsInSilentModeIOS:     true,
+        staysActiveInBackground:  false,
+        shouldDuckAndroid:        true,
         playThroughEarpieceAndroid: false,
       });
 
@@ -257,8 +253,8 @@ export function useVoiceChat({
 
       // Unload previous sound before creating a new one
       if (voiceSoundRef.current) {
-        await voiceSoundRef.current.stopAsync().catch(() => { });
-        await voiceSoundRef.current.unloadAsync().catch(() => { });
+        await voiceSoundRef.current.stopAsync().catch(() => {});
+        await voiceSoundRef.current.unloadAsync().catch(() => {});
         voiceSoundRef.current = null;
       }
 
@@ -277,7 +273,7 @@ export function useVoiceChat({
 
         if (st.isLoaded && st.didJustFinish) {
           voicePlayingRef.current = false;
-          await sound.unloadAsync().catch(() => { });
+          await sound.unloadAsync().catch(() => {});
           if (voiceSoundRef.current === sound) voiceSoundRef.current = null;
           playVoiceQueue(); // play next chunk
         }
@@ -307,13 +303,13 @@ export function useVoiceChat({
       if (!granted) return;
 
       await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
+        allowsRecordingIOS:   true,
         playsInSilentModeIOS: true,
       });
 
       voiceHasSentRef.current = false;
-      speechStartRef.current = null;
-      lastSpeechRef.current = null;
+      speechStartRef.current  = null;
+      lastSpeechRef.current   = null;
 
       setVoicePhase('listening');
       setVoiceStatus('Listening… speak freely');
@@ -324,9 +320,9 @@ export function useVoiceChat({
           if (!status.isRecording) return;
 
           // Convert metering dB value to 0–1 amplitude
-          const level = (status as any).metering ?? -60;
+          const level     = (status as any).metering ?? -60;
           const amplitude = Math.max(0, (level + 60) / 60);
-          const now = Date.now();
+          const now       = Date.now();
 
           if (amplitude > VAD_THRESHOLD) {
             // Speech detected — reset silence timer
@@ -347,8 +343,8 @@ export function useVoiceChat({
             ) {
               silenceTimerRef.current = setTimeout(() => {
                 silenceTimerRef.current = null;
-                speechStartRef.current = null;
-                lastSpeechRef.current = null;
+                speechStartRef.current  = null;
+                lastSpeechRef.current   = null;
                 voiceHasSentRef.current = true;
                 sendVoiceAudio();
               }, SILENCE_DURATION);
@@ -380,9 +376,9 @@ export function useVoiceChat({
 
       const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
       voiceWsRef.current?.send(JSON.stringify({
-        type: 'audio_chunk',
-        data: base64,
-        format: 'webm',
+        type:     'audio_chunk',
+        data:     base64,
+        format:   'wav',
         is_final: true,
       }));
 
@@ -401,8 +397,8 @@ export function useVoiceChat({
   const handleIndicatorTap = async () => {
     if (voicePhase === 'idle') {
       voiceHasSentRef.current = false;
-      speechStartRef.current = null;
-      lastSpeechRef.current = null;
+      speechStartRef.current  = null;
+      lastSpeechRef.current   = null;
       await startVoiceListening();
       return;
     }

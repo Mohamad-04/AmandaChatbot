@@ -2,7 +2,23 @@ import { StyleSheet, Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
+const C = {
+  sheetBg:     '#643f3f',
+  brand:       '#E8637A',
+  text:        'rgba(255,255,255,0.88)',
+  textMuted:   'rgba(255,255,255,0.55)',
+  textLight:   'rgba(255,255,255,0.35)',
+  border:      'rgba(232,99,122,0.14)',
+  rowBg:       'rgba(232,99,122,0.07)',
+  danger:      '#e05c5c',
+  dangerBg:    'rgba(224,92,92,0.10)',
+  dangerBorder:'rgba(224,92,92,0.22)',
+  primaryBg:   '#E8637A',
+};
+
 export const styles = StyleSheet.create({
+
+  // ── Top bar ──────────────────────────────────────────────────────────────
   navbar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -49,6 +65,21 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
+  signOutBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 12,
+    backgroundColor: 'rgba(224,92,92,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(224,92,92,0.28)',
+  },
+  signOutBtnText: {
+    color: '#e05c5c',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // ── Overlay + sheet ──────────────────────────────────────────────────────
   dimOverlay: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
@@ -56,14 +87,11 @@ export const styles = StyleSheet.create({
   },
   sheet: {
     position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
+    top: 0, bottom: 0, left: 0,
     width: width * 0.72,
-    backgroundColor: '#643f3f',
+    backgroundColor: C.sheetBg,
     paddingTop: 70,
-    paddingBottom: 40,
-    paddingHorizontal: 24,
+    paddingBottom: 0,
     borderTopRightRadius: 28,
     borderBottomRightRadius: 28,
   },
@@ -71,85 +99,116 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 24,
     marginBottom: 8,
   },
   sheetBrand: {
     fontSize: 24,
     fontWeight: '800',
-    color: '#E8637A',
+    color: C.brand,
     letterSpacing: 0.5,
   },
   closeBtn: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: 'rgba(240, 172, 182, 0.15)',
+    backgroundColor: 'rgba(240,172,182,0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeBtnText: {
-    color: '#E8637A',
+    color: C.brand,
     fontSize: 13,
     fontWeight: '700',
   },
-  sheetTitle: {
+
+  // ── Scrollable content ───────────────────────────────────────────────────
+  sheetScroll: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  sectionLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: 'rgba(255,255,255,0.30)',
+    color: C.textLight,
     letterSpacing: 2,
     textTransform: 'uppercase',
-    marginBottom: 14,
-    marginTop: 28,
+    marginTop: 24,
+    marginBottom: 6,
+    paddingHorizontal: 4,
   },
-  sheetLinks: {
-    gap: 8,
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 13,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: C.rowBg,
+    marginBottom: 4,
+    gap: 10,
   },
-  sheetLink: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 14,
-    backgroundColor: 'rgba(232,99,122,0.08)',
+  rowIcon: {
+    fontSize: 16,
+    width: 24,
+    textAlign: 'center',
+  },
+  rowLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+    color: C.text,
+  },
+  rowChevron: {
+    fontSize: 18,
+    color: C.textMuted,
+  },
+
+  // ── Auth section at bottom ────────────────────────────────────────────────
+  authSection: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 36,
+    borderTopWidth: 1,
+    borderTopColor: C.border,
+    gap: 10,
+  },
+  authBtnPrimary: {
+    paddingVertical: 13,
+    borderRadius: 12,
+    backgroundColor: C.primaryBg,
+    alignItems: 'center',
+  },
+  authBtnPrimaryText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: 'white',
+  },
+  authBtnSecondary: {
+    paddingVertical: 13,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(232,99,122,0.12)',
+    borderColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
   },
-  sheetLinkText: {
-    color: 'rgba(255,255,255,0.88)',
+  authBtnSecondaryText: {
     fontSize: 15,
     fontWeight: '600',
+    color: C.text,
   },
-  dropdownRow: {
-    flexDirection: 'row',
+  authBtnDanger: {
+    paddingVertical: 13,
+    borderRadius: 12,
+    backgroundColor: C.dangerBg,
+    borderWidth: 1,
+    borderColor: C.dangerBorder,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    flex: 1,
   },
-  dropdownArrow: {
-    color: '#E8637A',
-    fontSize: 12,
-  },
-  dropdownChildren: {
-    overflow: 'hidden',
-    marginTop: 4,
-  },
-  dropdownChild: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 44,
-    paddingLeft: 8,
-  },
-  dropdownIndent: {
-    width: 2,
-    height: 18,
-    backgroundColor: 'rgba(232,99,122,0.30)',
-    borderRadius: 1,
-    marginRight: 12,
-    marginLeft: 8,
-  },
-  dropdownChildText: {
-    color: 'rgba(255,255,255,0.60)',
-    fontSize: 14,
-    fontWeight: '400',
+  authBtnDangerText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: C.danger,
   },
 });

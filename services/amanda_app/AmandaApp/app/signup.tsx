@@ -14,6 +14,7 @@ import InputField from '../components/input-field';
 import { useAuth } from '../hooks/use-auth';
 import { styles } from '../styles/signup.styles';
 import { theme } from '../constants/theme';
+import { PasswordRequirements } from '../components/password-requirements';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -104,6 +105,7 @@ export default function SignupScreen() {
                       onSubmitEditing={() => confirmPasswordRef.current?.focus()}
                       inputRef={passwordRef}
                     />
+                    <PasswordRequirements password={password} />
                   </View>
 
                   <View style={styles.formGroup}>

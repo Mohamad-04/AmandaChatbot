@@ -14,7 +14,14 @@ async function request<T>(method: string, path: string, body?: object): Promise<
   });
 
   if (!res.ok) {
-    throw new Error(`Request failed: ${res.status} ${res.statusText}`);
+    let errorMessage = 'Something went wrong. Please try again.';
+    try {
+      const errData = await res.json();
+      if (errData.message) errorMessage = errData.message;
+    } catch {
+      // Keep default message if response isn't JSON
+    }
+    throw new Error(errorMessage);
   }
 
   return res.json();
@@ -40,6 +47,10 @@ export const login = (email: string, password: string) =>
 // Signup — registers a new user and returns success/message from Flask
 export const signup = (email: string, password: string) =>
   request<{ success: boolean; message?: string }>('POST', '/api/auth/signup', { email, password });
+
+// Verify reset token — checks token is valid without consuming it
+export const verifyResetToken = (token: string) =>
+  request<{ success: boolean; message?: string }>('POST', '/api/auth/verify-reset-token', { token });
 
 // Reset password — submits the token from email link and new password
 export const resetPassword = (token: string, password: string) =>

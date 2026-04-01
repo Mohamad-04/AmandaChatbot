@@ -1,10 +1,12 @@
 // Sliding settings panel that opens from within the chat sidebar.
 // Shows account info, app navigation, support links, and sign out.
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Animated, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Linking } from 'react-native';
 import { profileStyles as ps, SIDEBAR_WIDTH } from '../styles/chat-sidebar.styles';
+import { SupportSheet, SheetType } from './support-sheet';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -29,9 +31,8 @@ export interface ProfilePanelProps {
   onSignOut:       () => void;
 }
 
-// ── Small layout components — only used inside this file ───────────────────
+// ── Small layout components ────────────────────────────────────────────────
 
-// Groups related settings rows under a labelled section header
 const Section = ({ label, children }: SectionProps) => (
   <View style={ps.section}>
     <Text style={ps.sectionLabel}>{label}</Text>
@@ -39,7 +40,6 @@ const Section = ({ label, children }: SectionProps) => (
   </View>
 );
 
-// A single tappable settings row with icon, label, and optional value or right element
 const Row = ({ icon, label, value, onPress, right }: RowProps) => (
   <TouchableOpacity
     style={ps.row}
@@ -49,8 +49,8 @@ const Row = ({ icon, label, value, onPress, right }: RowProps) => (
   >
     <Text style={ps.rowIcon}>{icon}</Text>
     <Text style={ps.rowLabel}>{label}</Text>
-    {value   ? <Text style={ps.rowValue}>{value}</Text>  : null}
-    {right  ?? null}
+    {value  ? <Text style={ps.rowValue}>{value}</Text> : null}
+    {right ?? null}
     {onPress && !right ? <Text style={ps.rowChevron}>›</Text> : null}
   </TouchableOpacity>
 );
@@ -62,76 +62,80 @@ export default function ProfilePanel({
 }: ProfilePanelProps) {
   const router    = useRouter();
   const slideAnim = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
+  const [activeSheet, setActiveSheet] = useState<SheetType>(null);
 
-  // Slides in from the right on mount
   useEffect(() => {
     Animated.timing(slideAnim, {
-      toValue:         0,
-      duration:        260,
-      useNativeDriver: true,
+      toValue: 0, duration: 260, useNativeDriver: true,
     }).start();
   }, []);
 
-  // Slides back out before unmounting
   const handleClose = () => {
     Animated.timing(slideAnim, {
-      toValue:         SIDEBAR_WIDTH,
-      duration:        220,
-      useNativeDriver: true,
+      toValue: SIDEBAR_WIDTH, duration: 220, useNativeDriver: true,
     }).start(() => onClose());
   };
 
-  // Closes both panels then navigates after animation completes
   const navigate = (path: string) => {
     onClose();
     onCloseSidebar?.();
     setTimeout(() => router.push(path as any), 300);
   };
 
+  const handleContactUs = () => {
+    Linking.openURL('mailto:faisaahmed004@gmail.com?subject=Amanda%20Support');
+  };
+
   return (
-    <Animated.View style={[ps.panel, { transform: [{ translateX: slideAnim }] }]}>
+    <>
+      <Animated.View style={[ps.panel, { transform: [{ translateX: slideAnim }] }]}>
 
-      {/* Header with back button */}
-      <View style={ps.header}>
-        <TouchableOpacity onPress={handleClose} style={ps.backBtn} activeOpacity={0.7}>
-          <Text style={ps.backBtnText}>‹</Text>
-        </TouchableOpacity>
-        <Text style={ps.headerTitle}>Settings</Text>
-        <View style={{ width: 36 }} />
-      </View>
+        <View style={ps.header}>
+          <TouchableOpacity onPress={handleClose} style={ps.backBtn} activeOpacity={0.7}>
+            <Text style={ps.backBtnText}>‹</Text>
+          </TouchableOpacity>
+          <Text style={ps.headerTitle}>Settings</Text>
+          <View style={{ width: 36 }} />
+        </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false}>
 
-        <Section label="Account">
-          <Row icon="✉️" label="Email" value={userEmail || '—'} />
-        </Section>
+          <Section label="Account">
+            <Row icon="✉️" label="Email" value={userEmail || '—'} />
+          </Section>
 
-        <Section label="App">
-          <Row icon="🏠" label="Home"            onPress={() => navigate('/')} />
-          <Row icon="🗺️" label="Replay App Tour" onPress={() => navigate('/about')} />
-        </Section>
+          <Section label="App">
+            <Row icon="🏠" label="Home"            onPress={() => navigate('/')} />
+            <Row icon="🗺️" label="Replay App Tour" onPress={() => navigate('/about')} />
+          </Section>
 
-        <Section label="Support">
-          <Row icon="✉️" label="Contact us"     onPress={() => navigate('/contact')} />
-          <Row icon="💬" label="Share feedback" onPress={() => navigate('/feedback')} />
-          <Row icon="🐛" label="Report a bug"   onPress={() => navigate('/bugreport')} />
-        </Section>
+          <Section label="Support">
+            <Row icon="✉️" label="Contact us"     onPress={handleContactUs} />
+            <Row icon="💬" label="Share feedback" onPress={() => setActiveSheet('feedback')} />
+            <Row icon="🐛" label="Report a bug"   onPress={() => setActiveSheet('bug')} />
+          </Section>
 
-        <Section label="Legal">
-          <Row icon="📄" label="Terms & Conditions" onPress={() => navigate('/terms')} />
-          <Row icon="🔒" label="Privacy Policy"     onPress={() => navigate('/privacy')} />
-        </Section>
+          <Section label="Legal">
+            <Row icon="📄" label="Terms & Conditions" onPress={() => navigate('/terms')} />
+            <Row icon="🔒" label="Privacy Policy"     onPress={() => navigate('/privacy')} />
+          </Section>
 
-      </ScrollView>
+        </ScrollView>
 
-      {/* Sign out — pinned to the bottom */}
-      <View style={ps.signOutWrapper}>
-        <TouchableOpacity style={ps.signOutBtn} onPress={onSignOut} activeOpacity={0.8}>
-          <Text style={ps.signOutIcon}>→</Text>
-          <Text style={ps.signOutText}>Sign out</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={ps.signOutWrapper}>
+          <TouchableOpacity style={ps.signOutBtn} onPress={onSignOut} activeOpacity={0.8}>
+            <Text style={ps.signOutIcon}>→</Text>
+            <Text style={ps.signOutText}>Sign out</Text>
+          </TouchableOpacity>
+        </View>
 
-    </Animated.View>
+      </Animated.View>
+
+      <SupportSheet
+        visible={activeSheet !== null}
+        type={activeSheet}
+        onClose={() => setActiveSheet(null)}
+      />
+    </>
   );
 }

@@ -59,31 +59,15 @@ export default function LandingScreen() {
     <LinearGradient colors={theme.colors.gradient} style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }}>
 
-        {/* Navbar — shows login/signup or profile/signout based on auth state */}
-        <View style={styles.navbar}>
-          <Navbar />
-          <View style={styles.navLinks}>
-            {isLoggedIn ? (
-              <>
-                <TouchableOpacity onPress={() => setShowProfile(true)} activeOpacity={0.7}>
-                  <Text style={styles.navLink}>My Profile</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.navSignupBtn} onPress={handleSignOut} activeOpacity={0.85}>
-                  <Text style={styles.navSignupText}>Sign out</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <TouchableOpacity onPress={() => router.push('/login')} activeOpacity={0.7}>
-                  <Text style={styles.navLink}>Login</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.navSignupBtn} onPress={() => router.push('/signup')} activeOpacity={0.85}>
-                  <Text style={styles.navSignupText}>Sign Up</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </View>
+        {/* Navbar — auth buttons are inside the slide-out sheet */}
+        <Navbar
+          isLoggedIn={isLoggedIn}
+          userEmail={userEmail}
+          onLogin={() => router.push('/login')}
+          onSignup={() => router.push('/signup')}
+          onProfile={() => setShowProfile(true)}
+          onSignOut={handleSignOut}
+        />
 
         {/* Hero card — Amanda's intro and call to action */}
         <View style={styles.hero}>

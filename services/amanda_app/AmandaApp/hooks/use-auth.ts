@@ -6,7 +6,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { login, signup, resetPassword, verifyEmail, resendVerification, forgotPassword, logout, checkAuth } from '../services/api-client';
+import { login, signup, resetPassword, verifyResetToken, verifyEmail, resendVerification, forgotPassword, logout, checkAuth } from '../services/api-client';
+import { validatePassword } from '../components/password-requirements';
 
 
 interface AuthState {
@@ -23,7 +24,11 @@ export function useAuth() {
   // Validates fields, calls login API, navigates to chat on success.
   // Returns error string so screen can trigger shake animation.
   const handleLogin = async (email: string, password: string): Promise<string | null> => {
-    if (!email.trim() || !password) return 'Please fill in both fields';
+    if (!email.trim() || !password) {
+      const msg = 'Please fill in both fields';
+      setState({ loading: false, error: msg });
+      return msg;
+    }
 
     setState({ loading: true, error: '' });
     try {
@@ -46,22 +51,35 @@ export function useAuth() {
     password: string,
     confirmPassword: string
   ): Promise<string | null> => {
-    if (!email.trim() || !password || !confirmPassword) return 'Please fill in all fields';
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim()))   return 'Please enter a valid email address';
-    if (password.length < 8)              return 'Password must be at least 8 characters';
-    if (password !== confirmPassword)     return 'Passwords do not match';
+    const validationError = (() => {
+      if (!email.trim() || !password || !confirmPassword) return 'Please fill in all fields';
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) return 'Please enter a valid email address';
+      const pwErr = validatePassword(password);
+      if (pwErr) return pwErr;
+      if (password !== confirmPassword) return 'Passwords do not match';
+      return null;
+    })();
+    if (validationError) {
+      setState({ loading: false, error: validationError });
+      return validationError;
+    }
 
     setState({ loading: true, error: '' });
     try {
       const data = await signup(email.trim().toLowerCase(), password);
-      if (data.success) { router.replace('/verify-email'); return null; }
+      if (data.success) {
+        router.replace({
+          pathname: '/verify-email',
+          params: { email: email.trim().toLowerCase() },
+        });
+        return null;
+      }
       const msg = data.message || 'Sign up failed. Please try again.';
       setState({ loading: false, error: msg });
       return msg;
-    } catch {
-      const msg = 'Could not connect. Please try again.';
+    } catch (err: any) {
+      const msg = err?.message || 'Could not connect. Please try again.';
       setState({ loading: false, error: msg });
       return msg;
     }
@@ -74,9 +92,17 @@ export function useAuth() {
     password: string,
     confirmPassword: string
   ): Promise<string | null> => {
-    if (!token)                           return 'Invalid or missing reset link.';
-    if (password.length < 8)             return 'Password must be at least 8 characters';
-    if (password !== confirmPassword)    return 'Passwords do not match';
+    const resetValidationError = (() => {
+      if (!token) return 'Invalid or missing reset link.';
+      const pwErr = validatePassword(password);
+      if (pwErr) return pwErr;
+      if (password !== confirmPassword) return 'Passwords do not match';
+      return null;
+    })();
+    if (resetValidationError) {
+      setState({ loading: false, error: resetValidationError });
+      return resetValidationError;
+    }
 
     setState({ loading: true, error: '' });
     try {
@@ -92,6 +118,18 @@ export function useAuth() {
     }
   };
 
+  // Validates a password reset token without consuming it.
+  // Returns the status and message so the screen can gate the password form.
+  const handleVerifyResetToken = async (token: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const data = await verifyResetToken(token);
+      if (data.success) return { success: true, message: '' };
+      return { success: false, message: data.message || 'Invalid or expired reset token.' };
+    } catch (err: any) {
+      return { success: false, message: err.message || 'An error occurred. Please try again.' };
+    }
+  };
+
   // Calls the verify endpoint with the token from the URL.
   // Returns the status and message so the screen can display the right UI state.
   const handleVerifyEmail = async (token: string): Promise<{ success: boolean; message: string }> => {
@@ -101,8 +139,8 @@ export function useAuth() {
         return { success: true, message: data.message || 'Email verified! You can now sign in.' };
       }
       return { success: false, message: data.message || 'Verification failed. The link may have expired.' };
-    } catch {
-      return { success: false, message: 'An error occurred. Please try again.' };
+    } catch (err: any) {
+      return { success: false, message: err.message || 'An error occurred. Please try again.' };
     }
   };
 
@@ -119,9 +157,17 @@ export function useAuth() {
   // Returns error string for shake, or null on success.
   // Always shows success on screen — doesn't reveal if email is registered.
   const handleForgotPassword = async (email: string): Promise<string | null> => {
-    if (!email.trim()) return 'Please enter your email address';
+    if (!email.trim()) {
+      const msg = 'Please enter your email address';
+      setState({ loading: false, error: msg });
+      return msg;
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) return 'Please enter a valid email address';
+    if (!emailRegex.test(email.trim())) {
+      const msg = 'Please enter a valid email address';
+      setState({ loading: false, error: msg });
+      return msg;
+    }
 
     setState({ loading: true, error: '' });
     try {
@@ -165,6 +211,7 @@ const getSessionUser = async (): Promise<{ loggedIn: boolean; email: string }> =
     handleLogin,
     handleSignup,
     handleResetPassword,
+    handleVerifyResetToken,
     handleVerifyEmail,
     handleResendVerification,
     handleForgotPassword,

@@ -1,68 +1,41 @@
 /**
- * Navbar.tsx — Reusable navigation bar
+ * Navbar.tsx — Top navigation bar + slide-out sheet with sections and auth buttons.
  */
 import React, { useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  Animated,
-  Dimensions,
-  Modal,
-  TouchableWithoutFeedback,
+  View, Text, TouchableOpacity, Animated,
+  Dimensions, Modal, TouchableWithoutFeedback,
+  ScrollView, Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { styles, C} from '../styles/navbar.styles';
+import { styles } from '../styles/navbar.styles';
+import { SupportSheet, SheetType } from './support-sheet';
 
 const { width } = Dimensions.get('window');
 
 type NavbarProps = {
-  showBack?: boolean;
-  backTo?: string;
+  showBack?:   boolean;
+  backTo?:     string;
+  isLoggedIn?: boolean;
+  userEmail?:  string;
+  onLogin?:    () => void;
+  onSignup?:   () => void;
+  onProfile?:  () => void;
+  onSignOut?:  () => void;
 };
 
-function DropdownItem({ label, items, navigate }) {
-  const [open, setOpen] = useState(false);
-  const heightAnim = useRef(new Animated.Value(0)).current;
-  const TOTAL_HEIGHT = items.length * 44;
-
-  const toggle = () => {
-    Animated.timing(heightAnim, {
-      toValue: open ? 0 : TOTAL_HEIGHT,
-      duration: 220,
-      useNativeDriver: false,
-    }).start();
-    setOpen(!open);
-  };
-
-  return (
-    <View>
-      <TouchableOpacity style={styles.sheetLink} onPress={toggle} activeOpacity={0.7}>
-        <View style={styles.dropdownRow}>
-          <Text style={styles.sheetLinkText}>{label}</Text>
-          <Text style={styles.dropdownArrow}>{open ? '▾' : '▸'}</Text>
-        </View>
-      </TouchableOpacity>
-      <Animated.View style={[styles.dropdownChildren, { height: heightAnim }]}>
-        {items.map((item) => (
-          <TouchableOpacity
-            key={item.path}
-            style={styles.dropdownChild}
-            onPress={() => navigate(item.path)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.dropdownIndent} />
-            <Text style={styles.dropdownChildText}>{item.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </Animated.View>
-    </View>
-  );
-}
-
-export default function Navbar({ showBack = false, backTo = '/' }: NavbarProps) {
-  const router = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
+export default function Navbar({
+  showBack = false,
+  backTo,
+  isLoggedIn = false,
+  onLogin,
+  onSignup,
+  onProfile,
+  onSignOut,
+}: NavbarProps) {
+  const router     = useRouter();
+  const [menuOpen,    setMenuOpen]    = useState(false);
+  const [activeSheet, setActiveSheet] = useState<SheetType>(null);
   const sheetAnim = useRef(new Animated.Value(-width * 0.72)).current;
   const dimAnim   = useRef(new Animated.Value(0)).current;
 
@@ -86,8 +59,14 @@ export default function Navbar({ showBack = false, backTo = '/' }: NavbarProps) 
     setTimeout(() => router.push(path as any), 300);
   };
 
+  const handleContactUs = () => {
+    closeMenu();
+    Linking.openURL('mailto:faisaahmed004@gmail.com?subject=Amanda%20Support');
+  };
+
   return (
     <>
+      {/* ── Top bar ── */}
       <View style={styles.navbar}>
         <View style={styles.navLeft}>
           <TouchableOpacity style={styles.menuBtn} onPress={openMenu} activeOpacity={0.7}>
@@ -98,55 +77,127 @@ export default function Navbar({ showBack = false, backTo = '/' }: NavbarProps) 
           <Text style={styles.brand}>Amanda</Text>
         </View>
         {showBack && (
-          <TouchableOpacity
-            style={styles.backBtn}
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
             <Text style={styles.backBtnText}>← Back</Text>
+          </TouchableOpacity>
+        )}
+        {isLoggedIn && !showBack && (
+          <TouchableOpacity style={styles.signOutBtn} onPress={onSignOut} activeOpacity={0.8}>
+            <Text style={styles.signOutBtnText}>Sign out</Text>
           </TouchableOpacity>
         )}
       </View>
 
+      {/* ── Slide-out sheet ── */}
       <Modal visible={menuOpen} transparent animationType="none" onRequestClose={closeMenu}>
         <TouchableWithoutFeedback onPress={closeMenu}>
           <Animated.View style={[styles.dimOverlay, { opacity: dimAnim }]} />
         </TouchableWithoutFeedback>
+
         <Animated.View style={[styles.sheet, { transform: [{ translateX: sheetAnim }] }]}>
+
+          {/* Header */}
           <View style={styles.sheetHeader}>
             <Text style={styles.sheetBrand}>Amanda</Text>
             <TouchableOpacity style={styles.closeBtn} onPress={closeMenu} activeOpacity={0.7}>
               <Text style={styles.closeBtnText}>✕</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.sheetTitle}>Navigation</Text>
-          <View style={styles.sheetLinks}>
-            <TouchableOpacity style={styles.sheetLink} onPress={() => navigate('/')}>
-              <Text style={styles.sheetLinkText}>Home</Text>
+
+          {/* Scrollable sections */}
+          <ScrollView showsVerticalScrollIndicator={false} style={styles.sheetScroll}>
+
+            <Text style={styles.sectionLabel}>Navigation</Text>
+            <TouchableOpacity style={styles.row} onPress={() => navigate('/')} activeOpacity={0.7}>
+              <Text style={styles.rowIcon}>🏠</Text>
+              <Text style={styles.rowLabel}>Home</Text>
+              <Text style={styles.rowChevron}>›</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.sheetLink} onPress={() => navigate('/about')}>
-              <Text style={styles.sheetLinkText}>App Tour</Text>
+            <TouchableOpacity style={styles.row} onPress={() => navigate('/about')} activeOpacity={0.7}>
+              <Text style={styles.rowIcon}>🗺️</Text>
+              <Text style={styles.rowLabel}>App Tour</Text>
+              <Text style={styles.rowChevron}>›</Text>
             </TouchableOpacity>
-            <DropdownItem
-              label="Support"
-              items={[
-                { label: 'Contact us',     path: '/contact' },
-                { label: 'Share feedback', path: '/feedback' },
-                { label: 'Report a bug',   path: '/bugreport' },
-              ]}
-              navigate={navigate}
-            />
-            <DropdownItem
-              label="Legal"
-              items={[
-                { label: 'Terms & Conditions', path: '/terms' },
-                { label: 'Privacy Policy',     path: '/privacy' },
-              ]}
-              navigate={navigate}
-            />
+
+            <Text style={styles.sectionLabel}>Support</Text>
+            <TouchableOpacity style={styles.row} onPress={handleContactUs} activeOpacity={0.7}>
+              <Text style={styles.rowIcon}>✉️</Text>
+              <Text style={styles.rowLabel}>Contact us</Text>
+              <Text style={styles.rowChevron}>›</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.row} onPress={() => { closeMenu(); setTimeout(() => setActiveSheet('feedback'), 300); }} activeOpacity={0.7}>
+              <Text style={styles.rowIcon}>💬</Text>
+              <Text style={styles.rowLabel}>Share feedback</Text>
+              <Text style={styles.rowChevron}>›</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.row} onPress={() => { closeMenu(); setTimeout(() => setActiveSheet('bug'), 300); }} activeOpacity={0.7}>
+              <Text style={styles.rowIcon}>🐛</Text>
+              <Text style={styles.rowLabel}>Report a bug</Text>
+              <Text style={styles.rowChevron}>›</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.sectionLabel}>Legal</Text>
+            <TouchableOpacity style={styles.row} onPress={() => navigate('/terms')} activeOpacity={0.7}>
+              <Text style={styles.rowIcon}>📄</Text>
+              <Text style={styles.rowLabel}>Terms & Conditions</Text>
+              <Text style={styles.rowChevron}>›</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.row} onPress={() => navigate('/privacy')} activeOpacity={0.7}>
+              <Text style={styles.rowIcon}>🔒</Text>
+              <Text style={styles.rowLabel}>Privacy Policy</Text>
+              <Text style={styles.rowChevron}>›</Text>
+            </TouchableOpacity>
+
+          </ScrollView>
+
+          {/* Auth buttons at bottom */}
+          <View style={styles.authSection}>
+            {isLoggedIn ? (
+              <>
+                <TouchableOpacity
+                  style={styles.authBtnSecondary}
+                  onPress={() => { closeMenu(); onProfile?.(); }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.authBtnSecondaryText}>👤  My Profile</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.authBtnDanger}
+                  onPress={() => { closeMenu(); onSignOut?.(); }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.authBtnDangerText}>→  Sign out</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <TouchableOpacity
+                  style={styles.authBtnSecondary}
+                  onPress={() => { closeMenu(); setTimeout(() => onLogin?.(), 300); }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.authBtnSecondaryText}>Login</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.authBtnPrimary}
+                  onPress={() => { closeMenu(); setTimeout(() => onSignup?.(), 300); }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.authBtnPrimaryText}>Sign Up</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
+
         </Animated.View>
       </Modal>
+
+      {/* Support bottom sheets */}
+      <SupportSheet
+        visible={activeSheet !== null}
+        type={activeSheet}
+        onClose={() => setActiveSheet(null)}
+      />
     </>
   );
 }
