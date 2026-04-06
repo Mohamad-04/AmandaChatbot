@@ -8,10 +8,11 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import {
-  View, Text, TouchableOpacity, SafeAreaView,
+  View, Text, TouchableOpacity, Pressable, SafeAreaView,
   Animated, ActivityIndicator, ScrollView,
   KeyboardAvoidingView, Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Background from '../components/background';
 import Navbar from '../components/navbar';
@@ -19,6 +20,7 @@ import InputField from '../components/input-field';
 import { useAuth } from '../hooks/use-auth';
 import { styles } from '../styles/login.styles';
 import { theme } from '../constants/theme';
+import { colors } from '../constants/tokens';
 
 type View        = 'token' | 'resend';
 type VerifyState = 'idle' | 'loading' | 'success' | 'error';
@@ -47,7 +49,7 @@ export default function VerifyEmailScreen() {
   }, []);
 
   const onPressVerify = async () => {
-    if (!tokenInput.trim()) return;
+    if (!tokenInput.trim()) { setVerifyState('error'); setVerifyMsg('Please enter your verification token.'); return; }
     setVerifyState('loading');
     const result = await handleVerifyEmail(tokenInput.trim());
     setVerifyState(result.success ? 'success' : 'error');
@@ -107,9 +109,17 @@ export default function VerifyEmailScreen() {
                       <View style={styles.successBox}>
                         <Text style={styles.successText}>{verifyMsg}</Text>
                       </View>
-                      <TouchableOpacity style={styles.btn} onPress={() => router.replace('/login')}>
-                        <Text style={styles.btnText}>Go to Login</Text>
-                      </TouchableOpacity>
+                      <Pressable style={styles.btn} onPress={() => router.replace('/login')}>
+                        {({ pressed }) => (
+                          <LinearGradient
+                            colors={pressed ? [colors.btnPrimaryPressC1, colors.btnPrimaryPressC2] : [colors.btnPrimary, colors.btnPrimary]}
+                            start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                            style={styles.btnInner}
+                          >
+                            <Text style={styles.btnText}>Go to Login</Text>
+                          </LinearGradient>
+                        )}
+                      </Pressable>
                     </>
                   )}
 
@@ -138,17 +148,24 @@ export default function VerifyEmailScreen() {
                         />
                       </View>
 
-                      <TouchableOpacity
-                        style={[styles.btn, (verifyState === 'loading' || !tokenInput.trim()) && styles.btnDisabled]}
+                      <Pressable
+                        style={[styles.btn, verifyState === 'loading' && styles.btnDisabled]}
                         onPress={onPressVerify}
-                        disabled={verifyState === 'loading' || !tokenInput.trim()}
-                        activeOpacity={0.85}
+                        disabled={verifyState === 'loading'}
                       >
-                        {verifyState === 'loading'
-                          ? <ActivityIndicator color={theme.colors.white} size="small" />
-                          : <Text style={styles.btnText}>Verify token</Text>
-                        }
-                      </TouchableOpacity>
+                        {({ pressed }) => (
+                          <LinearGradient
+                            colors={pressed ? [colors.btnPrimaryPressC1, colors.btnPrimaryPressC2] : [colors.btnPrimary, colors.btnPrimary]}
+                            start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                            style={styles.btnInner}
+                          >
+                            {verifyState === 'loading'
+                              ? <ActivityIndicator color={theme.colors.white} size="small" />
+                              : <Text style={styles.btnText}>Verify token</Text>
+                            }
+                          </LinearGradient>
+                        )}
+                      </Pressable>
 
                       <TouchableOpacity onPress={goToResend} activeOpacity={0.7} style={{ alignItems: 'center', paddingTop: 4 }}>
                         <Text style={styles.forgotText}>Didn't get the email? Resend it</Text>
@@ -191,17 +208,24 @@ export default function VerifyEmailScreen() {
                             />
                           </View>
 
-                          <TouchableOpacity
+                          <Pressable
                             style={[styles.btn, (resendState === 'loading' || !email.trim()) && styles.btnDisabled]}
                             onPress={onPressResend}
                             disabled={resendState === 'loading' || !email.trim()}
-                            activeOpacity={0.85}
                           >
-                            {resendState === 'loading'
-                              ? <ActivityIndicator color={theme.colors.white} size="small" />
-                              : <Text style={styles.btnText}>Resend token</Text>
-                            }
-                          </TouchableOpacity>
+                            {({ pressed }) => (
+                              <LinearGradient
+                                colors={pressed ? [colors.btnPrimaryPressC1, colors.btnPrimaryPressC2] : [colors.btnPrimary, colors.btnPrimary]}
+                                start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                                style={styles.btnInner}
+                              >
+                                {resendState === 'loading'
+                                  ? <ActivityIndicator color={theme.colors.white} size="small" />
+                                  : <Text style={styles.btnText}>Resend token</Text>
+                                }
+                              </LinearGradient>
+                            )}
+                          </Pressable>
 
                           <TouchableOpacity onPress={goToToken} activeOpacity={0.7} style={{ alignItems: 'center', paddingTop: 4 }}>
                             <Text style={styles.forgotText}>I have my token — go back</Text>

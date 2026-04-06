@@ -22,6 +22,7 @@ import { useVoiceChat }    from '../hooks/use-voice-chat';
 import { useTranscription } from '../hooks/use-transcription';
 import { s }              from '../styles/chat.styles';
 import { chatColors as C } from '../constants/theme';
+import { useThemeContext, useThemeColors } from '../contexts/theme-context';
 
 
 // Animated wave bars on the voice chat button — only used here
@@ -57,14 +58,14 @@ function VoiceChatIcon() {
 }
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
-const EmptyState = ({ onChip }: any) => (
+const EmptyState = ({ onChip, tc, isDark }: any) => (
   <View style={s.emptyState}>
-    <Text style={s.emptyTitle}>Hi, I'm Amanda</Text>
-    <Text style={s.emptySubtitle}>I'm here to listen. What's on your mind?</Text>
+    <Text style={[s.emptyTitle, { color: tc.text }]}>Hi, I'm Amanda</Text>
+    <Text style={[s.emptySubtitle, { color: tc.textMuted }]}>I'm here to listen. What's on your mind?</Text>
     <View style={s.chips}>
       {["How are you feeling today?", "I need someone to talk to", "Help me manage my stress", "I've been feeling anxious"].map(c => (
-        <TouchableOpacity key={c} style={s.chip} onPress={() => onChip(c)} activeOpacity={0.7}>
-          <Text style={s.chipText}>{c}</Text>
+        <TouchableOpacity key={c} style={[s.chip, isDark && { backgroundColor: 'rgba(255,255,255,0.07)', borderColor: 'rgba(255,255,255,0.12)' }]} onPress={() => onChip(c)} activeOpacity={0.7}>
+          <Text style={[s.chipText, { color: tc.textMuted }]}>{c}</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -108,6 +109,7 @@ export default function ChatScreen() {
     handleIndicatorTap,
   } = useVoiceChat({ currentChatIdRef, flatListRef, setMessages, userEmail });
 
+
   const {
     isActive:       transcriptionActive,
     isRecording:    transcriptionRecording,
@@ -116,6 +118,9 @@ export default function ChatScreen() {
     cancelRecording,
     confirmRecording,
   } = useTranscription();
+
+  const { isDark } = useThemeContext();
+  const tc = useThemeColors();
 
   // ── UI state — only things that affect display, nothing else ──────────
   const [showLoginModal,      setShowLoginModal]      = useState(false);
@@ -170,22 +175,22 @@ export default function ChatScreen() {
   const listFooter = () => {
     if (!isStreaming) return null;
     if (!streamingText) return <TypingDots />;
-    return <ChatBubble role="assistant" content={streamingText} isStreaming />;
+    return <ChatBubble role="assistant" content={streamingText} />;
   };
 
   // ── Loading state ──────────────────────────────────────────────────────
   if (isLoading) return (
-    <View style={s.loadingContainer}>
-      <ActivityIndicator size="large" color={C.bg3} />
-      <Text style={s.loadingText}>Connecting to Amanda…</Text>
+    <View style={[s.loadingContainer, { backgroundColor: tc.bgBase }]}>
+      <ActivityIndicator size="large" color={tc.primary} />
+      <Text style={[s.loadingText, { color: tc.textMuted }]}>Connecting to Amanda…</Text>
     </View>
   );
 
   // ── Main render ────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={s.safe}>
-      <StatusBar barStyle="dark-content" />
-      <View style={s.bgLayer} pointerEvents="none" />
+    <SafeAreaView style={[s.safe, { backgroundColor: tc.bgBase }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
+      <View style={[s.bgLayer, { backgroundColor: tc.bgBase }]} pointerEvents="none" />
 
       {/* Login prompt for anonymous users */}
       <LoginModal
@@ -304,16 +309,16 @@ export default function ChatScreen() {
         keyboardVerticalOffset={0}
       >
         {/* Header — shows "· Voice" suffix in voice mode */}
-        <View style={s.header}>
+        <View style={[s.header, { backgroundColor: isDark ? 'rgba(28,24,22,0.60)' : 'rgba(241,227,211,0.40)', borderBottomColor: tc.border }]}>
           {!isAnonymous ? (
             <TouchableOpacity
               style={s.headerBtn}
               onPress={() => setShowSidebar(true)}
               activeOpacity={0.7}
             >
-              <View style={s.hLine} />
-              <View style={[s.hLine, { width: 14 }]} />
-              <View style={s.hLine} />
+              <View style={[s.hLine, { backgroundColor: tc.text }]} />
+              <View style={[s.hLine, { width: 14, backgroundColor: tc.text }]} />
+              <View style={[s.hLine, { backgroundColor: tc.text }]} />
             </TouchableOpacity>
           ) : (
             <View style={s.headerBtn} />
@@ -324,29 +329,29 @@ export default function ChatScreen() {
             activeOpacity={isAnonymous || voiceMode ? 1 : 0.7}
             style={s.headerTitleBtn}
           >
-            <Text style={s.headerTitle} numberOfLines={1}>
+            <Text style={[s.headerTitle, { color: tc.text }]} numberOfLines={1}>
               {chatTitle}{voiceMode ? ' · Voice' : ''}
             </Text>
             {!isAnonymous && !voiceMode && (
-              <Text style={s.headerTitleChevron}>⌄</Text>
+              <Text style={[s.headerTitleChevron, { color: tc.textMuted }]}>⌄</Text>
             )}
           </TouchableOpacity>
 
           {isAnonymous ? (
             <TouchableOpacity
-              style={s.headerSignInBtn}
+              style={[s.headerSignInBtn, isDark && { backgroundColor: 'rgba(221,208,196,0.15)', borderColor: 'rgba(221,208,196,0.25)' }]}
               onPress={() => setShowLoginModal(true)}
               activeOpacity={0.7}
             >
-              <Text style={s.headerSignInText}>Sign in</Text>
+              <Text style={[s.headerSignInText, { color: tc.text }]}>Sign in</Text>
             </TouchableOpacity>
           ) : voiceMode ? (
             <TouchableOpacity
-              style={s.headerSignInBtn}
+              style={[s.headerSignInBtn, isDark && { backgroundColor: 'rgba(221,208,196,0.15)', borderColor: 'rgba(221,208,196,0.25)' }]}
               onPress={exitVoiceMode}
               activeOpacity={0.7}
             >
-              <Text style={s.headerSignInText}>⌨️ Type</Text>
+              <Text style={[s.headerSignInText, { color: tc.text }]}>⌨️ Type</Text>
             </TouchableOpacity>
           ) : (
             <View style={s.headerBtn} />
@@ -373,7 +378,7 @@ export default function ChatScreen() {
           data={messages}
           keyExtractor={(_, i) => String(i)}
           renderItem={renderItem}
-          ListEmptyComponent={<EmptyState onChip={sendMessage} />}
+          ListEmptyComponent={<EmptyState onChip={sendMessage} tc={tc} isDark={isDark} />}
           ListFooterComponent={listFooter}
           contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}
@@ -384,7 +389,7 @@ export default function ChatScreen() {
 
           // ── Voice conversation mode ──────────────────────────────────
           <View style={s.voiceBar}>
-            <Text style={s.voiceStatus}>{voiceStatus}</Text>
+            <Text style={[s.voiceStatus, { color: tc.text }]}>{voiceStatus}</Text>
 
             {/* Indicator — disabled while Amanda is thinking or speaking */}
             <TouchableOpacity
@@ -396,7 +401,7 @@ export default function ChatScreen() {
               <VoiceIndicator phase={voicePhase} />
             </TouchableOpacity>
 
-            <Text style={s.voiceHint}>
+            <Text style={[s.voiceHint, { color: tc.textMuted }]}>
               {voicePhase === 'listening' ? 'Tap to send early · speak as long as you like' :
                voicePhase === 'thinking'  ? 'Amanda is thinking — please wait' :
                voicePhase === 'speaking'  ? 'Amanda is speaking — please wait' :
@@ -410,8 +415,6 @@ export default function ChatScreen() {
             >
               <Text style={s.voiceCancelText}>Cancel voice</Text>
             </TouchableOpacity>
-
-            <Text style={s.disclaimer}>Not a substitute for emergency services</Text>
           </View>
 
         ) : (
@@ -452,7 +455,7 @@ export default function ChatScreen() {
             ) : (
 
               // Normal text input — pill layout: mic | text | send/wave
-              <View style={[s.inputPill, inputText.length > 0 && s.inputPillFocused]}>
+              <View style={[s.inputPill, { backgroundColor: tc.inputBg }, inputText.length > 0 && s.inputPillFocused]}>
 
                 {/* Mic button — left side */}
                 <TouchableOpacity
@@ -460,15 +463,15 @@ export default function ChatScreen() {
                   onPress={startRecording}
                   activeOpacity={0.7}
                 >
-                  <Feather name="mic" size={18} color={C.textMuted} />
+                  <Feather name="mic" size={18} color={tc.textMuted} />
                 </TouchableOpacity>
 
                 <TextInput
-                  style={s.pillInput}
+                  style={[s.pillInput, { color: tc.text }]}
                   value={inputText}
                   onChangeText={setInputText}
                   placeholder="Message Amanda..."
-                  placeholderTextColor={C.textLight}
+                  placeholderTextColor={tc.textLight}
                   multiline
                   maxLength={2000}
                   editable={!isStreaming && isReady}
@@ -500,9 +503,11 @@ export default function ChatScreen() {
               </View>
             )}
 
-            <Text style={s.disclaimer}>Not a substitute for emergency services</Text>
           </View>
         )}
+
+        {/* Persistent footer — shown in both voice and text mode */}
+        <Text style={[s.disclaimer, { color: tc.textLight }]}>Not a substitute for emergency services</Text>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

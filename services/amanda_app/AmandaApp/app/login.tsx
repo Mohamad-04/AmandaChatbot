@@ -3,10 +3,11 @@
 
 import React, { useRef, useEffect } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity,
+  View, Text, TextInput, TouchableOpacity, Pressable,
   SafeAreaView, KeyboardAvoidingView, Platform,
   Animated, ActivityIndicator, ScrollView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Background from '../components/background';
 import Navbar from '../components/navbar';
@@ -14,6 +15,7 @@ import InputField from '../components/input-field';
 import { useAuth } from '../hooks/use-auth';
 import { styles } from '../styles/login.styles';
 import { theme } from '../constants/theme';
+import { colors } from '../constants/tokens';
 import { useState } from 'react';
 
 export default function LoginScreen() {
@@ -115,16 +117,29 @@ export default function LoginScreen() {
                     </View>
                   )}
 
-                  <TouchableOpacity
-                    style={[styles.btn, loading && styles.btnDisabled]}
+                  {/* Pressed state matches website hover: gradient #C9A29D → #A87A74 */}
+                  <Pressable
                     onPress={onPressLogin}
                     disabled={loading}
+                    style={[styles.btn, loading && styles.btnDisabled]}
                   >
-                    {loading
-                      ? <ActivityIndicator color={theme.colors.white} size="small" />
-                      : <Text style={styles.btnText}>Sign in</Text>
-                    }
-                  </TouchableOpacity>
+                    {({ pressed }) => (
+                      <LinearGradient
+                        colors={pressed
+                          ? [colors.btnPrimaryPressC1, colors.btnPrimaryPressC2]
+                          : [colors.btnPrimary, colors.btnPrimary]
+                        }
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 0, y: 1 }}
+                        style={styles.btnInner}
+                      >
+                        {loading
+                          ? <ActivityIndicator color={theme.colors.white} size="small" />
+                          : <Text style={styles.btnText}>Sign in</Text>
+                        }
+                      </LinearGradient>
+                    )}
+                  </Pressable>
 
                   <View style={styles.footer}>
                     <Text style={styles.footerText}>New here?</Text>

@@ -58,7 +58,7 @@ export const s = StyleSheet.create({
   sendBtn:         { width: 34, height: 34, borderRadius: 8, backgroundColor: C.sendBg, borderWidth: 1, borderColor: C.sendBorder, alignItems: 'center', justifyContent: 'center' },
   sendBtnDisabled: { opacity: 0.35 },
   sendBtnIcon:     { color: C.text, fontSize: 18, fontWeight: '600', lineHeight: 22 },
-  disclaimer:      { textAlign: 'center', fontSize: 11, color: C.textLight, marginTop: 8 },
+  disclaimer:      { textAlign: 'center', fontSize: 10, color: C.textLight, paddingBottom: Platform.OS === 'ios' ? 12 : 8, paddingTop: 4 },
 
   // ── Pill input ───────────────────────────────────────────────────────
   inputPill:       { flexDirection: 'row', alignItems: 'center', backgroundColor: C.inputBg, borderRadius: 28, paddingHorizontal: 6, paddingVertical: 6, gap: 4 },
@@ -84,10 +84,10 @@ export const s = StyleSheet.create({
   vttTranscribingText: { fontSize: 13, color: C.textMuted },
 
   // ── Voice conversation bar ───────────────────────────────────────────
-  voiceBar:       { paddingHorizontal: 24, paddingTop: 20, paddingBottom: Platform.OS === 'ios' ? 20 : 28, alignItems: 'center', gap: 14 },
-  voiceStatus:    { fontSize: 15, fontWeight: '600', color: C.text, textAlign: 'center' },
-  voiceHint:      { fontSize: 12, color: C.textMuted, textAlign: 'center' },
-  voiceCancelBtn: { paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20 },
+  voiceBar:       { paddingHorizontal: 24, paddingTop: 10, paddingBottom: 4, alignItems: 'center', gap: 8 },
+  voiceStatus:    { fontSize: 13, fontWeight: '600', color: C.text, textAlign: 'center' },
+  voiceHint:      { fontSize: 11, color: C.textMuted, textAlign: 'center' },
+  voiceCancelBtn: { paddingHorizontal: 20, paddingVertical: 6, borderRadius: 20 },
   voiceCancelText:{ fontSize: 13, color: C.textMuted, fontWeight: '500' },
 
   // ── Chat options menu ────────────────────────────────────────────────

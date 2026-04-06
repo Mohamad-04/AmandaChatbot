@@ -1,31 +1,17 @@
-import {
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
-
+import { StyleSheet, Dimensions } from 'react-native';
+import { colors } from '../constants/tokens';
 
 const { width } = Dimensions.get('window');
-const SLIDE_HEIGHT = 500; // Adjust this value based on your design needs
+const SLIDE_HEIGHT = 500;
 
-export const C = {
-  bg:          '#353232',
-  cardBorder:  '#FCE4EC(255,255,255,0.10)',
-  text:        'rgba(255,255,255,0.92)',
-  textMuted:   'rgba(255,255,255,0.55)',
-  accent:      '#B07D62',
-  accentLight: 'rgba(176,125,98,0.15)',
-  btnDark:     '#2D2D2D',
-};
-
-  /*bgTop:        '#FFF0F3',   // very soft blush background
-  bgBot:        '#FCE4EC',   // slightly deeper blush
-  rose:         '#E8637A*/
+// Re-exported so about.tsx can reference accent color directly if needed
+export const C = { accent: colors.primary };
 
 export const styles = StyleSheet.create({
 
   safe: {
     flex: 1,
-    backgroundColor: C.bg,
+    backgroundColor: colors.bgBase,
   },
 
   skipBtn: {
@@ -36,19 +22,19 @@ export const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: colors.inputBg,
     borderWidth: 1,
-    borderColor: C.cardBorder,
+    borderColor: colors.borderCard,
   },
   skipText: {
-    color: C.textMuted,
+    color: colors.textMuted,
     fontSize: 13,
     fontWeight: '500',
   },
 
   slide: {
     width,
-    height: SLIDE_HEIGHT,        // fixed height so all slides render correctly
+    height: SLIDE_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 36,
@@ -59,9 +45,9 @@ export const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: C.accentLight,
+    backgroundColor: colors.inputBg,
     borderWidth: 1,
-    borderColor: C.accent,
+    borderColor: colors.borderCard,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -72,20 +58,20 @@ export const styles = StyleSheet.create({
   tag: {
     fontSize: 11,
     fontWeight: '600',
-    color: C.accent,
+    color: colors.primary,
     letterSpacing: 2,
     textTransform: 'uppercase',
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: C.text,
+    color: colors.text,
     textAlign: 'center',
     letterSpacing: -0.3,
   },
   body: {
     fontSize: 15,
-    color: C.textMuted,
+    color: colors.textMuted,
     textAlign: 'center',
     lineHeight: 24,
     maxWidth: 300,
@@ -106,27 +92,27 @@ export const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.20)',
+    backgroundColor: colors.borderCard,
   },
   dotActive: {
     width: 24,
-    backgroundColor: C.accent,
+    backgroundColor: colors.primary,
   },
   continueBtn: {
     width: '100%',
-    backgroundColor: C.btnDark,
+    backgroundColor: colors.btnPrimary,
     paddingVertical: 16,
     borderRadius: 14,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: C.cardBorder,
+    borderColor: colors.borderCard,
   },
   continueBtnLast: {
-    backgroundColor: C.accent,
-    borderColor: C.accent,
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   continueBtnText: {
-    color: C.text,
+    color: colors.white,
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 0.3,
@@ -136,9 +122,8 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   backBtnText: {
-    color: C.textMuted,
+    color: colors.textMuted,
     fontSize: 14,
     fontWeight: '500',
   },
-
 });

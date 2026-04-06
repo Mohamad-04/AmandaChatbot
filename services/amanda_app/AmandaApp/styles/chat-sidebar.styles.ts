@@ -35,6 +35,7 @@ export const sidebarStyles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 16,
     overflow: 'hidden',
+    flexDirection: 'column',
   },
   drawerHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -43,9 +44,6 @@ export const sidebarStyles = StyleSheet.create({
     marginBottom: 12,
   },
   drawerBrand:       { fontSize: 20, fontWeight: '700', color: C.text, letterSpacing: -0.4 },
-  profileBtn:        { padding: 4 },
-  profileAvatar:     { width: 34, height: 34, borderRadius: 17, backgroundColor: C.bg3, alignItems: 'center', justifyContent: 'center' },
-  profileAvatarText: { color: 'white', fontWeight: '700', fontSize: 14 },
   newChatBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     marginHorizontal: 16, marginBottom: 20,
@@ -71,6 +69,39 @@ export const sidebarStyles = StyleSheet.create({
   chatItemTitle:  { fontSize: 14, fontWeight: '500', color: C.text, marginBottom: 2 },
   chatItemTime:   { fontSize: 12, color: C.textLight },
   chatItemDot:    { width: 7, height: 7, borderRadius: 4, backgroundColor: C.bg3, marginLeft: 8 },
+
+  // ── Search bar ────────────────────────────────────────────────────────────
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(168,122,116,0.10)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: C.border,
+    gap: 8,
+  },
+  searchIcon:  { fontSize: 14 },
+  searchInput: { flex: 1, fontSize: 14, color: C.text, paddingVertical: 0 },
+  searchClear: { fontSize: 12, color: C.textLight, fontWeight: '600' },
+
+  // ── Profile footer ────────────────────────────────────────────────────────
+  profileFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    marginBottom: 24,
+    borderTopWidth: 1,
+    borderTopColor: C.border,
+  },
+  profileAvatar:     { width: 34, height: 34, borderRadius: 17, backgroundColor: C.bg3, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  profileAvatarText: { color: 'white', fontWeight: '700', fontSize: 14 },
+  profileEmail:      { flex: 1, fontSize: 14, fontWeight: '500', color: C.text },
 });
 
 export const supportSheetStyles = StyleSheet.create({

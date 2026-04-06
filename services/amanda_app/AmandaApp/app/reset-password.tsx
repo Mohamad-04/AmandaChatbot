@@ -3,10 +3,11 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import {
-  View, Text, TouchableOpacity, SafeAreaView,
+  View, Text, Pressable, SafeAreaView,
   KeyboardAvoidingView, Platform, Animated,
   ActivityIndicator, ScrollView, TextInput,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Background from '../components/background';
 import Navbar from '../components/navbar';
@@ -14,6 +15,7 @@ import InputField from '../components/input-field';
 import { useAuth } from '../hooks/use-auth';
 import { styles } from '../styles/login.styles';
 import { theme } from '../constants/theme';
+import { colors } from '../constants/tokens';
 import { PasswordRequirements } from '../components/password-requirements';
 
 export default function ResetPasswordScreen() {
@@ -25,7 +27,7 @@ export default function ResetPasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [success, setSuccess]                 = useState(false);
 
-  const confirmRef = useRef<TextInput>(null);
+  const confirmRef = useRef<TextInput>(null) as React.RefObject<TextInput>;
   const shakeAnim  = useRef(new Animated.Value(0)).current;
   const fadeAnim   = useRef(new Animated.Value(0)).current;
   const slideAnim  = useRef(new Animated.Value(30)).current;
@@ -86,9 +88,17 @@ export default function ResetPasswordScreen() {
                           Invalid or missing reset link. Please request a new one.
                         </Text>
                       </View>
-                      <TouchableOpacity style={styles.btn} onPress={() => router.push('/forgot-password')}>
-                        <Text style={styles.btnText}>Request Reset Link</Text>
-                      </TouchableOpacity>
+                      <Pressable style={styles.btn} onPress={() => router.replace('/forgot-password')}>
+                        {({ pressed }) => (
+                          <LinearGradient
+                            colors={pressed ? [colors.btnPrimaryPressC1, colors.btnPrimaryPressC2] : [colors.btnPrimary, colors.btnPrimary]}
+                            start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                            style={styles.btnInner}
+                          >
+                            <Text style={styles.btnText}>Request Reset Link</Text>
+                          </LinearGradient>
+                        )}
+                      </Pressable>
                     </>
 
                   ) : success ? (
@@ -99,9 +109,17 @@ export default function ResetPasswordScreen() {
                           Password reset successfully. You can now log in with your new password.
                         </Text>
                       </View>
-                      <TouchableOpacity style={styles.btn} onPress={() => router.push('/login')}>
-                        <Text style={styles.btnText}>Go to Login</Text>
-                      </TouchableOpacity>
+                      <Pressable style={styles.btn} onPress={() => router.replace('/login')}>
+                        {({ pressed }) => (
+                          <LinearGradient
+                            colors={pressed ? [colors.btnPrimaryPressC1, colors.btnPrimaryPressC2] : [colors.btnPrimary, colors.btnPrimary]}
+                            start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                            style={styles.btnInner}
+                          >
+                            <Text style={styles.btnText}>Go to Login</Text>
+                          </LinearGradient>
+                        )}
+                      </Pressable>
                     </>
 
                   ) : (
@@ -141,16 +159,24 @@ export default function ResetPasswordScreen() {
                         </View>
                       )}
 
-                      <TouchableOpacity
+                      <Pressable
                         style={[styles.btn, loading && styles.btnDisabled]}
                         onPress={onPressReset}
                         disabled={loading}
                       >
-                        {loading
-                          ? <ActivityIndicator color={theme.colors.white} size="small" />
-                          : <Text style={styles.btnText}>Reset Password</Text>
-                        }
-                      </TouchableOpacity>
+                        {({ pressed }) => (
+                          <LinearGradient
+                            colors={pressed ? [colors.btnPrimaryPressC1, colors.btnPrimaryPressC2] : [colors.btnPrimary, colors.btnPrimary]}
+                            start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                            style={styles.btnInner}
+                          >
+                            {loading
+                              ? <ActivityIndicator color={theme.colors.white} size="small" />
+                              : <Text style={styles.btnText}>Reset Password</Text>
+                            }
+                          </LinearGradient>
+                        )}
+                      </Pressable>
                     </>
                   )}
 

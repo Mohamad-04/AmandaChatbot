@@ -8,7 +8,7 @@ import Constants from 'expo-constants';
 // This avoids hardcoding an IP that changes between networks/machines.
 const resolveBackendUrl = (): string => {
   const debuggerHost = Constants.expoConfig?.hostUri;
-  let localIp = debuggerHost ? debuggerHost.split(':')[0] : '192.168.0.36'; // update to your own IP.
+  let localIp = debuggerHost ? debuggerHost.split(':')[0] : '10.58.83.240'; // update to your own IP.
 
   // Android emulators can't use localhost — they need this special alias
   // that points to the host machine running the emulator.

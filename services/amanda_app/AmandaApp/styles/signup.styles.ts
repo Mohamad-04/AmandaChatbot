@@ -57,7 +57,7 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 28,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.borderCard,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
@@ -83,14 +83,14 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: 12,
-    backgroundColor: 'rgba(241, 227, 211, 0.55)',
+    backgroundColor: theme.colors.inputBg,
     paddingHorizontal: 14,
     height: 50,
     gap: 8,
   },
 
   inputWrapperFocused: {
-    borderColor: 'rgba(168, 122, 116, 0.55)',
+    borderColor: theme.colors.borderFocus,
     backgroundColor: theme.colors.glassStrong,
   },
 
@@ -111,7 +111,7 @@ export const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: theme.colors.errorBg,
     borderWidth: 1,
-    borderColor: 'rgba(192, 57, 43, 0.30)',
+    borderColor: theme.colors.borderError,
     borderRadius: 10,
     padding: 12,
   },
@@ -128,15 +128,21 @@ export const styles = StyleSheet.create({
 
   // ── Button ────────────────────────────────────────────────────────────
   btn: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: 14,
+    backgroundColor: theme.colors.btnPrimary,
     borderRadius: 12,
-    alignItems: 'center',
     marginTop: 8,
+    overflow: 'hidden',
   },
 
   btnDisabled: {
     opacity: 0.5,
+  },
+
+  // Inner gradient layer — fills the Pressable, handles pressed colour transition
+  btnInner: {
+    width: '100%',
+    paddingVertical: 14,
+    alignItems: 'center',
   },
 
   btnText: {

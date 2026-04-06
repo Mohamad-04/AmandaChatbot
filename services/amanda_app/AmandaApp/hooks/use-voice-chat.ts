@@ -49,6 +49,8 @@ export function useVoiceChat({
   const voiceWsRef        = useRef<WebSocket | null>(null);
   const voiceRecRef       = useRef<Audio.Recording | null>(null);
   const voiceSoundRef     = useRef<Audio.Sound | null>(null);
+  // Prevents the WebSocket onclose auto-reconnect from firing after intentional cleanup
+  const isExitingRef      = useRef(false);
 
   // Audio chunks waiting to be played — played sequentially, never interrupted
   const voiceQueueRef     = useRef<Array<{ data: string; format: string }>>([]);
@@ -91,25 +93,41 @@ export function useVoiceChat({
   };
 
   // ── Cleanup — stops all audio, closes socket, resets all refs ─────────
-  const voiceCleanup = () => {
+  const voiceCleanup = async () => {
+    isExitingRef.current = true;
+
     if (silenceTimerRef.current)   { clearTimeout(silenceTimerRef.current);   silenceTimerRef.current   = null; }
     if (reconnectTimerRef.current) { clearTimeout(reconnectTimerRef.current); reconnectTimerRef.current = null; }
 
-    voiceRecRef.current?.stopAndUnloadAsync().catch(() => {});
-    voiceRecRef.current = null;
+    // Invalidate in-flight playback callbacks
+    audioGenRef.current += 1;
 
-    voiceSoundRef.current?.unloadAsync().catch(() => {});
-    voiceSoundRef.current = null;
+    // Kill the socket's message handler immediately — prevents incoming audio_chunk
+    // and status messages from changing voicePhase or adding to the queue after cancel
+    if (voiceWsRef.current) {
+      voiceWsRef.current.onmessage = null;
+      voiceWsRef.current.close();
+      voiceWsRef.current = null;
+    }
 
+    // Clear queue and playing flag synchronously before any awaits
     voiceQueueRef.current   = [];
     voicePlayingRef.current = false;
     speechStartRef.current  = null;
     lastSpeechRef.current   = null;
 
-    voiceWsRef.current?.close();
-    voiceWsRef.current = null;
+    voiceRecRef.current?.stopAndUnloadAsync().catch(() => {});
+    voiceRecRef.current = null;
+
+    // Await stop so the hardware audio buffer is flushed immediately
+    if (voiceSoundRef.current) {
+      await voiceSoundRef.current.stopAsync().catch(() => {});
+      await voiceSoundRef.current.unloadAsync().catch(() => {});
+      voiceSoundRef.current = null;
+    }
 
     setVoiceConnected(false);
+    isExitingRef.current = false;
   };
 
   // ── Enter / exit voice mode ────────────────────────────────────────────
@@ -123,7 +141,7 @@ export function useVoiceChat({
   const exitVoiceMode = () => {
     setVoiceMode(false);
     setVoicePhase('idle');
-    voiceCleanup();
+    void voiceCleanup();
   };
 
   // ── WebSocket connection to voice server ───────────────────────────────
@@ -158,10 +176,12 @@ export function useVoiceChat({
       try { handleVoiceMessage(JSON.parse(e.data)); } catch {}
     };
 
-    // Auto-reconnect on close
+    // Auto-reconnect on close — skip if we closed intentionally during cleanup
     ws.onclose = () => {
       setVoiceConnected(false);
-      reconnectTimerRef.current = setTimeout(connectVoiceWS, 2000);
+      if (!isExitingRef.current) {
+        reconnectTimerRef.current = setTimeout(connectVoiceWS, 2000);
+      }
     };
 
     ws.onerror = () => setVoiceConnected(false);
@@ -265,6 +285,14 @@ export function useVoiceChat({
         { uri },
         { shouldPlay: false, volume: 1.0 }
       );
+
+      // Check again after the async createAsync — cleanup may have run while we waited
+      if (audioGenRef.current !== gen) {
+        await sound.unloadAsync().catch(() => {});
+        voicePlayingRef.current = false;
+        return;
+      }
+
       voiceSoundRef.current = sound;
 
       sound.setOnPlaybackStatusUpdate(async (st: any) => {

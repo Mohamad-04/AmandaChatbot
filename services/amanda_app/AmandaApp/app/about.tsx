@@ -110,7 +110,7 @@ export default function AboutScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
 
       {/* Skip button */}
       {!isLastSlide && (

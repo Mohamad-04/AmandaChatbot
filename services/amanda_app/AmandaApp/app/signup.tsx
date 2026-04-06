@@ -3,10 +3,11 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity,
+  View, Text, TextInput, TouchableOpacity, Pressable,
   SafeAreaView, KeyboardAvoidingView, Platform,
   Animated, ActivityIndicator, ScrollView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Background from '../components/background';
 import Navbar from '../components/navbar';
@@ -14,6 +15,7 @@ import InputField from '../components/input-field';
 import { useAuth } from '../hooks/use-auth';
 import { styles } from '../styles/signup.styles';
 import { theme } from '../constants/theme';
+import { colors } from '../constants/tokens';
 import { PasswordRequirements } from '../components/password-requirements';
 
 export default function SignupScreen() {
@@ -129,17 +131,30 @@ export default function SignupScreen() {
                     </View>
                   )}
 
-                  <TouchableOpacity
-                    style={[styles.btn, loading && styles.btnDisabled]}
+                  {/* Pressable + LinearGradient — pressed state matches website hover:
+                      gradient(180deg, #C9A29D, #A87A74), default is dark brown */}
+                  <Pressable
                     onPress={onPressSignup}
                     disabled={loading}
-                    activeOpacity={0.85}
+                    style={[styles.btn, loading && styles.btnDisabled, { padding: 0, overflow: 'hidden' }]}
                   >
-                    {loading
-                      ? <ActivityIndicator color={theme.colors.white} size="small" />
-                      : <Text style={styles.btnText}>Create account</Text>
-                    }
-                  </TouchableOpacity>
+                    {({ pressed }) => (
+                      <LinearGradient
+                        colors={pressed
+                          ? [colors.btnPrimaryPressC1, colors.btnPrimaryPressC2]
+                          : [colors.btnPrimary, colors.btnPrimary]
+                        }
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 0, y: 1 }}
+                        style={styles.btnInner}
+                      >
+                        {loading
+                          ? <ActivityIndicator color={theme.colors.white} size="small" />
+                          : <Text style={styles.btnText}>Create account</Text>
+                        }
+                      </LinearGradient>
+                    )}
+                  </Pressable>
 
                   <View style={styles.divider}>
                     <View style={styles.dividerLine} />

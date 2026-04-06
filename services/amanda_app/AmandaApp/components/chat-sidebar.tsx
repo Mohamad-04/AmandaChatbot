@@ -4,12 +4,14 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, Modal, Animated,
-  TouchableWithoutFeedback, FlatList, ActivityIndicator,
+  TouchableWithoutFeedback, FlatList, ActivityIndicator, TextInput, Switch,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../hooks/use-auth';
+import { useThemeContext, useThemeColors } from '../contexts/theme-context';
 import { listChats } from '../services/api-client';
-import { sidebarStyles as s, C, SIDEBAR_WIDTH } from '../styles/chat-sidebar.styles';
+import { sidebarStyles as s, SIDEBAR_WIDTH } from '../styles/chat-sidebar.styles';
 import ProfilePanel from './profile-panel';
 
 // Shape of a single chat session from the list endpoint
@@ -50,9 +52,12 @@ export default function ChatSidebar({
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const dimAnim   = useRef(new Animated.Value(0)).current;
 
-  const [chats,       setChats]       = useState<Chat[]>([]);
-  const [loading,     setLoading]     = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
+  const [chats,        setChats]       = useState<Chat[]>([]);
+  const [loading,      setLoading]     = useState(false);
+  const [showProfile,  setShowProfile] = useState(false);
+  const [searchQuery,  setSearchQuery] = useState('');
+  const { isDark, toggleTheme } = useThemeContext();
+  const tc = useThemeColors();
 
   // Slides drawer in when visible, out when hidden
   useEffect(() => {
@@ -69,8 +74,12 @@ export default function ChatSidebar({
       }),
     ]).start();
 
-    if (!visible) setShowProfile(false);
+    if (!visible) { setShowProfile(false); setSearchQuery(''); }
   }, [visible]);
+
+  const filteredChats = searchQuery.trim()
+    ? chats.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    : chats;
 
   // Fetches the chat list every time the sidebar opens
   useEffect(() => {
@@ -81,7 +90,7 @@ export default function ChatSidebar({
   async function loadChats() {
     setLoading(true);
     try {
-      const data = await listChats();
+      const data = await listChats() as any;
       if (data.success && data.chats) setChats(data.chats);
     } catch (e) {
       console.log('[ChatSidebar] failed to load chats:', e);
@@ -113,18 +122,18 @@ export default function ChatSidebar({
     const isActive = item.id === currentChatId;
     return (
       <TouchableOpacity
-        style={[s.chatItem, isActive && s.chatItemActive]}
+        style={[s.chatItem, isActive && s.chatItemActive, { borderBottomColor: isDark ? 'rgba(168,122,116,0.06)' : 'rgba(168,122,116,0.08)' }]}
         onPress={() => handleSelectChat(item)}
         activeOpacity={0.7}
       >
         <View style={s.chatItemInner}>
-          <Text style={s.chatItemTitle} numberOfLines={1}>{item.title}</Text>
-          <Text style={s.chatItemTime}>{formatRelativeTime(item.last_message_time)}</Text>
+          <Text style={[s.chatItemTitle, { color: tc.text }]} numberOfLines={1}>{item.title}</Text>
+          <Text style={[s.chatItemTime, { color: tc.textLight }]}>{formatRelativeTime(item.last_message_time)}</Text>
         </View>
         {isActive && <View style={s.chatItemDot} />}
       </TouchableOpacity>
     );
-  }, [currentChatId]);
+  }, [currentChatId, isDark, tc]);
 
   if (!visible) return null;
 
@@ -137,48 +146,92 @@ export default function ChatSidebar({
       </TouchableWithoutFeedback>
 
       {/* Sliding drawer */}
-      <Animated.View style={[s.drawer, { transform: [{ translateX: slideAnim }] }]}>
+      <Animated.View style={[s.drawer, { transform: [{ translateX: slideAnim }], backgroundColor: isDark ? 'rgba(28,24,22,0.98)' : 'rgba(241,227,211,0.98)' }]}>
 
-        {/* Brand and profile button */}
-        <View style={s.drawerHeader}>
-          <Text style={s.drawerBrand}>Amanda</Text>
-          <TouchableOpacity
-            style={s.profileBtn}
-            onPress={() => setShowProfile(true)}
-            activeOpacity={0.7}
-          >
-            <View style={s.profileAvatar}>
-              <Text style={s.profileAvatarText}>
-                {userEmail ? userEmail[0].toUpperCase() : '?'}
-              </Text>
-            </View>
-          </TouchableOpacity>
+        {/* Brand + theme toggle */}
+        <View style={[s.drawerHeader, { borderBottomColor: tc.border }]}>
+          <Text style={[s.drawerBrand, { color: tc.text }]}>Amanda</Text>
+          <Switch
+            value={isDark}
+            onValueChange={toggleTheme}
+            trackColor={{ false: 'rgba(168,122,116,0.30)', true: '#2d1e1c' }}
+            thumbColor={isDark ? '#C9A29D' : '#ffffff'}
+            style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
+          />
+        </View>
+
+        {/* Search bar */}
+        <View style={[s.searchBar, { borderColor: tc.border, backgroundColor: isDark ? 'rgba(168,122,116,0.08)' : 'rgba(168,122,116,0.10)' }]}>
+          <Feather name="search" size={15} color={tc.textLight} />
+          <TextInput
+            style={[s.searchInput, { color: tc.text }]}
+            placeholder="Search chats…"
+            placeholderTextColor={tc.textLight}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            returnKeyType="search"
+            autoCorrect={false}
+            autoCapitalize="none"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Text style={[s.searchClear, { color: tc.textLight }]}>✕</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* New chat button */}
-        <TouchableOpacity style={s.newChatBtn} onPress={handleNewChat} activeOpacity={0.85}>
-          <Text style={s.newChatIcon}>＋</Text>
-          <Text style={s.newChatText}>New Chat</Text>
+        <TouchableOpacity
+          style={[s.newChatBtn, {
+            backgroundColor: isDark ? 'rgba(255,255,255,0.10)' : tc.text,
+            borderWidth: isDark ? 1 : 0,
+            borderColor: isDark ? 'rgba(255,255,255,0.14)' : 'transparent',
+          }]}
+          onPress={handleNewChat}
+          activeOpacity={0.85}
+        >
+          <Text style={[s.newChatIcon, { color: isDark ? 'rgba(255,255,255,0.88)' : 'white' }]}>＋</Text>
+          <Text style={[s.newChatText, { color: isDark ? 'rgba(255,255,255,0.88)' : 'white' }]}>New Chat</Text>
         </TouchableOpacity>
 
-        <Text style={s.listHeading}>Recent</Text>
+        <Text style={[s.listHeading, { color: tc.textLight }]}>Recent</Text>
 
-        {/* Chat list — loading, empty, or populated */}
-        {loading ? (
-          <View style={s.loadingBox}>
-            <ActivityIndicator size="small" color={C.bg3} />
+        {/* Chat list — flex: 1 so it fills remaining space and footer sticks to bottom */}
+        <View style={{ flex: 1 }}>
+          {loading ? (
+            <View style={s.loadingBox}>
+              <ActivityIndicator size="small" color={tc.primary} />
+            </View>
+          ) : filteredChats.length === 0 ? (
+            <Text style={[s.emptyText, { color: tc.textMuted }]}>
+              {searchQuery.trim() ? 'No chats match your search.' : 'No chats yet. Start a new one!'}
+            </Text>
+          ) : (
+            <FlatList
+              data={filteredChats}
+              keyExtractor={item => String(item.id)}
+              renderItem={renderChat}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 24 }}
+            />
+          )}
+        </View>
+
+        {/* Profile footer — avatar + email, taps to open profile panel */}
+        <TouchableOpacity
+          style={[s.profileFooter, { borderTopColor: tc.border }]}
+          onPress={() => setShowProfile(true)}
+          activeOpacity={0.7}
+        >
+          <View style={s.profileAvatar}>
+            <Text style={s.profileAvatarText}>
+              {userEmail ? userEmail[0].toUpperCase() : '?'}
+            </Text>
           </View>
-        ) : chats.length === 0 ? (
-          <Text style={s.emptyText}>No chats yet. Start a new one!</Text>
-        ) : (
-          <FlatList
-            data={chats}
-            keyExtractor={item => String(item.id)}
-            renderItem={renderChat}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 24 }}
-          />
-        )}
+          <Text style={[s.profileEmail, { color: tc.text }]} numberOfLines={1}>
+            {userEmail ?? 'Account'}
+          </Text>
+        </TouchableOpacity>
 
         {/* Profile panel — only mounted when open */}
         {showProfile && (

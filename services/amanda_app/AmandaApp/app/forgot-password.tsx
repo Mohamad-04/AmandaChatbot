@@ -8,10 +8,11 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import {
-  View, Text, TouchableOpacity, SafeAreaView,
+  View, Text, TouchableOpacity, Pressable, SafeAreaView,
   Animated, ActivityIndicator, ScrollView,
   KeyboardAvoidingView, Platform,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Background from '../components/background';
 import Navbar from '../components/navbar';
@@ -19,8 +20,9 @@ import InputField from '../components/input-field';
 import { useAuth } from '../hooks/use-auth';
 import { styles } from '../styles/login.styles';
 import { theme } from '../constants/theme';
+import { colors } from '../constants/tokens';
 
-type View       = 'email' | 'token';
+type ScreenView = 'email' | 'token';
 type SendState  = 'idle' | 'loading';
 type TokenState = 'idle' | 'loading' | 'error';
 
@@ -28,7 +30,7 @@ export default function ForgotPasswordScreen() {
   const router = useRouter();
   const { handleForgotPassword, handleVerifyResetToken } = useAuth();
 
-  const [view,       setView]       = useState<View>('email');
+  const [view,       setView]       = useState<ScreenView>('email');
   const [email,      setEmail]      = useState('');
   const [sendState,  setSendState]  = useState<SendState>('idle');
   const [sendError,  setSendError]  = useState('');
@@ -57,7 +59,7 @@ export default function ForgotPasswordScreen() {
   };
 
   const onPressSend = async () => {
-    if (!email.trim()) return;
+    if (!email.trim()) { setSendError('Please enter your email address.'); shake(); return; }
     setSendState('loading');
     setSendError('');
     const err = await handleForgotPassword(email);
@@ -67,12 +69,12 @@ export default function ForgotPasswordScreen() {
   };
 
   const onPressVerify = async () => {
-    if (!tokenInput.trim()) return;
+    if (!tokenInput.trim()) { setTokenState('error'); setTokenError('Please enter your reset token.'); shake(); return; }
     setTokenState('loading');
     setTokenError('');
     const result = await handleVerifyResetToken(tokenInput.trim());
     if (result.success) {
-      router.push({ pathname: '/reset-password', params: { token: tokenInput.trim() } });
+      router.replace({ pathname: '/reset-password', params: { token: tokenInput.trim() } });
     } else {
       setTokenState('error');
       setTokenError(result.message);
@@ -130,21 +132,28 @@ export default function ForgotPasswordScreen() {
                         />
                       </View>
 
-                      <TouchableOpacity
-                        style={[styles.btn, (sendState === 'loading' || !email.trim()) && styles.btnDisabled]}
+                      <Pressable
+                        style={[styles.btn, sendState === 'loading' && styles.btnDisabled]}
                         onPress={onPressSend}
-                        disabled={sendState === 'loading' || !email.trim()}
-                        activeOpacity={0.85}
+                        disabled={sendState === 'loading'}
                       >
-                        {sendState === 'loading'
-                          ? <ActivityIndicator color={theme.colors.white} size="small" />
-                          : <Text style={styles.btnText}>Send Reset Link</Text>
-                        }
-                      </TouchableOpacity>
+                        {({ pressed }) => (
+                          <LinearGradient
+                            colors={pressed ? [colors.btnPrimaryPressC1, colors.btnPrimaryPressC2] : [colors.btnPrimary, colors.btnPrimary]}
+                            start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                            style={styles.btnInner}
+                          >
+                            {sendState === 'loading'
+                              ? <ActivityIndicator color={theme.colors.white} size="small" />
+                              : <Text style={styles.btnText}>Send Reset Link</Text>
+                            }
+                          </LinearGradient>
+                        )}
+                      </Pressable>
 
                       <View style={styles.footer}>
                         <Text style={styles.footerText}>Remember your password?</Text>
-                        <TouchableOpacity onPress={() => router.push('/login')} activeOpacity={0.7}>
+                        <TouchableOpacity onPress={() => router.replace('/login')} activeOpacity={0.7}>
                           <Text style={styles.footerLink}> Sign in</Text>
                         </TouchableOpacity>
                       </View>
@@ -176,17 +185,24 @@ export default function ForgotPasswordScreen() {
                         />
                       </View>
 
-                      <TouchableOpacity
-                        style={[styles.btn, (tokenState === 'loading' || !tokenInput.trim()) && styles.btnDisabled]}
+                      <Pressable
+                        style={[styles.btn, tokenState === 'loading' && styles.btnDisabled]}
                         onPress={onPressVerify}
-                        disabled={tokenState === 'loading' || !tokenInput.trim()}
-                        activeOpacity={0.85}
+                        disabled={tokenState === 'loading'}
                       >
-                        {tokenState === 'loading'
-                          ? <ActivityIndicator color={theme.colors.white} size="small" />
-                          : <Text style={styles.btnText}>Verify token</Text>
-                        }
-                      </TouchableOpacity>
+                        {({ pressed }) => (
+                          <LinearGradient
+                            colors={pressed ? [colors.btnPrimaryPressC1, colors.btnPrimaryPressC2] : [colors.btnPrimary, colors.btnPrimary]}
+                            start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+                            style={styles.btnInner}
+                          >
+                            {tokenState === 'loading'
+                              ? <ActivityIndicator color={theme.colors.white} size="small" />
+                              : <Text style={styles.btnText}>Verify token</Text>
+                            }
+                          </LinearGradient>
+                        )}
+                      </Pressable>
 
                       <TouchableOpacity onPress={() => setView('email')} activeOpacity={0.7} style={{ alignItems: 'center', paddingTop: 4 }}>
                         <Text style={styles.forgotText}>Didn't get the email? Go back</Text>

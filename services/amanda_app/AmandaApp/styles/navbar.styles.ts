@@ -1,20 +1,7 @@
 import { StyleSheet, Dimensions } from 'react-native';
+import { colors } from '../constants/tokens';
 
 const { width } = Dimensions.get('window');
-
-const C = {
-  sheetBg:     '#643f3f',
-  brand:       '#E8637A',
-  text:        'rgba(255,255,255,0.88)',
-  textMuted:   'rgba(255,255,255,0.55)',
-  textLight:   'rgba(255,255,255,0.35)',
-  border:      'rgba(232,99,122,0.14)',
-  rowBg:       'rgba(232,99,122,0.07)',
-  danger:      '#e05c5c',
-  dangerBg:    'rgba(224,92,92,0.10)',
-  dangerBorder:'rgba(224,92,92,0.22)',
-  primaryBg:   '#E8637A',
-};
 
 export const styles = StyleSheet.create({
 
@@ -41,13 +28,13 @@ export const styles = StyleSheet.create({
   menuLine: {
     width: 22,
     height: 2,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.text,
     borderRadius: 2,
   },
   brand: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#ffffff',
+    color: colors.text,
     letterSpacing: 0.5,
   },
   backBtn: {
@@ -56,12 +43,12 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#f0efef',
+    backgroundColor: colors.inputBg,
     borderWidth: 1,
-    borderColor: '#F0C8D0',
+    borderColor: colors.borderCard,
   },
   backBtnText: {
-    color: '#313131',
+    color: colors.text,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -69,12 +56,12 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 12,
-    backgroundColor: 'rgba(224,92,92,0.12)',
+    backgroundColor: colors.errorBg,
     borderWidth: 1,
-    borderColor: 'rgba(224,92,92,0.28)',
+    borderColor: colors.borderError,
   },
   signOutBtnText: {
-    color: '#e05c5c',
+    color: colors.error,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -83,17 +70,19 @@ export const styles = StyleSheet.create({
   dimOverlay: {
     position: 'absolute',
     top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(45,27,32,0.45)',
+    backgroundColor: 'rgba(45,30,28,0.35)',
   },
   sheet: {
     position: 'absolute',
     top: 0, bottom: 0, left: 0,
     width: width * 0.72,
-    backgroundColor: C.sheetBg,
+    backgroundColor: colors.bgBase,
     paddingTop: 70,
     paddingBottom: 0,
     borderTopRightRadius: 28,
     borderBottomRightRadius: 28,
+    borderRightWidth: 1,
+    borderColor: colors.borderCard,
   },
   sheetHeader: {
     flexDirection: 'row',
@@ -105,21 +94,21 @@ export const styles = StyleSheet.create({
   sheetBrand: {
     fontSize: 24,
     fontWeight: '800',
-    color: C.brand,
+    color: colors.text,
     letterSpacing: 0.5,
   },
   closeBtn: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: 'rgba(240,172,182,0.15)',
+    backgroundColor: colors.inputBg,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
+    borderColor: colors.borderCard,
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeBtnText: {
-    color: C.brand,
+    color: colors.textMuted,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -132,7 +121,7 @@ export const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: C.textLight,
+    color: colors.textLight,
     letterSpacing: 2,
     textTransform: 'uppercase',
     marginTop: 24,
@@ -145,7 +134,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 13,
     paddingHorizontal: 12,
     borderRadius: 12,
-    backgroundColor: C.rowBg,
+    backgroundColor: colors.inputBg,
     marginBottom: 4,
     gap: 10,
   },
@@ -158,11 +147,11 @@ export const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '500',
-    color: C.text,
+    color: colors.text,
   },
   rowChevron: {
     fontSize: 18,
-    color: C.textMuted,
+    color: colors.textMuted,
   },
 
   // ── Auth section at bottom ────────────────────────────────────────────────
@@ -171,44 +160,44 @@ export const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 36,
     borderTopWidth: 1,
-    borderTopColor: C.border,
+    borderTopColor: colors.borderCard,
     gap: 10,
   },
   authBtnPrimary: {
     paddingVertical: 13,
     borderRadius: 12,
-    backgroundColor: C.primaryBg,
+    backgroundColor: colors.btnPrimary,
     alignItems: 'center',
   },
   authBtnPrimaryText: {
     fontSize: 15,
     fontWeight: '700',
-    color: 'white',
+    color: colors.white,
   },
   authBtnSecondary: {
     paddingVertical: 13,
     borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: colors.borderCard,
     alignItems: 'center',
   },
   authBtnSecondaryText: {
     fontSize: 15,
     fontWeight: '600',
-    color: C.text,
+    color: colors.text,
   },
   authBtnDanger: {
     paddingVertical: 13,
     borderRadius: 12,
-    backgroundColor: C.dangerBg,
+    backgroundColor: colors.errorBg,
     borderWidth: 1,
-    borderColor: C.dangerBorder,
+    borderColor: colors.borderError,
     alignItems: 'center',
   },
   authBtnDangerText: {
     fontSize: 15,
     fontWeight: '600',
-    color: C.danger,
+    color: colors.error,
   },
 });
