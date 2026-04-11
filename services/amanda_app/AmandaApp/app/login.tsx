@@ -8,7 +8,7 @@ import {
   Animated, ActivityIndicator, ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import Background from '../components/background';
 import Navbar from '../components/navbar';
 import InputField from '../components/input-field';
@@ -22,7 +22,9 @@ export default function LoginScreen() {
   const router = useRouter();
   const { loading, error, handleLogin } = useAuth();
 
-  const [email, setEmail]       = useState('');
+  // Pre-fill email if coming from profile-setup after a fresh sign-up
+  const { email: paramEmail } = useLocalSearchParams<{ email: string }>();
+  const [email, setEmail]       = useState(paramEmail ?? '');
   const [password, setPassword] = useState('');
 
   const passwordRef = useRef<TextInput>(null);

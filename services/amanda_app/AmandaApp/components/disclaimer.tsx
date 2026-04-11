@@ -119,6 +119,7 @@ export default function disclaimer({ visible, onAgree, onCancel }) {
           <ScrollView
             style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
+            indicatorStyle="black"
             onScroll={handleScroll}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={true}

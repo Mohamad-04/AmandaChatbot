@@ -141,40 +141,63 @@ export const supportSheetStyles = StyleSheet.create({
 });
 
 export const profileStyles = StyleSheet.create({
+
+  // ── Panel shell ────────────────────────────────────────────────────────────
   panel: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: C.drawerBg,
     paddingTop: 56,
   },
+
+  // ── Header (shared by main list and sub-pages) ─────────────────────────────
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingBottom: 16,
     borderBottomWidth: 1, borderBottomColor: C.border,
     marginBottom: 8,
   },
-  backBtn:     { width: 36, alignItems: 'flex-start' },
-  backBtnText: { fontSize: 26, color: C.text, lineHeight: 30 },
-  headerTitle: { fontSize: 17, fontWeight: '600', color: C.text, letterSpacing: -0.3 },
-  section:      { paddingHorizontal: 20, marginBottom: 4 },
+  backBtn:      { width: 36, alignItems: 'flex-start' },
+  backBtnText:  { fontSize: 26, color: C.text, lineHeight: 30 },
+  headerTitle:  { fontSize: 17, fontWeight: '600', color: C.text, letterSpacing: -0.3 },
+  closeBtn:     { width: 36, alignItems: 'flex-end' },
+  closeBtnText: { fontSize: 18, color: C.text, fontWeight: '700' },
+
+  // ── Section + row layout ───────────────────────────────────────────────────
+  section:     { paddingHorizontal: 16, marginBottom: 4 },
   sectionLabel: {
     fontSize: 11, fontWeight: '700', color: C.textLight,
     letterSpacing: 0.8, textTransform: 'uppercase',
-    marginTop: 20, marginBottom: 6,
+    marginTop: 20, marginBottom: 6, paddingHorizontal: 4,
+  },
+  // Card wraps all rows in a section with rounded corners
+  sectionCard: {
+    backgroundColor: 'rgba(168,122,116,0.07)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: C.border,
+    overflow: 'hidden',
   },
   row: {
     flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 13, paddingHorizontal: 16,
     borderBottomWidth: 1, borderBottomColor: 'rgba(168,122,116,0.10)',
     gap: 12,
   },
-  rowIcon:    { fontSize: 16, width: 24, textAlign: 'center' },
-  rowLabel:   { flex: 1, fontSize: 15, color: C.text, fontWeight: '500' },
-  rowValue:   { fontSize: 13, color: C.textMuted, maxWidth: 140, textAlign: 'right' },
-  rowChevron: { fontSize: 18, color: C.textLight, marginLeft: 4 },
+  rowLast:          { borderBottomWidth: 0 },
+  rowIcon:          { fontSize: 15, width: 22, textAlign: 'center' },
+  rowIconDanger:    { color: C.danger },
+  rowLabel:         { flex: 1, fontSize: 15, color: C.text, fontWeight: '500' },
+  rowLabelDanger:   { color: C.danger },
+  rowValue:         { fontSize: 13, color: C.textMuted, maxWidth: 140, textAlign: 'right' },
+  rowChevron:       { fontSize: 18, color: C.textLight, marginLeft: 4 },
+  rowChevronDanger: { color: C.danger },
+
+  // ── Sign out ───────────────────────────────────────────────────────────────
   signOutWrapper: {
-    marginTop: 'auto',
-    paddingHorizontal: 20, paddingTop: 24, paddingBottom: 32,
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32,
     borderTopWidth: 1, borderTopColor: C.border,
+    backgroundColor: C.drawerBg,
   },
   signOutBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
@@ -185,4 +208,102 @@ export const profileStyles = StyleSheet.create({
   },
   signOutIcon: { fontSize: 16, color: '#c0392b' },
   signOutText: { fontSize: 15, fontWeight: '600', color: '#c0392b' },
+
+  // ── Sub-page overlay (slides in from the right within the panel) ───────────
+  subPage: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: C.drawerBg,
+    paddingTop: 56,
+  },
+  subPageBody: { flex: 1 },
+
+  // ── Edit profile form ──────────────────────────────────────────────────────
+  formScroll:   { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },
+  formGroup:    { marginBottom: 20 },
+  formLabel:    { fontSize: 13, fontWeight: '600', color: C.textMuted, marginBottom: 8 },
+  required:     { color: C.bg3 },
+  optional:     { color: C.textLight, fontWeight: '400' },
+  formInput: {
+    backgroundColor: 'rgba(168,122,116,0.08)',
+    borderWidth: 1, borderColor: C.border,
+    borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
+    fontSize: 15, color: C.text,
+  },
+
+  // Age range dropdown trigger button
+  pickerBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: 'rgba(168,122,116,0.08)',
+    borderWidth: 1, borderColor: C.border,
+    borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
+  },
+  pickerBtnText:        { fontSize: 15, color: C.text },
+  pickerBtnPlaceholder: { color: C.textLight },
+  pickerChevron:        { fontSize: 16, color: C.textLight },
+
+  // Save button
+  saveBtn: {
+    marginTop: 8,
+    paddingVertical: 15, borderRadius: 14,
+    backgroundColor: C.bg3, alignItems: 'center',
+  },
+  saveBtnDisabled: { opacity: 0.40 },
+  saveBtnText:     { fontSize: 15, fontWeight: '700', color: 'white', letterSpacing: -0.2 },
+
+  // ── Coming soon (My Journey placeholder) ──────────────────────────────────
+  comingSoonContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 60 },
+  comingSoonEmoji:     { fontSize: 40, marginBottom: 14 },
+  comingSoonTitle:     { fontSize: 18, fontWeight: '700', color: C.text, marginBottom: 8 },
+  comingSoonSub:       { fontSize: 14, color: C.textMuted },
+
+  // ── Shared modal backdrop ──────────────────────────────────────────────────
+  modalBackdrop: {
+    flex: 1, backgroundColor: 'rgba(45,30,28,0.50)',
+    justifyContent: 'center', alignItems: 'center', padding: 24,
+  },
+
+  // ── Age range picker modal ─────────────────────────────────────────────────
+  pickerModal: {
+    width: '100%', backgroundColor: '#FDFAF7',
+    borderRadius: 18, padding: 20,
+    shadowColor: '#2d1e1c', shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16, shadowRadius: 24, elevation: 16,
+  },
+  pickerModalTitle: {
+    fontSize: 13, fontWeight: '700', color: C.textLight,
+    letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 12,
+  },
+  pickerOption: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 14, paddingHorizontal: 16,
+    borderRadius: 10, marginBottom: 4,
+  },
+  pickerOptionActive:    { backgroundColor: 'rgba(168,122,116,0.14)' },
+  pickerOptionText:      { fontSize: 15, color: C.text, fontWeight: '500' },
+  pickerOptionTextActive: { color: C.bg3, fontWeight: '700' },
+  pickerTick:            { fontSize: 14, color: C.bg3, fontWeight: '700' },
+
+  // ── Delete account confirmation modal ─────────────────────────────────────
+  deleteModal: {
+    width: '100%', backgroundColor: '#FDFAF7',
+    borderRadius: 18, padding: 28, alignItems: 'center',
+    shadowColor: '#2d1e1c', shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16, shadowRadius: 24, elevation: 16,
+  },
+  deleteModalEmoji:  { fontSize: 40, marginBottom: 16 },
+  deleteModalTitle:  { fontSize: 20, fontWeight: '700', color: C.text, marginBottom: 10 },
+  deleteModalSub:    { fontSize: 14, color: C.textMuted, textAlign: 'center', lineHeight: 20, marginBottom: 24 },
+  // Delete button is a "coming soon" placeholder — wired to real API when backend is ready
+  deleteModalComingSoon: {
+    width: '100%', paddingVertical: 14, borderRadius: 14,
+    backgroundColor: 'rgba(192,57,43,0.08)',
+    borderWidth: 1, borderColor: 'rgba(192,57,43,0.20)',
+    alignItems: 'center', marginBottom: 12,
+  },
+  deleteModalComingSoonText: { fontSize: 15, fontWeight: '600', color: C.textMuted },
+  deleteModalCancel: {
+    width: '100%', paddingVertical: 14, borderRadius: 14,
+    borderWidth: 1, borderColor: C.border, alignItems: 'center',
+  },
+  deleteModalCancelText: { fontSize: 15, fontWeight: '600', color: C.text },
 });

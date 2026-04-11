@@ -56,7 +56,7 @@ export const darkColors = {
   textLight:   'rgba(255, 255, 255, 0.35)',
 
   bgBase:      '#1C1917',                          // near-black with subtle warm tint
-  bgGlass:     'rgba(40, 34, 32, 0.85)',           // bubble / card bg
+  bgGlass:     'rgba(61, 49, 45, 0.85)',           // bubble / card bg
   bgGlassStrong: 'rgba(28, 24, 22, 0.97)',         // sidebar bg
   bgWarm:      'rgba(221, 208, 196, 0.95)',
 

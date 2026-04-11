@@ -109,14 +109,14 @@ export default function VerifyEmailScreen() {
                       <View style={styles.successBox}>
                         <Text style={styles.successText}>{verifyMsg}</Text>
                       </View>
-                      <Pressable style={styles.btn} onPress={() => router.replace('/login')}>
+                      <Pressable style={styles.btn} onPress={() => router.replace({ pathname: '/profile-setup', params: { email } })}>
                         {({ pressed }) => (
                           <LinearGradient
                             colors={pressed ? [colors.btnPrimaryPressC1, colors.btnPrimaryPressC2] : [colors.btnPrimary, colors.btnPrimary]}
                             start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
                             style={styles.btnInner}
                           >
-                            <Text style={styles.btnText}>Go to Login</Text>
+                            <Text style={styles.btnText}>Continue →</Text>
                           </LinearGradient>
                         )}
                       </Pressable>
@@ -145,6 +145,7 @@ export default function VerifyEmailScreen() {
                           onChangeText={setTokenInput}
                           returnKeyType="done"
                           onSubmitEditing={onPressVerify}
+                          textContentType="none"
                         />
                       </View>
 

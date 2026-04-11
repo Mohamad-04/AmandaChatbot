@@ -182,6 +182,7 @@ export default function ForgotPasswordScreen() {
                           onChangeText={setTokenInput}
                           returnKeyType="done"
                           onSubmitEditing={onPressVerify}
+                          textContentType="none"
                         />
                       </View>
 

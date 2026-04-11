@@ -17,6 +17,10 @@ import {
   StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const ONBOARDED_KEY = '@amanda_onboarded';
+const markOnboarded = () => AsyncStorage.setItem(ONBOARDED_KEY, 'true').catch(() => {});
 import DisclaimerModal from '../components/disclaimer';
 import { styles, C } from '../styles/about.styles';
 
@@ -116,7 +120,7 @@ export default function AboutScreen() {
       {!isLastSlide && (
         <TouchableOpacity
           style={styles.skipBtn}
-          onPress={() => router.back()}
+          onPress={() => { markOnboarded(); router.replace('/'); }}
           activeOpacity={0.7}
         >
           <Text style={styles.skipText}>Skip</Text>
@@ -197,8 +201,9 @@ export default function AboutScreen() {
       <DisclaimerModal
         visible={showDisclaimer}
         onAgree={() => {
+          markOnboarded();
           setShowDisclaimer(false);
-          router.push('/chat');
+          router.replace('/chat');
         }}
         onCancel={() => setShowDisclaimer(false)}
       />
