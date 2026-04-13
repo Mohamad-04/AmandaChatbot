@@ -28,6 +28,7 @@ export default function RootLayout() {
         <Stack.Screen name="chat" />
         <Stack.Screen name="about" />
         <Stack.Screen name="profile-setup" />
+        <Stack.Screen name="personalisation" />
       </Stack>
     </ThemeProvider>
   );

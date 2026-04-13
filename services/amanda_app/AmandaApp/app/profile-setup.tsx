@@ -1,8 +1,11 @@
-// Profile setup screen — shown once after email verification, before entering chat.
+// Profile setup — shown once after email verification, before personalisation.
 // Collects first name (required), last name and age range (both optional).
-// Data is saved to AsyncStorage as a placeholder until the backend profile
-// endpoint is ready. When ready: swap AsyncStorage in handleContinue() for
-// a PATCH /api/users/profile call.
+//
+// Intentionally inherits the same card/form design as login and signup.
+// Styles live in styles/login.styles.ts (shared across all auth-flow screens).
+//
+// Storage: AsyncStorage as a placeholder until the backend profile endpoint is ready.
+// When ready: swap the AsyncStorage call in handleContinue() for a PATCH /api/users/profile call.
 
 import React, { useRef, useEffect, useState } from 'react';
 import {
@@ -13,15 +16,17 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Background from '../components/background';
-import Navbar     from '../components/navbar';
-import InputField from '../components/input-field';
-import { styles } from '../styles/login.styles';
-import { colors } from '../constants/tokens';
-import { theme }  from '../constants/theme';
+import Background  from '../components/background';
+import Navbar      from '../components/navbar';
+import InputField  from '../components/input-field';
+import { styles }  from '../styles/login.styles';
+import { colors }  from '../constants/tokens';
+import { theme }   from '../constants/theme';
 
+// Stored locally — swapped for PATCH /api/users/profile when backend is ready
 const PROFILE_KEY = '@amanda_profile';
-const AGE_RANGES  = ['<18', '18–24', '25–34', '35–44', '45+'];
+
+const AGE_RANGES = ['<18', '18–24', '25–34', '35–44', '45+'];
 
 export default function ProfileSetupScreen() {
   const router = useRouter();
@@ -32,6 +37,7 @@ export default function ProfileSetupScreen() {
   const [ageRange,      setAgeRange]      = useState('');
   const [showAgePicker, setShowAgePicker] = useState(false);
 
+  // Fade and slide the form in on mount — matches login/signup entrance
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
@@ -42,18 +48,17 @@ export default function ProfileSetupScreen() {
     ]).start();
   }, []);
 
-  // Save profile locally then go to login with email pre-filled.
-  // The user only needs to enter their password — one step to get into chat.
-  // TODO: once the backend returns a session on email verification, replace
-  // router.replace('/login') with router.replace('/chat') directly.
+  // Saves the profile locally then moves to personalisation onboarding
+  // TODO: replace AsyncStorage with PATCH /api/users/profile when backend is ready
   const handleContinue = async () => {
     await AsyncStorage.setItem(
       PROFILE_KEY,
       JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim(), ageRange }),
     ).catch(() => {});
-    router.replace('/chat');
+    router.replace('/personalisation');
   };
 
+  // First name is the only required field
   const canContinue = firstName.trim().length > 0;
 
   return (
@@ -78,7 +83,7 @@ export default function ProfileSetupScreen() {
                 <Text style={styles.heroTitle}>What should{'\n'}Amanda call you?</Text>
               </View>
 
-              {/* Form card — matches verify-email and signup card style */}
+              {/* Form card */}
               <View style={styles.card}>
 
                 {/* First name — required */}
@@ -119,10 +124,7 @@ export default function ProfileSetupScreen() {
                     <Text style={{ color: theme.colors.placeholder, fontWeight: '400' }}>(optional)</Text>
                   </Text>
                   <TouchableOpacity
-                    style={[
-                      styles.inputWrapper,
-                      { justifyContent: 'space-between' },
-                    ]}
+                    style={[styles.inputWrapper, { justifyContent: 'space-between' }]}
                     onPress={() => setShowAgePicker(true)}
                     activeOpacity={0.7}
                   >
@@ -136,7 +138,7 @@ export default function ProfileSetupScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Continue button */}
+                {/* Continue button — disabled until first name is filled */}
                 <Pressable
                   style={[styles.btn, !canContinue && styles.btnDisabled]}
                   onPress={handleContinue}
@@ -155,7 +157,7 @@ export default function ProfileSetupScreen() {
 
               </View>
 
-              {/* Skip — lets user go straight to chat without filling anything in */}
+              {/* Footer note — reassures the user they can edit this later */}
               <View style={styles.footer}>
                 <Text style={styles.footerText}>
                   You can always update this later in{' '}
@@ -167,7 +169,7 @@ export default function ProfileSetupScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
 
-        {/* Age range picker modal */}
+        {/* Age range picker — modal overlay styled to match the app */}
         <Modal
           visible={showAgePicker}
           transparent

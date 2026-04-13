@@ -15,19 +15,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Linking } from 'react-native';
 import { profileStyles as ps, C, SIDEBAR_WIDTH } from '../styles/chat-sidebar.styles';
+import { colors } from '../constants/tokens';
 import { SupportSheet, SheetType } from './support-sheet';
+import {
+  PERSONALISATION_KEY,
+  REASONS, MOODS, GOALS, THERAPY_OPTIONS, TONE_PREFERENCES,
+} from '../constants/personalisation';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-// Local storage key for profile data (placeholder until backend is ready)
-const PROFILE_KEY = '@amanda_profile';
-
-const AGE_RANGES = ['<18', '18–24', '25–34', '35–44', '45+'];
+const PROFILE_KEY  = '@amanda_profile';
+const AGE_RANGES   = ['<18', '18–24', '25–34', '35–44', '45+'];
 
 // Sub-pages that slide in over the main settings list
 type SubPage =
   | 'edit-profile'
   | 'data-privacy'
+  | 'personalisation'
   | 'mood-tracking'
   | 'insights'
   | 'weekly-checkin';
@@ -95,7 +99,15 @@ export default function ProfilePanel({
   const [lastName,  setLastName]  = useState('');
   const [ageRange,  setAgeRange]  = useState('');
 
-  // Load saved profile from AsyncStorage on mount
+  // Personalisation state
+  const [pStep,              setPStep]              = useState(0);
+  const [pReasons,           setPReasons]           = useState<string[]>([]);
+  const [pMood,              setPMood]              = useState('');
+  const [pGoals,             setPGoals]             = useState<string[]>([]);
+  const [pTherapyExperience, setPTherapyExperience] = useState('');
+  const [pTonePreference,    setPTonePreference]    = useState('');
+
+  // Load saved profile and personalisation from AsyncStorage on mount
   useEffect(() => {
     AsyncStorage.getItem(PROFILE_KEY).then(val => {
       if (val) {
@@ -103,6 +115,17 @@ export default function ProfilePanel({
         setFirstName(p.firstName || '');
         setLastName(p.lastName  || '');
         setAgeRange(p.ageRange  || '');
+      }
+    }).catch(() => {});
+
+    AsyncStorage.getItem(PERSONALISATION_KEY).then(val => {
+      if (val) {
+        const p = JSON.parse(val);
+        setPReasons(p.reasons           || []);
+        setPMood(p.mood                 || '');
+        setPGoals(p.goals               || []);
+        setPTherapyExperience(p.therapyExperience || '');
+        setPTonePreference(p.tonePreference       || '');
       }
     }).catch(() => {});
   }, []);
@@ -121,6 +144,7 @@ export default function ProfilePanel({
 
   // Open a sub-page by sliding it in from the right
   const openSubPage = (page: SubPage) => {
+    if (page === 'personalisation') setPStep(0);
     setSubPage(page);
     subAnim.setValue(SIDEBAR_WIDTH);
     Animated.timing(subAnim, { toValue: 0, duration: 240, useNativeDriver: true }).start();
@@ -150,14 +174,23 @@ export default function ProfilePanel({
     closeSubPage();
   };
 
+  const savePersonalisation = async () => {
+    await AsyncStorage.setItem(
+      PERSONALISATION_KEY,
+      JSON.stringify({ reasons: pReasons, mood: pMood, goals: pGoals, therapyExperience: pTherapyExperience, tonePreference: pTonePreference }),
+    ).catch(() => {});
+    closeSubPage();
+  };
+
   // ── Sub-page title map ─────────────────────────────────────────────────────
 
   const subPageTitle: Record<SubPage, string> = {
-    'edit-profile':   'Edit Profile',
-    'data-privacy':   'Data & Privacy',
-    'mood-tracking':  'Mood Tracking',
-    'insights':       'Insights',
-    'weekly-checkin': 'Weekly Check-in',
+    'edit-profile':    'Edit Profile',
+    'data-privacy':    'Data & Privacy',
+    'personalisation': 'Personalisation',
+    'mood-tracking':   'Mood Tracking',
+    'insights':        'Insights',
+    'weekly-checkin':  'Weekly Check-in',
   };
 
   // ── Sub-page content renderers ─────────────────────────────────────────────
@@ -172,7 +205,7 @@ export default function ProfilePanel({
           value={firstName}
           onChangeText={setFirstName}
           placeholder="Your first name"
-          placeholderTextColor={C.textLight}
+          placeholderTextColor={colors.textLight}
           autoCapitalize="words"
           textContentType="givenName"
         />
@@ -185,7 +218,7 @@ export default function ProfilePanel({
           value={lastName}
           onChangeText={setLastName}
           placeholder="Your last name"
-          placeholderTextColor={C.textLight}
+          placeholderTextColor={colors.textLight}
           autoCapitalize="words"
           textContentType="familyName"
         />
@@ -213,6 +246,213 @@ export default function ProfilePanel({
 
     </ScrollView>
   );
+
+  const PChip = ({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) => (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.75}
+      style={{
+        paddingVertical: 9, paddingHorizontal: 16, borderRadius: 28, margin: 4,
+        backgroundColor: selected ? colors.primary : '#EDE0D4',
+        borderWidth: 2, borderColor: selected ? colors.primary : 'transparent',
+      }}
+    >
+      <Text style={{ fontSize: 13, fontWeight: selected ? '700' : '500', color: selected ? 'white' : colors.text }}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  const renderPersonalisation = () => {
+    const pCanProceed = () => {
+      if (pStep === 0) return pReasons.length > 0;
+      if (pStep === 1) return pMood !== '';
+      if (pStep === 2) return pGoals.length > 0;
+      if (pStep === 3) return pTherapyExperience !== '';
+      if (pStep === 4) return pTonePreference !== '';
+      return false;
+    };
+
+    const P_STEPS = [
+      { title: 'What brings you\nto Amanda?',        subtitle: 'Choose everything that feels relevant.' },
+      { title: 'How are you\nfeeling?',              subtitle: 'No right or wrong answer — just pick what feels closest.' },
+      { title: 'What would you\nlike to work on?',   subtitle: 'Pick at least one goal.' },
+      { title: 'Have you tried\ntherapy before?',    subtitle: 'Helps Amanda understand where you are.' },
+      { title: 'How would you like\nAmanda to speak?', subtitle: 'Match her style to what feels comfortable.' },
+    ];
+
+    const renderPOptions = () => {
+      switch (pStep) {
+        case 0:
+          return (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {REASONS.map(r => (
+                <PChip key={r} label={r} selected={pReasons.includes(r)}
+                  onPress={() => setPReasons(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])} />
+              ))}
+            </View>
+          );
+        case 1:
+          return (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
+              {MOODS.map(m => {
+                const active = pMood === m.label;
+                return (
+                  <TouchableOpacity
+                    key={m.label}
+                    onPress={() => setPMood(m.label)}
+                    activeOpacity={0.75}
+                    style={{
+                      width: '44%', paddingVertical: 16, borderRadius: 16,
+                      alignItems: 'center', gap: 6,
+                      backgroundColor: active ? colors.primary : '#EDE0D4',
+                      borderWidth: 2, borderColor: active ? colors.primary : 'transparent',
+                    }}
+                  >
+                    <Text style={{ fontSize: 30 }}>{m.emoji}</Text>
+                    <Text style={{ fontSize: 13, fontWeight: active ? '700' : '500', color: active ? 'white' : colors.text }}>
+                      {m.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          );
+        case 2:
+          return (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {GOALS.map(g => (
+                <PChip key={g} label={g} selected={pGoals.includes(g)}
+                  onPress={() => setPGoals(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g])} />
+              ))}
+            </View>
+          );
+        case 3:
+          return (
+            <View>
+              {THERAPY_OPTIONS.map(opt => {
+                const active = pTherapyExperience === opt.label;
+                return (
+                  <TouchableOpacity
+                    key={opt.label}
+                    onPress={() => setPTherapyExperience(opt.label)}
+                    activeOpacity={0.75}
+                    style={{
+                      flexDirection: 'row', alignItems: 'center',
+                      padding: 14, borderRadius: 14, marginBottom: 8,
+                      backgroundColor: active ? colors.primary : '#EDE0D4',
+                      borderWidth: 2, borderColor: active ? colors.primary : 'transparent',
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: active ? 'white' : colors.text }}>{opt.label}</Text>
+                      <Text style={{ fontSize: 12, color: active ? 'rgba(255,255,255,0.75)' : colors.textMuted, marginTop: 2 }}>{opt.desc}</Text>
+                    </View>
+                    <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: active ? 'rgba(255,255,255,0.30)' : 'rgba(168,122,116,0.18)', alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ fontSize: 10, color: active ? 'white' : 'transparent', fontWeight: '700' }}>✓</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          );
+        case 4:
+          return (
+            <View>
+              {TONE_PREFERENCES.map(t => {
+                const active = pTonePreference === t.label;
+                return (
+                  <TouchableOpacity
+                    key={t.label}
+                    onPress={() => setPTonePreference(t.label)}
+                    activeOpacity={0.75}
+                    style={{
+                      flexDirection: 'row', alignItems: 'center',
+                      padding: 14, borderRadius: 14, marginBottom: 8,
+                      backgroundColor: active ? colors.primary : '#EDE0D4',
+                      borderWidth: 2, borderColor: active ? colors.primary : 'transparent',
+                    }}
+                  >
+                    <Text style={{ fontSize: 20, marginRight: 12 }}>{t.symbol}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: active ? 'white' : colors.text }}>{t.label}</Text>
+                      <Text style={{ fontSize: 12, color: active ? 'rgba(255,255,255,0.75)' : colors.textMuted, marginTop: 2 }}>{t.desc}</Text>
+                    </View>
+                    <View style={{ width: 20, height: 20, borderRadius: 10, backgroundColor: active ? 'rgba(255,255,255,0.30)' : 'rgba(168,122,116,0.18)', alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ fontSize: 10, color: active ? 'white' : 'transparent', fontWeight: '700' }}>✓</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          );
+      }
+    };
+
+    const currentStep = P_STEPS[pStep];
+
+    return (
+      <View style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 20, alignItems: 'center' }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+
+          {/* Progress dots */}
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, marginBottom: 24, width: '100%' }}>
+            {P_STEPS.map((_, i) => (
+              <View key={i} style={{
+                height: 6, borderRadius: 3,
+                width: i === pStep ? 20 : 6,
+                backgroundColor: i === pStep ? colors.primary : 'rgba(168,122,116,0.25)',
+              }} />
+            ))}
+          </View>
+
+          {/* Heading */}
+          <View style={{ alignItems: 'center', marginBottom: 24, width: '100%' }}>
+            <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text, textAlign: 'center', lineHeight: 28, marginBottom: 6 }}>
+              {currentStep.title}
+            </Text>
+            <Text style={{ fontSize: 13, color: colors.textMuted, textAlign: 'center', lineHeight: 20, maxWidth: 240 }}>
+              {currentStep.subtitle}
+            </Text>
+          </View>
+
+          {/* Options */}
+          <View style={{ width: '100%' }}>
+            {renderPOptions()}
+          </View>
+
+        </ScrollView>
+
+        {/* Bottom controls */}
+        <View style={{ paddingHorizontal: 20, paddingBottom: 24, gap: 10 }}>
+          <TouchableOpacity
+            style={{
+              paddingVertical: 14, borderRadius: 12, alignItems: 'center',
+              backgroundColor: pCanProceed() ? colors.primary : 'transparent',
+              borderWidth: 1.5,
+              borderColor: pCanProceed() ? colors.primary : 'rgba(168,122,116,0.50)',
+            }}
+            onPress={() => {
+              if (pStep < P_STEPS.length - 1) setPStep(s => s + 1);
+              else savePersonalisation();
+            }}
+            disabled={!pCanProceed()}
+            activeOpacity={0.85}
+          >
+            <Text style={{ fontSize: 15, fontWeight: '600', color: pCanProceed() ? 'white' : 'rgba(168,122,116,0.60)' }}>
+              {pStep === P_STEPS.length - 1 ? 'Save' : 'Continue →'}
+            </Text>
+          </TouchableOpacity>
+
+          {pStep > 0 && (
+            <TouchableOpacity onPress={() => setPStep(s => s - 1)} activeOpacity={0.7} style={{ alignItems: 'center', paddingVertical: 8 }}>
+              <Text style={{ fontSize: 13, fontWeight: '500', color: colors.textMuted }}>← Back</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
+  };
 
   const renderDataPrivacy = () => (
     <View style={ps.subPageBody}>
@@ -258,6 +498,7 @@ export default function ProfilePanel({
           <Section label="Account">
             <Row icon="✉️" label="Email"           value={userEmail || '—'} last={false} />
             <Row icon="👤" label="Edit Profile"    onPress={() => openSubPage('edit-profile')} last={false} />
+            <Row icon="✦"  label="Personalisation" onPress={() => openSubPage('personalisation')} last={false} />
             <Row icon="🔒" label="Data & Privacy"  onPress={() => openSubPage('data-privacy')} last />
           </Section>
 
@@ -310,8 +551,9 @@ export default function ProfilePanel({
               </TouchableOpacity>
             </View>
 
-            {subPage === 'edit-profile'   && renderEditProfile()}
-            {subPage === 'data-privacy'   && renderDataPrivacy()}
+            {subPage === 'edit-profile'    && renderEditProfile()}
+            {subPage === 'personalisation' && renderPersonalisation()}
+            {subPage === 'data-privacy'    && renderDataPrivacy()}
             {(subPage === 'mood-tracking' ||
               subPage === 'insights'      ||
               subPage === 'weekly-checkin') && renderComingSoon()}
