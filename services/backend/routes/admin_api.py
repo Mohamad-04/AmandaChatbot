@@ -7,7 +7,12 @@ GET /api/admin/overview              — stats + chart data
 GET /api/admin/users                 — user list with chat counts
 GET /api/admin/conversations         — conversation list (optional ?user_id filter)
 GET /api/admin/conversations/<id>/messages — messages for a single conversation
+GET /api/admin/study-assignments     — all entries from project_assignments.yaml
+POST /api/admin/study-user           — set a user's session assignment in the YAML
 """
+from pathlib import Path
+import yaml
+
 from flask import Blueprint, jsonify, session, request
 from database import db
 from models.user import User
@@ -15,6 +20,8 @@ from models.chat import Chat
 from models.message import Message
 from datetime import datetime, timedelta
 from sqlalchemy import func
+
+ASSIGNMENTS_PATH = Path(__file__).resolve().parents[2] / "ai_backend" / "config" / "project_assignments.yaml"
 
 admin_api_bp = Blueprint('admin_api', __name__, url_prefix='/api/admin')
 
@@ -31,6 +38,72 @@ def require_admin():
     if not user or not user.is_admin:
         return None, (jsonify({'success': False, 'message': 'Admin access required'}), 403)
     return user, None
+
+
+@admin_api_bp.route('/me', methods=['GET'])
+def me():
+    """
+    Returns the currently logged-in admin's email and initials.
+
+    Response JSON: { "email": str, "initials": str }
+    """
+    user, err = require_admin()
+    if err:
+        return err
+    initials = user.email[:2].upper()
+    return jsonify({'email': user.email, 'initials': initials}), 200
+
+
+@admin_api_bp.route('/recent-activity', methods=['GET'])
+def recent_activity():
+    """
+    Returns the most recent conversations that had a message in the last 24 hours.
+    Up to 15 entries, sorted newest first.
+
+    Response JSON: [{ "id": int, "user": str, "title": str, "timestamp": str, "preview": str }, ...]
+    """
+    _, err = require_admin()
+    if err:
+        return err
+
+    try:
+        since = datetime.utcnow() - timedelta(hours=24)
+
+        # Latest message per chat in the last 24h
+        latest_msg_subq = (
+            db.session.query(
+                Message.chat_id,
+                func.max(Message.timestamp).label('latest')
+            )
+            .filter(Message.timestamp >= since)
+            .group_by(Message.chat_id)
+            .subquery()
+        )
+
+        rows = (
+            db.session.query(Chat, Message)
+            .join(latest_msg_subq, Chat.id == latest_msg_subq.c.chat_id)
+            .join(Message, (Message.chat_id == Chat.id) & (Message.timestamp == latest_msg_subq.c.latest))
+            .order_by(latest_msg_subq.c.latest.desc())
+            .limit(15)
+            .all()
+        )
+
+        result = []
+        for chat, msg in rows:
+            result.append({
+                'id': chat.id,
+                'user': chat.user.email if chat.user else 'Unknown',
+                'title': chat.title,
+                'timestamp': msg.timestamp.isoformat(),
+                'preview': msg.content[:120],
+            })
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        print(f"Admin recent activity error: {e}")
+        return jsonify({'success': False, 'message': 'An error occurred'}), 500
 
 
 @admin_api_bp.route('/overview', methods=['GET'])
@@ -234,4 +307,123 @@ def conversation_messages(chat_id):
 
     except Exception as e:
         print(f"Admin conversation messages error: {e}")
+        return jsonify({'success': False, 'message': 'An error occurred'}), 500
+
+
+@admin_api_bp.route('/study-assignments', methods=['GET'])
+def study_assignments():
+    """
+    Returns all entries from project_assignments.yaml as a flat list.
+
+    Response JSON: [{ "email": str, "project_key": str, "session_number": int }, ...]
+    """
+    _, err = require_admin()
+    if err:
+        return err
+
+    try:
+        if not ASSIGNMENTS_PATH.exists():
+            return jsonify([]), 200
+        with open(ASSIGNMENTS_PATH, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f) or {}
+        users = data.get('users') or {}
+        result = [
+            {
+                'email': email,
+                'project_key': cfg.get('project_key', ''),
+                'session_number': cfg.get('session_number', 1),
+            }
+            for email, cfg in users.items()
+        ]
+        return jsonify(result), 200
+    except Exception as e:
+        print(f"Admin study assignments error: {e}")
+        return jsonify({'success': False, 'message': 'An error occurred'}), 500
+
+
+@admin_api_bp.route('/study-user', methods=['POST'])
+def study_user():
+    """
+    Create or update a participant's session assignment.
+
+    Request JSON: { "email": str, "session_number": int }
+    The project_key is always "romanian_adhd_parents".
+
+    Response JSON: { "success": true }
+    """
+    _, err = require_admin()
+    if err:
+        return err
+
+    try:
+        body = request.get_json(force=True) or {}
+        email = (body.get('email') or '').strip().lower()
+        session_number = int(body.get('session_number', 1))
+
+        if not email:
+            return jsonify({'success': False, 'message': 'email is required'}), 400
+        if session_number not in range(1, 7):
+            return jsonify({'success': False, 'message': 'session_number must be 1–6'}), 400
+
+        if ASSIGNMENTS_PATH.exists():
+            with open(ASSIGNMENTS_PATH, 'r', encoding='utf-8') as f:
+                data = yaml.safe_load(f) or {}
+        else:
+            data = {}
+
+        if 'users' not in data or data['users'] is None:
+            data['users'] = {}
+
+        data['users'][email] = {
+            'project_key': 'romanian_adhd_parents',
+            'session_number': session_number,
+        }
+
+        ASSIGNMENTS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(ASSIGNMENTS_PATH, 'w', encoding='utf-8') as f:
+            yaml.dump(data, f, default_flow_style=False, allow_unicode=True)
+
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        print(f"Admin study user error: {e}")
+        return jsonify({'success': False, 'message': 'An error occurred'}), 500
+
+
+@admin_api_bp.route('/study-user', methods=['DELETE'])
+def delete_study_users():
+    """
+    Remove one or more participants from project_assignments.yaml.
+
+    Request JSON: { "emails": [str, ...] }
+    Response JSON: { "success": true, "removed": int }
+    """
+    _, err = require_admin()
+    if err:
+        return err
+
+    try:
+        body = request.get_json(force=True) or {}
+        emails = [e.strip().lower() for e in (body.get('emails') or []) if e]
+
+        if not emails:
+            return jsonify({'success': False, 'message': 'emails list is required'}), 400
+
+        if not ASSIGNMENTS_PATH.exists():
+            return jsonify({'success': True, 'removed': 0}), 200
+
+        with open(ASSIGNMENTS_PATH, 'r', encoding='utf-8') as f:
+            data = yaml.safe_load(f) or {}
+
+        users = data.get('users') or {}
+        removed = sum(1 for e in emails if e in users)
+        for e in emails:
+            users.pop(e, None)
+        data['users'] = users
+
+        with open(ASSIGNMENTS_PATH, 'w', encoding='utf-8') as f:
+            yaml.dump(data, f, default_flow_style=False, allow_unicode=True)
+
+        return jsonify({'success': True, 'removed': removed}), 200
+    except Exception as e:
+        print(f"Admin delete study users error: {e}")
         return jsonify({'success': False, 'message': 'An error occurred'}), 500

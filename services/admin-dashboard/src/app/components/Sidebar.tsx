@@ -1,13 +1,14 @@
 import { NavLink } from "react-router";
-import { LayoutDashboard, Users, MessageSquare, AlertTriangle, Settings, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, AlertTriangle, Settings, GraduationCap, ArrowLeft } from "lucide-react";
 
 export function Sidebar() {
   const navItems = [
-    { to: "/",              label: "Overview",      icon: LayoutDashboard, end: true },
-    { to: "/users",         label: "Users",         icon: Users },
-    { to: "/conversations", label: "Conversations", icon: MessageSquare },
-    { to: "/risk-alerts",   label: "Risk Alerts",   icon: AlertTriangle },
-    { to: "/settings",      label: "Settings",      icon: Settings },
+    { to: "/",               label: "Overview",        icon: LayoutDashboard, end: true },
+    { to: "/users",          label: "Users",           icon: Users },
+    { to: "/conversations",  label: "Conversations",   icon: MessageSquare },
+    { to: "/risk-alerts",    label: "Risk Alerts",     icon: AlertTriangle },
+    { to: "/study-sessions", label: "Study Sessions",  icon: GraduationCap },
+    { to: "/settings",       label: "Settings",        icon: Settings },
   ];
 
   return (
