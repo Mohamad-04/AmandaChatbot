@@ -1,39 +1,3 @@
-// =============================================================================
-// BACKEND INTEGRATION — OverviewPage
-// =============================================================================
-// All data below is currently hardcoded (fake). Replace with API calls.
-//
-// Suggested endpoint:  GET /api/admin/overview
-// Auth:                Admin-only (check is_admin on the session/token)
-//
-// Expected JSON response shape:
-// {
-//   "stats": {
-//     "total_users":          <int>   -- COUNT(*) FROM users
-//     "active_today":         <int>   -- COUNT(*) FROM users WHERE last_active_at >= today (needs last_active_at column on users)
-//     "total_conversations":  <int>   -- COUNT(*) FROM conversations
-//     "risk_alerts":          <int>   -- COUNT(*) FROM risk_alerts WHERE resolved = false (needs a risk_alerts table, see RiskAlertsPage)
-//   },
-//   "new_users_over_time": [          -- GROUP BY day for last 30 days
-//     { "date": "Mar 1", "users": 45 },
-//     ...
-//   ],
-//   "message_breakdown": {
-//     "user_messages":    <int>,      -- COUNT(*) FROM messages WHERE sender = 'user'
-//     "amanda_messages":  <int>       -- COUNT(*) FROM messages WHERE sender = 'amanda'
-//   },
-//   "daily_conversations": [          -- GROUP BY day for last 14 days
-//     { "day": "Mon", "conversations": 234 },
-//     ...
-//   ]
-// }
-//
-// DB tables needed:
-//   users          — id, email, is_admin, is_verified, created_at, last_active_at
-//   conversations  — id, user_id, title, created_at
-//   messages       — id, conversation_id, content, sender ('user'|'amanda'), created_at
-// =============================================================================
-
 import { useState, useEffect } from "react";
 import { StatCard } from "../components/StatCard";
 import { Users, Activity, MessageSquare, AlertTriangle } from "lucide-react";
@@ -44,8 +8,22 @@ import {
 
 declare global { interface Window { amandaLoaderDone?: boolean; } }
 
+interface OverviewData {
+  stats: {
+    total_users: number;
+    active_today: number;
+    total_conversations: number;
+    risk_alerts: number;
+  };
+  new_users_over_time: { date: string; users: number }[];
+  message_breakdown: { user_messages: number; amanda_messages: number };
+  daily_conversations: { day: string; conversations: number }[];
+}
+
 export function OverviewPage() {
   const [chartsReady, setChartsReady] = useState(!!window.amandaLoaderDone);
+  const [data, setData] = useState<OverviewData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (window.amandaLoaderDone) return;
@@ -54,37 +32,17 @@ export function OverviewPage() {
     return () => window.removeEventListener('amanda-ready', onReady);
   }, []);
 
-  // TODO: replace with fetch('/api/admin/overview') and store in state
-  const newUsersData = [
-    { date: "Mar 1",  users: 45 },
-    { date: "Mar 5",  users: 52 },
-    { date: "Mar 9",  users: 48 },
-    { date: "Mar 13", users: 61 },
-    { date: "Mar 17", users: 70 },
-    { date: "Mar 19", users: 78 },
-  ];
+  useEffect(() => {
+    fetch('/api/admin/overview', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
 
-  const conversationsData = [
-    { day: "Mon", conversations: 234 },
-    { day: "Tue", conversations: 287 },
-    { day: "Wed", conversations: 256 },
-    { day: "Thu", conversations: 312 },
-    { day: "Fri", conversations: 298 },
-    { day: "Sat", conversations: 178 },
-    { day: "Sun", conversations: 156 },
-    { day: "Mon", conversations: 245 },
-    { day: "Tue", conversations: 289 },
-    { day: "Wed", conversations: 267 },
-    { day: "Thu", conversations: 324 },
-    { day: "Fri", conversations: 301 },
-    { day: "Sat", conversations: 189 },
-    { day: "Sun", conversations: 167 },
-  ];
-
-  const messageBreakdownData = [
-    { name: "User Messages",   value: 12483, color: "#A87A74" },
-    { name: "Amanda Messages", value: 13256, color: "#C8A9A4" },
-  ];
+  const messageBreakdownData = data ? [
+    { name: "User Messages",   value: data.message_breakdown.user_messages,   color: "#A87A74" },
+    { name: "Amanda Messages", value: data.message_breakdown.amanda_messages, color: "#C8A9A4" },
+  ] : [];
 
   const tooltipStyle = {
     backgroundColor: "var(--popover)",
@@ -92,6 +50,8 @@ export function OverviewPage() {
     borderRadius: "8px",
     color: "var(--foreground)",
   };
+
+  const val = (n: number | undefined) => loading ? "—" : String(n ?? 0);
 
   return (
     <div className="space-y-6 max-w-[1600px]">
@@ -101,19 +61,19 @@ export function OverviewPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Users"         value="2,847" icon={Users}        change="+12.5% from last month" changeType="positive" />
-        <StatCard title="Active Today"        value="342"   icon={Activity}      change="+8.3% from yesterday"  changeType="positive" />
-        <StatCard title="Total Conversations" value="8,492" icon={MessageSquare} change="+15.2% from last month" changeType="positive" />
-        <StatCard title="Risk Alerts"         value="23"    icon={AlertTriangle} change="4 new today" />
+        <StatCard title="Total Users"         value={val(data?.stats.total_users)}         icon={Users}         change="" changeType="positive" />
+        <StatCard title="Active Today"        value={val(data?.stats.active_today)}        icon={Activity}      change="" changeType="positive" />
+        <StatCard title="Total Conversations" value={val(data?.stats.total_conversations)} icon={MessageSquare} change="" changeType="positive" />
+        <StatCard title="Risk Alerts"         value={val(data?.stats.risk_alerts)}         icon={AlertTriangle} change="" />
       </div>
 
-      {chartsReady && (
+      {chartsReady && data && (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="rounded-xl bg-card/80 backdrop-blur-md border border-border p-6 shadow-sm">
               <h3 className="mb-4" style={{ fontFamily: 'Lexend Deca' }}>New Users (Last 30 Days)</h3>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={newUsersData}>
+                <LineChart data={data.new_users_over_time}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(168, 122, 116, 0.2)" />
                   <XAxis dataKey="date" stroke="currentColor" style={{ fontSize: '12px' }} />
                   <YAxis stroke="currentColor" style={{ fontSize: '12px' }} />
@@ -144,7 +104,7 @@ export function OverviewPage() {
           <div className="rounded-xl bg-card/80 backdrop-blur-md border border-border p-6 shadow-sm">
             <h3 className="mb-4" style={{ fontFamily: 'Lexend Deca' }}>Daily Conversations (Last 2 Weeks)</h3>
             <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={conversationsData}>
+              <BarChart data={data.daily_conversations}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(168, 122, 116, 0.2)" />
                 <XAxis dataKey="day" stroke="currentColor" style={{ fontSize: '12px' }} />
                 <YAxis stroke="currentColor" style={{ fontSize: '12px' }} />

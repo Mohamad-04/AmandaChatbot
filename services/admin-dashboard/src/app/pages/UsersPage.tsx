@@ -1,70 +1,51 @@
-// =============================================================================
-// BACKEND INTEGRATION — UsersPage
-// =============================================================================
-// All user data below is currently hardcoded (fake). Replace with API calls.
-//
-// Suggested endpoint:  GET /api/admin/users?search=<email>&filter=<all|admin|verified>
-// Auth:                Admin-only
-//
-// Expected JSON response shape (array):
-// [
-//   {
-//     "id":          <int>,
-//     "email":       <string>,
-//     "join_date":   <string ISO date>,  -- users.created_at
-//     "total_chats": <int>,              -- COUNT(*) FROM conversations WHERE user_id = users.id
-//     "last_active": <string>,           -- users.last_active_at (formatted as relative time on backend, or raw datetime to format on frontend)
-//     "is_admin":    <bool>              -- users.is_admin
-//   },
-//   ...
-// ]
-//
-// DB tables needed:
-//   users          — id, email, is_admin, is_verified, created_at, last_active_at
-//   conversations  — id, user_id  (for the total_chats count JOIN)
-//
-// "View Chats" button (Eye icon, line 102) should link to ConversationsPage
-// filtered by this user's ID. Suggested: navigate to /conversations?user_id=<id>
-// which requires GET /api/admin/conversations?user_id=<id> (see ConversationsPage).
-// =============================================================================
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { Search, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
 interface User {
-  id: string;
+  id: number;
   email: string;
-  joinDate: string;
-  totalChats: number;
-  lastActive: string;
-  isAdmin: boolean;
+  join_date: string;
+  total_chats: number;
+  last_active: string | null;
+  is_admin: boolean;
+}
+
+function relativeTime(iso: string | null): string {
+  if (!iso) return "Never";
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days > 1 ? "s" : ""} ago`;
 }
 
 export function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // TODO: replace with fetch('/api/admin/users') and store in state
-  const users: User[] = [
-    { id: "1", email: "sarah.johnson@email.com",  joinDate: "2026-01-15", totalChats: 23, lastActive: "2 hours ago",  isAdmin: false },
-    { id: "2", email: "mike.rodriguez@email.com", joinDate: "2026-02-03", totalChats: 18, lastActive: "5 hours ago",  isAdmin: false },
-    { id: "3", email: "emma.kim@email.com",        joinDate: "2025-12-20", totalChats: 45, lastActive: "1 day ago",    isAdmin: false },
-    { id: "4", email: "admin@amanda.ai",           joinDate: "2025-11-01", totalChats: 0,  lastActive: "Just now",     isAdmin: true  },
-    { id: "5", email: "alex.martinez@email.com",  joinDate: "2026-01-28", totalChats: 31, lastActive: "3 hours ago",  isAdmin: false },
-    { id: "6", email: "lisa.patel@email.com",      joinDate: "2026-02-14", totalChats: 12, lastActive: "1 hour ago",   isAdmin: false },
-    { id: "7", email: "james.wilson@email.com",    joinDate: "2026-03-01", totalChats: 8,  lastActive: "4 hours ago",  isAdmin: false },
-    { id: "8", email: "sophia.chen@email.com",     joinDate: "2026-01-10", totalChats: 27, lastActive: "6 hours ago",  isAdmin: false },
-  ];
+  useEffect(() => {
+    fetch('/api/admin/users', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => { setUsers(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter =
       filterType === "all" ||
-      (filterType === "admin" && user.isAdmin) ||
-      (filterType === "verified" && !user.isAdmin);
+      (filterType === "admin" && user.is_admin) ||
+      (filterType === "verified" && !user.is_admin);
     return matchesSearch && matchesFilter;
   });
 
@@ -109,7 +90,11 @@ export function UsersPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map((user, index) => (
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-muted-foreground">Loading users…</td>
+                </tr>
+              ) : filteredUsers.map((user, index) => (
                 <tr key={user.id}
                   className={`border-b border-border/50 hover:bg-accent/30 transition-colors ${index === filteredUsers.length - 1 ? "border-b-0" : ""}`}>
                   <td className="p-4">
@@ -120,16 +105,17 @@ export function UsersPage() {
                       <span>{user.email}</span>
                     </div>
                   </td>
-                  <td className="p-4 text-muted-foreground">{new Date(user.joinDate).toLocaleDateString()}</td>
-                  <td className="p-4">{user.totalChats}</td>
-                  <td className="p-4 text-muted-foreground">{user.lastActive}</td>
+                  <td className="p-4 text-muted-foreground">{new Date(user.join_date).toLocaleDateString()}</td>
+                  <td className="p-4">{user.total_chats}</td>
+                  <td className="p-4 text-muted-foreground">{relativeTime(user.last_active)}</td>
                   <td className="p-4">
-                    {user.isAdmin && (
+                    {user.is_admin && (
                       <Badge className="rounded-full bg-primary/20 text-primary border-primary/30">Admin</Badge>
                     )}
                   </td>
                   <td className="p-4 text-right">
-                    <Button variant="ghost" size="sm" className="rounded-full">
+                    <Button variant="ghost" size="sm" className="rounded-full"
+                      onClick={() => navigate(`/conversations?user_id=${user.id}`)}>
                       <Eye className="w-4 h-4 mr-2" />View Chats
                     </Button>
                   </td>
@@ -140,7 +126,7 @@ export function UsersPage() {
         </div>
       </div>
 
-      {filteredUsers.length === 0 && (
+      {!loading && filteredUsers.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">No users found matching your criteria.</div>
       )}
     </div>
