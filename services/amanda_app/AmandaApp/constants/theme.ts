@@ -36,8 +36,9 @@ export const chatColors = {
   textMuted:   colors.textMuted,
   textLight:   colors.textLight,
   cardBorder:  colors.border,
-  userBubble:  colors.bgGlass,
-  asstBubble:  colors.bgGlass,
+  // Matches website: user bubbles are terracotta-tinted, assistant bubbles transparent
+  userBubble:  'rgba(168,122,116,0.16)',
+  asstBubble:  'transparent',
   inputBg:     'rgba(241,227,211,0.55)',
   inputBorder: 'rgba(168,122,116,0.20)',
   sendBg:      'rgba(45,30,28,0.12)',

@@ -146,7 +146,7 @@ export default function ChatSidebar({
       </TouchableWithoutFeedback>
 
       {/* Sliding drawer */}
-      <Animated.View style={[s.drawer, { transform: [{ translateX: slideAnim }], backgroundColor: isDark ? 'rgba(28,24,22,0.98)' : 'rgba(241,227,211,0.98)' }]}>
+      <Animated.View style={[s.drawer, { transform: [{ translateX: slideAnim }], backgroundColor: isDark ? 'rgba(44,30,26,0.93)' : '#E8D5CC' }]}>
 
         {/* Brand + theme toggle */}
         <View style={[s.drawerHeader, { borderBottomColor: tc.border }]}>

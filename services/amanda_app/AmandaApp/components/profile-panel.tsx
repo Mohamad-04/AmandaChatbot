@@ -15,7 +15,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Linking } from 'react-native';
 import { profileStyles as ps, C, SIDEBAR_WIDTH } from '../styles/chat-sidebar.styles';
-import { colors } from '../constants/tokens';
+import { colors, darkColors } from '../constants/tokens';
+import { useThemeContext } from '../contexts/theme-context';
 import { SupportSheet, SheetType } from './support-sheet';
 import {
   PERSONALISATION_KEY,
@@ -54,29 +55,29 @@ export interface ProfilePanelProps {
 
 // ── Reusable layout components ─────────────────────────────────────────────────
 
-const Section = ({ label, children }: { label: string; children: React.ReactNode }) => (
+const Section = ({ label, children, isDark, tc }: { label: string; children: React.ReactNode; isDark: boolean; tc: any }) => (
   <View style={ps.section}>
-    <Text style={ps.sectionLabel}>{label}</Text>
-    <View style={ps.sectionCard}>{children}</View>
+    <Text style={[ps.sectionLabel, { color: isDark ? 'rgba(255,255,255,0.35)' : undefined }]}>{label}</Text>
+    <View style={[ps.sectionCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(168,122,116,0.07)', borderColor: isDark ? 'rgba(255,255,255,0.08)' : C.border }]}>{children}</View>
   </View>
 );
 
 const Row = ({
-  icon, label, value, onPress, danger, last,
+  icon, label, value, onPress, danger, last, isDark, tc,
 }: {
   icon: string; label: string; value?: string;
-  onPress?: () => void; danger?: boolean; last?: boolean;
+  onPress?: () => void; danger?: boolean; last?: boolean; isDark: boolean; tc: any;
 }) => (
   <TouchableOpacity
-    style={[ps.row, last && ps.rowLast]}
+    style={[ps.row, last && ps.rowLast, { borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(168,122,116,0.10)' }]}
     onPress={onPress}
     activeOpacity={onPress ? 0.6 : 1}
     disabled={!onPress}
   >
     <Text style={[ps.rowIcon, danger && ps.rowIconDanger]}>{icon}</Text>
-    <Text style={[ps.rowLabel, danger && ps.rowLabelDanger]}>{label}</Text>
-    {value ? <Text style={ps.rowValue}>{value}</Text> : null}
-    {onPress ? <Text style={[ps.rowChevron, danger && ps.rowChevronDanger]}>›</Text> : null}
+    <Text style={[ps.rowLabel, { color: danger ? C.danger : tc.text }, danger && ps.rowLabelDanger]}>{label}</Text>
+    {value ? <Text style={[ps.rowValue, { color: tc.textMuted }]}>{value}</Text> : null}
+    {onPress ? <Text style={[ps.rowChevron, danger && ps.rowChevronDanger, { color: isDark ? 'rgba(255,255,255,0.25)' : C.textLight }]}>›</Text> : null}
   </TouchableOpacity>
 );
 
@@ -86,6 +87,8 @@ export default function ProfilePanel({
   onClose, onCloseSidebar, userEmail, onSignOut,
 }: ProfilePanelProps) {
   const router       = useRouter();
+  const { isDark }   = useThemeContext();
+  const tc           = isDark ? darkColors : colors;
   const panelAnim    = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
   const subAnim      = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
 
@@ -199,39 +202,38 @@ export default function ProfilePanel({
     <ScrollView style={{ flex: 1 }} contentContainerStyle={ps.formScroll} keyboardShouldPersistTaps="handled">
 
       <View style={ps.formGroup}>
-        <Text style={ps.formLabel}>First Name <Text style={ps.required}>*</Text></Text>
+        <Text style={[ps.formLabel, { color: tc.textMuted }]}>First Name <Text style={ps.required}>*</Text></Text>
         <TextInput
-          style={ps.formInput}
+          style={[ps.formInput, { color: tc.text, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(168,122,116,0.08)', borderColor: isDark ? 'rgba(255,255,255,0.10)' : C.border }]}
           value={firstName}
           onChangeText={setFirstName}
           placeholder="Your first name"
-          placeholderTextColor={colors.textLight}
+          placeholderTextColor={tc.textLight}
           autoCapitalize="words"
           textContentType="givenName"
         />
       </View>
 
       <View style={ps.formGroup}>
-        <Text style={ps.formLabel}>Last Name <Text style={ps.optional}>(optional)</Text></Text>
+        <Text style={[ps.formLabel, { color: tc.textMuted }]}>Last Name <Text style={ps.optional}>(optional)</Text></Text>
         <TextInput
-          style={ps.formInput}
+          style={[ps.formInput, { color: tc.text, backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(168,122,116,0.08)', borderColor: isDark ? 'rgba(255,255,255,0.10)' : C.border }]}
           value={lastName}
           onChangeText={setLastName}
           placeholder="Your last name"
-          placeholderTextColor={colors.textLight}
+          placeholderTextColor={tc.textLight}
           autoCapitalize="words"
           textContentType="familyName"
         />
       </View>
 
       <View style={ps.formGroup}>
-        <Text style={ps.formLabel}>Age Range <Text style={ps.optional}>(optional)</Text></Text>
-        {/* Custom dropdown — opens a modal picker styled to match the app */}
-        <TouchableOpacity style={ps.pickerBtn} onPress={() => setShowAgePicker(true)} activeOpacity={0.7}>
-          <Text style={[ps.pickerBtnText, !ageRange && ps.pickerBtnPlaceholder]}>
+        <Text style={[ps.formLabel, { color: tc.textMuted }]}>Age Range <Text style={ps.optional}>(optional)</Text></Text>
+        <TouchableOpacity style={[ps.pickerBtn, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(168,122,116,0.08)', borderColor: isDark ? 'rgba(255,255,255,0.10)' : C.border }]} onPress={() => setShowAgePicker(true)} activeOpacity={0.7}>
+          <Text style={[ps.pickerBtnText, { color: tc.text }, !ageRange && { color: tc.textLight }]}>
             {ageRange || 'Select age range'}
           </Text>
-          <Text style={ps.pickerChevron}>⌄</Text>
+          <Text style={[ps.pickerChevron, { color: tc.textLight }]}>⌄</Text>
         </TouchableOpacity>
       </View>
 
@@ -456,14 +458,8 @@ export default function ProfilePanel({
 
   const renderDataPrivacy = () => (
     <View style={ps.subPageBody}>
-      <Section label="Account">
-        <Row
-          icon="🗑️"
-          label="Delete Account"
-          onPress={() => setShowDeleteModal(true)}
-          danger
-          last
-        />
+      <Section label="Account" isDark={isDark} tc={tc}>
+        <Row icon="🗑️" label="Delete Account" onPress={() => setShowDeleteModal(true)} danger last isDark={isDark} tc={tc} />
       </Section>
     </View>
   );
@@ -472,8 +468,8 @@ export default function ProfilePanel({
   const renderComingSoon = () => (
     <View style={ps.comingSoonContainer}>
       <Text style={ps.comingSoonEmoji}>🌱</Text>
-      <Text style={ps.comingSoonTitle}>Coming soon</Text>
-      <Text style={ps.comingSoonSub}>This feature is on its way.</Text>
+      <Text style={[ps.comingSoonTitle, { color: tc.text }]}>Coming soon</Text>
+      <Text style={[ps.comingSoonSub, { color: tc.textMuted }]}>This feature is on its way.</Text>
     </View>
   );
 
@@ -481,57 +477,57 @@ export default function ProfilePanel({
 
   return (
     <>
-      <Animated.View style={[ps.panel, { transform: [{ translateX: panelAnim }] }]}>
+      <Animated.View style={[ps.panel, { transform: [{ translateX: panelAnim }], backgroundColor: isDark ? 'rgba(44,30,26,0.98)' : '#E8D5CC' }]}>
 
         {/* Main header */}
-        <View style={ps.header}>
+        <View style={[ps.header, { borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : C.border }]}>
           <TouchableOpacity onPress={handleClose} style={ps.backBtn} activeOpacity={0.7}>
-            <Text style={ps.backBtnText}>‹</Text>
+            <Text style={[ps.backBtnText, { color: tc.text }]}>‹</Text>
           </TouchableOpacity>
-          <Text style={ps.headerTitle}>Settings</Text>
+          <Text style={[ps.headerTitle, { color: tc.text }]}>Settings</Text>
           <View style={{ width: 36 }} />
         </View>
 
-        <ScrollView indicatorStyle="black" contentContainerStyle={{ paddingBottom: 120 }}>
+        <ScrollView indicatorStyle={isDark ? 'white' : 'black'} contentContainerStyle={{ paddingBottom: 120 }}>
 
           {/* ── Account ─────────────────────────────────────────────────── */}
-          <Section label="Account">
-            <Row icon="✉️" label="Email"           value={userEmail || '—'} last={false} />
-            <Row icon="👤" label="Edit Profile"    onPress={() => openSubPage('edit-profile')} last={false} />
-            <Row icon="✦"  label="Personalisation" onPress={() => openSubPage('personalisation')} last={false} />
-            <Row icon="🔒" label="Data & Privacy"  onPress={() => openSubPage('data-privacy')} last />
+          <Section label="Account" isDark={isDark} tc={tc}>
+            <Row icon="✉️" label="Email"           value={userEmail || '—'} last={false} isDark={isDark} tc={tc} />
+            <Row icon="👤" label="Edit Profile"    onPress={() => openSubPage('edit-profile')} last={false} isDark={isDark} tc={tc} />
+            <Row icon="✦"  label="Personalisation" onPress={() => openSubPage('personalisation')} last={false} isDark={isDark} tc={tc} />
+            <Row icon="🔒" label="Data & Privacy"  onPress={() => openSubPage('data-privacy')} last isDark={isDark} tc={tc} />
           </Section>
 
           {/* ── My Journey (placeholder — each leads to "coming soon") ───── */}
-          <Section label="My Journey">
-            <Row icon="😊" label="Mood Tracking"   onPress={() => openSubPage('mood-tracking')} last={false} />
-            <Row icon="📊" label="Insights"         onPress={() => openSubPage('insights')} last={false} />
-            <Row icon="📝" label="Weekly Check-in"  onPress={() => openSubPage('weekly-checkin')} last />
+          <Section label="My Journey" isDark={isDark} tc={tc}>
+            <Row icon="😊" label="Mood Tracking"   onPress={() => openSubPage('mood-tracking')} last={false} isDark={isDark} tc={tc} />
+            <Row icon="📊" label="Insights"         onPress={() => openSubPage('insights')} last={false} isDark={isDark} tc={tc} />
+            <Row icon="📝" label="Weekly Check-in"  onPress={() => openSubPage('weekly-checkin')} last isDark={isDark} tc={tc} />
           </Section>
 
           {/* ── App ─────────────────────────────────────────────────────── */}
-          <Section label="App">
-            <Row icon="🏠" label="Home"            onPress={() => navigate('/')} last={false} />
-            <Row icon="🗺️" label="Replay App Tour" onPress={() => navigate('/about')} last />
+          <Section label="App" isDark={isDark} tc={tc}>
+            <Row icon="🏠" label="Home"            onPress={() => navigate('/')} last={false} isDark={isDark} tc={tc} />
+            <Row icon="🗺️" label="Replay App Tour" onPress={() => navigate('/about')} last isDark={isDark} tc={tc} />
           </Section>
 
           {/* ── Support ─────────────────────────────────────────────────── */}
-          <Section label="Support">
-            <Row icon="✉️" label="Contact us"     onPress={() => Linking.openURL('mailto:faisaahmed004@gmail.com?subject=Amanda%20Support')} last={false} />
-            <Row icon="💬" label="Share feedback" onPress={() => setActiveSheet('feedback')} last={false} />
-            <Row icon="🐛" label="Report a bug"   onPress={() => setActiveSheet('bug')} last />
+          <Section label="Support" isDark={isDark} tc={tc}>
+            <Row icon="✉️" label="Contact us"     onPress={() => Linking.openURL('mailto:faisaahmed004@gmail.com?subject=Amanda%20Support')} last={false} isDark={isDark} tc={tc} />
+            <Row icon="💬" label="Share feedback" onPress={() => setActiveSheet('feedback')} last={false} isDark={isDark} tc={tc} />
+            <Row icon="🐛" label="Report a bug"   onPress={() => setActiveSheet('bug')} last isDark={isDark} tc={tc} />
           </Section>
 
           {/* ── Legal ───────────────────────────────────────────────────── */}
-          <Section label="Legal">
-            <Row icon="📄" label="Terms & Conditions" onPress={() => navigate('/terms')} last={false} />
-            <Row icon="🔒" label="Privacy Policy"     onPress={() => navigate('/privacy')} last />
+          <Section label="Legal" isDark={isDark} tc={tc}>
+            <Row icon="📄" label="Terms & Conditions" onPress={() => navigate('/terms')} last={false} isDark={isDark} tc={tc} />
+            <Row icon="🔒" label="Privacy Policy"     onPress={() => navigate('/privacy')} last isDark={isDark} tc={tc} />
           </Section>
 
         </ScrollView>
 
         {/* Sign out — pinned to bottom */}
-        <View style={ps.signOutWrapper}>
+        <View style={[ps.signOutWrapper, { backgroundColor: isDark ? 'rgba(44,30,26,0.98)' : '#E8D5CC', borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : C.border }]}>
           <TouchableOpacity style={ps.signOutBtn} onPress={onSignOut} activeOpacity={0.8}>
             <Text style={ps.signOutIcon}>→</Text>
             <Text style={ps.signOutText}>Sign out</Text>
@@ -540,14 +536,14 @@ export default function ProfilePanel({
 
         {/* ── Sub-page overlay — slides in over the main list ─────────── */}
         {subPage && (
-          <Animated.View style={[ps.subPage, { transform: [{ translateX: subAnim }] }]}>
-            <View style={ps.header}>
+          <Animated.View style={[ps.subPage, { transform: [{ translateX: subAnim }], backgroundColor: isDark ? 'rgba(44,30,26,0.98)' : '#E8D5CC' }]}>
+            <View style={[ps.header, { borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : C.border }]}>
               <TouchableOpacity onPress={closeSubPage} style={ps.backBtn} activeOpacity={0.7}>
-                <Text style={ps.backBtnText}>‹</Text>
+                <Text style={[ps.backBtnText, { color: tc.text }]}>‹</Text>
               </TouchableOpacity>
-              <Text style={ps.headerTitle}>{subPageTitle[subPage]}</Text>
+              <Text style={[ps.headerTitle, { color: tc.text }]}>{subPageTitle[subPage]}</Text>
               <TouchableOpacity onPress={handleClose} style={ps.closeBtn} activeOpacity={0.7}>
-                <Text style={ps.closeBtnText}>✕</Text>
+                <Text style={[ps.closeBtnText, { color: tc.text }]}>✕</Text>
               </TouchableOpacity>
             </View>
 

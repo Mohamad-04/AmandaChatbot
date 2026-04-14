@@ -66,7 +66,7 @@ export const darkColors = {
   borderError:   'rgba(224, 112, 96, 0.40)',
   borderSuccess: 'rgba(39, 127, 82, 0.35)',
 
-  inputBg:     'rgba(40, 34, 32, 0.90)',
+  inputBg:     'rgba(122, 78, 82, 0.35)',
 
   btnPrimary:        '#C8A9A4',
   btnPrimaryPressC1: '#C9A29D',

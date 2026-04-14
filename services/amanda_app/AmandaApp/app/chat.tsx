@@ -8,6 +8,7 @@ import {
   FlatList, KeyboardAvoidingView, Platform, ActivityIndicator,
   StatusBar, SafeAreaView, Modal, Image, Animated,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { Audio } from 'expo-av'; 
@@ -17,6 +18,8 @@ import ChatBubble     from '../components/chat-bubble';
 import TypingDots     from '../components/typing-dots';
 import RecordingWave  from '../components/recording-wave';
 import VoiceIndicator from '../components/voice-indicator';
+import CrisisBanner   from '../components/crisis-banner';
+import CrisisReminder from '../components/crisis-reminder';
 import { useChat }         from '../hooks/use-chat';
 import { useVoiceChat }    from '../hooks/use-voice-chat';
 import { useTranscription } from '../hooks/use-transcription';
@@ -100,6 +103,38 @@ export default function ChatScreen() {
     handleNewChat,
   } = useChat();
 
+  // ── Crisis detection state ─────────────────────────────────────────────
+  // Defined before useVoiceChat so checkForCrisis can be passed as a callback
+
+  // Once true, stays true for the entire session — banner never hides
+  const [crisisDetected,     setCrisisDetected]     = useState(false);
+  // Tracks which chat ID triggered the crisis — reminder only shows in that chat
+  const [crisisChatId,       setCrisisChatId]       = useState<number | null>(null);
+  // Reminder shown once on first detection — user can dismiss it
+  const [showCrisisReminder, setShowCrisisReminder] = useState(false);
+
+  // Placeholder: frontend keyword scan until backend emits a 'crisis_detected' socket event.
+  // Scans the USER's message only — not Amanda's response — to avoid false positives
+  // from Amanda reflecting language back empathetically.
+  // Keep this list short and high-confidence (low false positive rate).
+  const CRISIS_KEYWORDS = [
+    'want to die', 'kill myself', 'end my life', "don't want to be here",
+    'suicide', 'suicidal', 'take my own life', "can't go on", 'no reason to live',
+    'better off without me', 'want it to end',
+  ];
+
+  // Checks a user message for crisis signals and sets the banner/reminder if found
+  const checkForCrisis = (userMessage: string) => {
+    if (crisisDetected) return; // already flagged — no need to re-check
+    const lower = userMessage.toLowerCase();
+    const found = CRISIS_KEYWORDS.some(kw => lower.includes(kw));
+    if (found) {
+      setCrisisDetected(true);
+      setCrisisChatId(currentChatIdRef.current);
+      setShowCrisisReminder(true);
+    }
+  };
+
   const {
     voiceMode,
     voicePhase,
@@ -107,8 +142,7 @@ export default function ChatScreen() {
     enterVoiceMode,
     exitVoiceMode,
     handleIndicatorTap,
-  } = useVoiceChat({ currentChatIdRef, flatListRef, setMessages, userEmail });
-
+  } = useVoiceChat({ currentChatIdRef, flatListRef, setMessages, userEmail, onUserMessage: checkForCrisis });
 
   const {
     isActive:       transcriptionActive,
@@ -123,11 +157,11 @@ export default function ChatScreen() {
   const tc = useThemeColors();
 
   // ── UI state — only things that affect display, nothing else ──────────
-  const [showLoginModal,      setShowLoginModal]      = useState(false);
-  const [showSidebar,         setShowSidebar]         = useState(false);
-  const [showChatMenu,        setShowChatMenu]        = useState(false);
-  const [renameModalVisible,  setRenameModalVisible]  = useState(false);
-  const [renameText,          setRenameText]          = useState('');
+  const [showLoginModal,     setShowLoginModal]     = useState(false);
+  const [showSidebar,        setShowSidebar]        = useState(false);
+  const [showChatMenu,       setShowChatMenu]       = useState(false);
+  const [renameModalVisible, setRenameModalVisible] = useState(false);
+  const [renameText,         setRenameText]         = useState('');
 
   // Show login modal immediately if user is anonymous
   useEffect(() => {
@@ -151,6 +185,12 @@ export default function ChatScreen() {
     exitVoiceMode();
     await handleNewChat();
     enterVoiceMode();
+  };
+
+  // Scan each user message for crisis signals before it's sent
+  const sendMessageWithCrisisCheck = (text: string) => {
+    checkForCrisis(text);
+    sendMessage(text);
   };
 
   // Scroll to bottom whenever messages or streaming text updates
@@ -180,7 +220,7 @@ export default function ChatScreen() {
 
   // ── Loading state ──────────────────────────────────────────────────────
   if (isLoading) return (
-    <View style={[s.loadingContainer, { backgroundColor: tc.bgBase }]}>
+    <View style={[s.loadingContainer, { backgroundColor: isDark ? '#3d2924' : tc.bgBase }]}>
       <ActivityIndicator size="large" color={tc.primary} />
       <Text style={[s.loadingText, { color: tc.textMuted }]}>Connecting to Amanda…</Text>
     </View>
@@ -188,9 +228,18 @@ export default function ChatScreen() {
 
   // ── Main render ────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={[s.safe, { backgroundColor: tc.bgBase }]}>
+    <SafeAreaView style={[s.safe, { backgroundColor: 'transparent' }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      <View style={[s.bgLayer, { backgroundColor: tc.bgBase }]} pointerEvents="none" />
+      {/* Gradient background — light mirrors website, dark uses same palette in deep tones */}
+      <LinearGradient
+        colors={isDark
+          ? ['#7A4E52',  '#52322b', '#2c1e1aec']
+          : ['#EAD9C8', '#C8A9A4', '#8C5652']}
+        start={{ x: 0.15, y: 0.05 }}
+        end={{ x: 0.85, y: 0.95 }}
+        style={s.bgLayer}
+        pointerEvents="none"
+      />
 
       {/* Login prompt for anonymous users */}
       <LoginModal
@@ -309,7 +358,7 @@ export default function ChatScreen() {
         keyboardVerticalOffset={0}
       >
         {/* Header — shows "· Voice" suffix in voice mode */}
-        <View style={[s.header, { backgroundColor: isDark ? 'rgba(28,24,22,0.60)' : 'rgba(241,227,211,0.40)', borderBottomColor: tc.border }]}>
+        <View style={[s.header, { backgroundColor: isDark ? 'rgba(122,78,82,0.35)' : 'rgba(241,227,211,0.35)', borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : tc.border }]}>
           {!isAnonymous ? (
             <TouchableOpacity
               style={s.headerBtn}
@@ -358,6 +407,9 @@ export default function ChatScreen() {
           )}
         </View>
 
+        {/* Crisis support banner — persistent for the entire session once triggered */}
+        {crisisDetected && <CrisisBanner />}
+
         {/* Anonymous banner — tapping opens login modal */}
         {isAnonymous && (
           <TouchableOpacity
@@ -378,11 +430,17 @@ export default function ChatScreen() {
           data={messages}
           keyExtractor={(_, i) => String(i)}
           renderItem={renderItem}
-          ListEmptyComponent={<EmptyState onChip={sendMessage} tc={tc} isDark={isDark} />}
+          ListEmptyComponent={<EmptyState onChip={sendMessageWithCrisisCheck} tc={tc} isDark={isDark} />}
           ListFooterComponent={listFooter}
           contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}
         />
+
+        {/* Crisis reminder — slides up above the input bar on first detection.
+            Only shown in the chat where the crisis was detected, not when switching chats. */}
+        {crisisDetected && showCrisisReminder && currentChatId === crisisChatId && (
+          <CrisisReminder onDismiss={() => setShowCrisisReminder(false)} />
+        )}
 
         {/* Bottom bar — switches between voice mode and text mode */}
         {voiceMode ? (
@@ -455,7 +513,7 @@ export default function ChatScreen() {
             ) : (
 
               // Normal text input — pill layout: mic | text | send/wave
-              <View style={[s.inputPill, { backgroundColor: tc.inputBg }, inputText.length > 0 && s.inputPillFocused]}>
+              <View style={[s.inputPill, { backgroundColor: tc.inputBg }, inputText.length > 0 && { backgroundColor: isDark ? 'rgba(122,78,82,0.50)' : 'rgba(241,227,211,0.72)' }]}>
 
                 {/* Mic button — left side */}
                 <TouchableOpacity
@@ -475,7 +533,7 @@ export default function ChatScreen() {
                   multiline
                   maxLength={2000}
                   editable={!isStreaming && isReady}
-                  onSubmitEditing={() => sendMessage(inputText)}
+                  onSubmitEditing={() => sendMessageWithCrisisCheck(inputText)}
                   blurOnSubmit={false}
                 />
 
@@ -483,7 +541,7 @@ export default function ChatScreen() {
                   // Send button — shown when there is text to send
                   <TouchableOpacity
                     style={[s.pillSendBtn, (isStreaming || !isReady) && s.sendBtnDisabled]}
-                    onPress={() => sendMessage(inputText)}
+                    onPress={() => sendMessageWithCrisisCheck(inputText)}
                     disabled={isStreaming || !isReady}
                     activeOpacity={0.7}
                   >
@@ -507,7 +565,7 @@ export default function ChatScreen() {
         )}
 
         {/* Persistent footer — shown in both voice and text mode */}
-        <Text style={[s.disclaimer, { color: tc.textLight }]}>Not a substitute for emergency services</Text>
+        <Text style={[s.disclaimer, { color: isDark ? tc.textLight : '#EDE0D4' }]}>Not a substitute for emergency services</Text>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

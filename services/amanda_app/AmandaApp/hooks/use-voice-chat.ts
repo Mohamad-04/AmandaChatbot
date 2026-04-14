@@ -32,12 +32,15 @@ interface UseVoiceChatOptions {
   flatListRef:      React.MutableRefObject<any>;
   // Shared setMessages from use-chat so transcripts appear in the message list
   setMessages:      React.Dispatch<React.SetStateAction<any[]>>;
+  // Crisis detection callback — called on every user transcript so voice mode is covered too
+  onUserMessage?:   (text: string) => void;
 }
 
 export function useVoiceChat({
   currentChatIdRef,
   flatListRef,
   setMessages,
+  onUserMessage,
 }: UseVoiceChatOptions) {
   // ── Voice mode state ───────────────────────────────────────────────────
   const [voiceMode,      setVoiceMode]      = useState(false);
@@ -207,6 +210,8 @@ export function useVoiceChat({
         if (d.is_final && d.text?.trim()) {
           const text = d.text.trim();
           const role = d.role === 'user' ? 'user' : 'assistant';
+          // Run crisis detection on user speech — same check as typed messages
+          if (role === 'user') onUserMessage?.(text);
           setMessages(prev => [...prev, { role, content: text }]);
           setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
 

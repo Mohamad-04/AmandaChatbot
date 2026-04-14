@@ -58,7 +58,7 @@ export const s = StyleSheet.create({
   sendBtn:         { width: 34, height: 34, borderRadius: 8, backgroundColor: C.sendBg, borderWidth: 1, borderColor: C.sendBorder, alignItems: 'center', justifyContent: 'center' },
   sendBtnDisabled: { opacity: 0.35 },
   sendBtnIcon:     { color: C.text, fontSize: 18, fontWeight: '600', lineHeight: 22 },
-  disclaimer:      { textAlign: 'center', fontSize: 10, color: C.textLight, paddingBottom: Platform.OS === 'ios' ? 12 : 8, paddingTop: 4 },
+  disclaimer:      { textAlign: 'center', fontSize: 10, color: '#EDE0D4', paddingBottom: Platform.OS === 'ios' ? 12 : 8, paddingTop: 4 },
 
   // ── Pill input ───────────────────────────────────────────────────────
   inputPill:       { flexDirection: 'row', alignItems: 'center', backgroundColor: C.inputBg, borderRadius: 28, paddingHorizontal: 6, paddingVertical: 6, gap: 4 },

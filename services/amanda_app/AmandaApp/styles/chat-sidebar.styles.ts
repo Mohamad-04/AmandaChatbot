@@ -9,7 +9,7 @@ export const C = {
   textMuted:  '#6b4e4b',
   textLight:  '#a89290',
   border:     'rgba(168,122,116,0.18)',
-  drawerBg:   'rgba(241,227,211,0.98)',
+  drawerBg:   'rgba(241,227,211,0.82)',
   activeChat: 'rgba(168,122,116,0.16)',
   sendBg:     'rgba(45,30,28,0.12)',
   sendBorder: 'rgba(45,30,28,0.15)',
@@ -109,7 +109,7 @@ export const supportSheetStyles = StyleSheet.create({
   backdrop:   { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(45,30,28,0.45)' },
   sheet: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: '#FDFAF7',
+    backgroundColor: 'rgba(241,227,211,0.97)',
     borderTopLeftRadius: 28, borderTopRightRadius: 28,
     padding: 28, paddingBottom: Platform.OS === 'ios' ? 40 : 28,
     shadowColor: '#2d1e1c', shadowOffset: { width: 0, height: -4 },
@@ -142,10 +142,10 @@ export const supportSheetStyles = StyleSheet.create({
 
 export const profileStyles = StyleSheet.create({
 
-  // ── Panel shell ────────────────────────────────────────────────────────────
+  // ── Panel shell — fully opaque so gradient doesn't show through ───────────
   panel: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: C.drawerBg,
+    backgroundColor: 'rgba(241,227,211,0.98)',
     paddingTop: 56,
   },
 
@@ -197,7 +197,7 @@ export const profileStyles = StyleSheet.create({
     position: 'absolute', bottom: 0, left: 0, right: 0,
     paddingHorizontal: 20, paddingTop: 16, paddingBottom: 32,
     borderTopWidth: 1, borderTopColor: C.border,
-    backgroundColor: C.drawerBg,
+    backgroundColor: 'rgba(241,227,211,0.98)',
   },
   signOutBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
@@ -212,7 +212,7 @@ export const profileStyles = StyleSheet.create({
   // ── Sub-page overlay (slides in from the right within the panel) ───────────
   subPage: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: C.drawerBg,
+    backgroundColor: 'rgba(241,227,211,0.98)',
     paddingTop: 56,
   },
   subPageBody: { flex: 1 },
