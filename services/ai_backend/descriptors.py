@@ -64,6 +64,14 @@ def _build_file_descriptor() -> descriptor_pb2.FileDescriptorProto:
     field.label = descriptor_pb2.FieldDescriptorProto.LABEL_OPTIONAL
     field.type = descriptor_pb2.FieldDescriptorProto.TYPE_STRING
 
+    # ChatMessage.first_name field
+    field = chat_message.field.add()
+    field.name = "first_name"
+    field.number = 4
+    field.label = descriptor_pb2.FieldDescriptorProto.LABEL_OPTIONAL
+    field.type = descriptor_pb2.FieldDescriptorProto.TYPE_STRING
+    field.json_name = "firstName"
+
     # Define ChatChunk
     chat_chunk = file_proto.message_type.add()
     chat_chunk.name = "ChatChunk"

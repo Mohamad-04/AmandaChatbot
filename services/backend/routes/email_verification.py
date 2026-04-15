@@ -4,7 +4,7 @@ Email verification routes.
 POST /api/auth/verify-email       — consume a verification token
 POST /api/auth/resend-verification — resend the verification email
 """
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from database import db
 from models.user import User
 from services.email_service import send_verification_email
@@ -55,6 +55,12 @@ def verify_email():
         user.verification_token = None
         user.verification_token_expires = None
         db.session.commit()
+
+        # Auto-login: create a session so the app goes straight to chat
+        session.clear()
+        session.permanent = True
+        session['user_id'] = user.id
+        session['email'] = user.email
 
         return jsonify({
             'success': True,

@@ -161,6 +161,7 @@ class AIServicer:
             user_id = request.user_id
             chat_id = request.chat_id
             user_message = request.message
+            first_name = request.first_name or None
 
             # Resolve effective user identity (MVP)
             user_email = self._resolve_user_email(user_id)
@@ -169,7 +170,11 @@ class AIServicer:
             coordinator = self._get_or_create_coordinator(user_id, chat_id, user_email)
 
             # Build optional project/session prompt context
-            project_context = self._build_project_context(user_email)
+            project_context = self._build_project_context(user_email) or {}
+
+            # Pass user's first name so Amanda can address them by name
+            if first_name:
+                project_context["user_first_name"] = first_name
 
             # Stream response from coordinator
             for chunk_text in self._stream_from_coordinator(

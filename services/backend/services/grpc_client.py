@@ -64,7 +64,7 @@ class GRPCClient:
             self._channel = None
             self._stub = None
     
-    def stream_chat(self, user_id: str, chat_id: str, message: str) -> Generator[str, None, None]:
+    def stream_chat(self, user_id: str, chat_id: str, message: str, first_name: str = None) -> Generator[str, None, None]:
         """
         Stream a chat message to the AI backend and yield response chunks.
         
@@ -94,7 +94,8 @@ class GRPCClient:
         request = ChatMessage(
             user_id=str(user_id),
             chat_id=str(chat_id),
-            message=message
+            message=message,
+            first_name=first_name or "",
         )
         
         try:
