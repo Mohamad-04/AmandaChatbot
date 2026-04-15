@@ -83,4 +83,15 @@ export const saveMessage = (chatId: number, role: string, content: string) =>
 export const logout = () =>
   request<{ success: boolean }>('POST', '/api/auth/logout');
 
+// Get the current user's profile (first name, last name, age range)
+export const getProfile = () => request('GET', '/api/user/profile');
+
+// Update profile fields — pass only the fields you want to change
+export const updateProfile = (data: object) =>
+  request<{ success: boolean }>('PATCH', '/api/user/profile', data);
+
+// Permanently delete the logged-in user's account and all their data
+export const deleteAccount = () =>
+  request<{ success: boolean }>('DELETE', '/api/user/account');
+
 console.log('[API] BACKEND_URL:', BACKEND_URL);

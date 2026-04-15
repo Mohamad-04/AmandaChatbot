@@ -10,7 +10,8 @@ so we don’t duplicate authentication logic across multiple route files.
 from utils.auth import require_auth
 
 # Flask imports
-from flask import Blueprint, jsonify, session
+from flask import Blueprint, jsonify, request, session
+from database import db
 
 # User model (SQLAlchemy)
 from models.user import User
@@ -95,3 +96,72 @@ def get_profile():
             "success": False,
             "message": "An error occurred fetching profile"
         }), 500
+
+
+# =============================================================================
+# PATCH PROFILE
+# =============================================================================
+@user_bp.route('/profile', methods=['PATCH'])
+@require_auth
+def update_profile():
+    """
+    Update the current user's profile fields.
+
+    Request JSON (all fields optional):
+        { "first_name": "...", "last_name": "...", "age_range": "..." }
+
+    Response JSON:
+        { "success": true }
+    """
+    try:
+        user_id = session["user_id"]
+        user = User.query.get(user_id)
+
+        if not user:
+            return jsonify({"success": False, "message": "User not found"}), 404
+
+        data = request.get_json() or {}
+
+        allowed_fields = ['first_name', 'last_name', 'age_range']
+        for field in allowed_fields:
+            if field in data:
+                setattr(user, field, data[field])
+
+        db.session.commit()
+        return jsonify({"success": True}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Update profile error: {e}")
+        return jsonify({"success": False, "message": "An error occurred updating profile"}), 500
+
+
+# =============================================================================
+# DELETE ACCOUNT
+# =============================================================================
+@user_bp.route('/account', methods=['DELETE'])
+@require_auth
+def delete_account():
+    """
+    Permanently delete the current user's account and all associated data.
+
+    Response JSON:
+        { "success": true }
+    """
+    try:
+        user_id = session["user_id"]
+        user = User.query.get(user_id)
+
+        if not user:
+            return jsonify({"success": False, "message": "User not found"}), 404
+
+        db.session.delete(user)
+        db.session.commit()
+
+        session.clear()
+        return jsonify({"success": True}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Delete account error: {e}")
+        return jsonify({"success": False, "message": "An error occurred deleting account"}), 500

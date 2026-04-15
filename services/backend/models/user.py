@@ -39,6 +39,11 @@ class User(db.Model):
     reset_token = db.Column(db.String(64), nullable=True, index=True)
     reset_token_expires = db.Column(db.DateTime, nullable=True)
 
+    # Profile fields (set during profile-setup after email verification)
+    first_name = db.Column(db.String(100), nullable=True)
+    last_name = db.Column(db.String(100), nullable=True)
+    age_range = db.Column(db.String(20), nullable=True)
+
     # Relationships
     chats = db.relationship('Chat', back_populates='user', lazy='dynamic', cascade='all, delete-orphan')
     
@@ -112,7 +117,10 @@ class User(db.Model):
             'created_at': self.created_at.isoformat(),
             'last_active_at': self.last_active_at.isoformat() if self.last_active_at else None,
             'is_verified': self.is_verified,
-            'is_admin': self.is_admin
+            'is_admin': self.is_admin,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'age_range': self.age_range,
         }
     
     def __repr__(self):
