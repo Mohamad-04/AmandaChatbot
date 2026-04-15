@@ -5,6 +5,7 @@ import { UsersPage } from "./pages/UsersPage";
 import { ConversationsPage } from "./pages/ConversationsPage";
 import { RiskAlertsPage } from "./pages/RiskAlertsPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { StudySessionsPage } from "./pages/StudySessionsPage";
 
 export const router = createBrowserRouter([
   {
@@ -15,6 +16,7 @@ export const router = createBrowserRouter([
       { path: "users", Component: UsersPage },
       { path: "conversations", Component: ConversationsPage },
       { path: "risk-alerts", Component: RiskAlertsPage },
+      { path: "study-sessions", Component: StudySessionsPage },
       { path: "settings", Component: SettingsPage },
     ],
   },
