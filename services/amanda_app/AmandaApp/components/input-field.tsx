@@ -2,7 +2,8 @@
 // Used across login, signup, and any other form screens.
 
 import React, { useState } from 'react';
-import { View, Text, TextInput } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { theme } from '../constants/theme';
 import { styles } from '../styles/login.styles';
 
@@ -33,20 +34,22 @@ export default function InputField({
   inputRef,
   textContentType = 'none',
 }: InputFieldProps) {
-  // Tracks whether this input is focused to apply highlight styling
-  const [focused, setFocused] = useState(false);
+  const [focused,  setFocused]  = useState(false);
+  const [revealed, setRevealed] = useState(false);
+
+  const isPassword = secureTextEntry;
 
   return (
     <View style={[styles.inputWrapper, focused && styles.inputWrapperFocused]}>
       <Text style={styles.inputIcon}>{icon}</Text>
       <TextInput
         ref={inputRef}
-        style={[styles.input, { backgroundColor: 'transparent' }]}
+        style={[styles.input, { backgroundColor: 'transparent', flex: 1 }]}
         placeholder={placeholder}
         placeholderTextColor={theme.colors.placeholder}
         value={value}
         onChangeText={onChangeText}
-        secureTextEntry={secureTextEntry}
+        secureTextEntry={isPassword && !revealed}
         keyboardType={keyboardType}
         autoCapitalize="none"
         autoCorrect={false}
@@ -56,6 +59,19 @@ export default function InputField({
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
       />
+      {isPassword && (
+        <TouchableOpacity
+          onPress={() => setRevealed(r => !r)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={{ paddingRight: 4 }}
+        >
+          <Feather
+            name={revealed ? 'eye-off' : 'eye'}
+            size={18}
+            color={theme.colors.placeholder}
+          />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

@@ -1,87 +1,89 @@
-// Animated indicator displayed during voice conversations.
-// Pulses and changes colour based on what Amanda is currently doing.
+// Animated bar indicator displayed during voice conversations.
+// Same style as the voice chat button but larger and phase-aware.
 // Phases: idle | listening | thinking | speaking
 
 import React, { useRef, useEffect } from 'react';
-import { View, Image, Animated } from 'react-native';
-import { chatColors as C } from '../constants/theme';
+import { View, Animated } from 'react-native';
 
 export type VoicePhase = 'idle' | 'listening' | 'thinking' | 'speaking';
 
 interface VoiceIndicatorProps {
-  phase: VoicePhase;
+  phase:     VoicePhase;
+  isDark?:   boolean;
 }
 
-export default function VoiceIndicator({ phase }: VoiceIndicatorProps) {
-  const p1 = useRef(new Animated.Value(1)).current;
-  const p2 = useRef(new Animated.Value(1)).current;
-  const p3 = useRef(new Animated.Value(1)).current;
-  const op = useRef(new Animated.Value(0.4)).current;
+const BAR_WIDTH  = 4;
+const BAR_HEIGHT = 32;
+const BAR_GAP    = 5;
+const BAR_COLOR  = '#ffffff';
+const CIRCLE     = 80;
+
+// Animation config per phase
+const PHASE_CONFIG = {
+  idle:      { minScale: 0.08, maxScale: 0.25, minDur: 900,  maxDur: 1400 },
+  listening: { minScale: 0.15, maxScale: 1.00, minDur: 200,  maxDur: 500  },
+  thinking:  { minScale: 0.10, maxScale: 0.50, minDur: 700,  maxDur: 1100 },
+  speaking:  { minScale: 0.20, maxScale: 0.90, minDur: 280,  maxDur: 600  },
+};
+
+export default function VoiceIndicator({ phase, isDark = false }: VoiceIndicatorProps) {
+  const b0 = useRef(new Animated.Value(0.15)).current;
+  const b1 = useRef(new Animated.Value(0.40)).current;
+  const b2 = useRef(new Animated.Value(0.70)).current;
+  const b3 = useRef(new Animated.Value(0.40)).current;
+  const b4 = useRef(new Animated.Value(0.15)).current;
+
+  const bars = [b0, b1, b2, b3, b4];
 
   useEffect(() => {
-    p1.stopAnimation();
-    p2.stopAnimation();
-    p3.stopAnimation();
+    bars.forEach(b => b.stopAnimation());
 
-    if (phase === 'idle') {
-      Animated.timing(op, { toValue: 0.4, duration: 300, useNativeDriver: true }).start();
-      [p1, p2, p3].forEach(p =>
-        Animated.spring(p, { toValue: 1, useNativeDriver: true }).start()
-      );
-      return;
-    }
+    const { minScale, maxScale, minDur, maxDur } = PHASE_CONFIG[phase];
 
-    Animated.timing(op, { toValue: 1, duration: 300, useNativeDriver: true }).start();
-
-    const dur    = phase === 'listening' ? 700 : phase === 'speaking' ? 500 : 1100;
-    const scales = phase === 'listening' ? [1.18, 1.34, 1.50] : [1.08, 1.16, 1.26];
-
-    [p1, p2, p3].forEach((anim, i) => {
-      Animated.loop(
+    bars.forEach((bar, i) => {
+      const go = () => {
+        const toHigh = minScale + Math.random() * (maxScale - minScale);
+        const toLow  = minScale + Math.random() * (maxScale - minScale) * 0.4;
+        const durA   = minDur + Math.random() * (maxDur - minDur);
+        const durB   = minDur + Math.random() * (maxDur - minDur);
         Animated.sequence([
-          Animated.delay(i * 140),
-          Animated.timing(anim, { toValue: scales[i], duration: dur, useNativeDriver: true }),
-          Animated.timing(anim, { toValue: 1,         duration: dur, useNativeDriver: true }),
-        ])
-      ).start();
+          Animated.timing(bar, { toValue: toHigh, duration: durA, useNativeDriver: true }),
+          Animated.timing(bar, { toValue: toLow,  duration: durB, useNativeDriver: true }),
+        ]).start(({ finished }) => { if (finished) go(); });
+      };
+      setTimeout(go, i * 80);
     });
   }, [phase]);
 
-  // Ring colour changes to reflect what Amanda is currently doing
-  const color = phase === 'listening' ? '#E8593C'
-              : phase === 'thinking'  ? C.textMuted
-              : phase === 'speaking'  ? '#4A90D9'
-              : C.bg3;
-
-  const SIZE = 72;
-
   return (
-    <View style={{ width: SIZE * 2.6, height: SIZE * 2.6, alignItems: 'center', justifyContent: 'center' }}>
-      {[p3, p2, p1].map((p, i) => (
-        <Animated.View
-          key={i}
-          style={{
-            position: 'absolute',
-            width:           SIZE * [2.4, 1.8, 1.35][i],
-            height:          SIZE * [2.4, 1.8, 1.35][i],
-            borderRadius:    SIZE * [1.2, 0.9, 0.675][i],
-            backgroundColor: `rgba(168,122,116,${[0.07, 0.13, 0.22][i]})`,
-            transform: [{ scale: p }],
-            opacity: op,
-          }}
-        />
-      ))}
-
-      {/* Amanda's photo sits in the centre — the coloured ring around it shows her current phase */}
-      <View style={{
-        width: SIZE, height: SIZE, borderRadius: SIZE / 2,
-        backgroundColor: color, overflow: 'hidden',
-        alignItems: 'center', justifyContent: 'center',
-      }}>
-        <Image
-          source={require('../assets/images/Amanda.jpg')}
-          style={{ width: SIZE, height: SIZE }}
-        />
+    <View style={{
+      width: CIRCLE, height: CIRCLE, borderRadius: CIRCLE / 2,
+      backgroundColor: phase === 'listening' ? (isDark ? '#B86878' : '#C47E8A')
+                     : phase === 'thinking'  ? (isDark ? '#6A4848' : '#7A5550')
+                     : phase === 'speaking'  ? (isDark ? '#A87880' : '#C9A29D')
+                     : (isDark ? 'rgba(201,162,157,0.25)' : 'rgba(45,30,28,0.35)'),
+      shadowColor:    phase === 'listening' ? '#E8A0B0' : 'transparent',
+      shadowOffset:   { width: 0, height: 0 },
+      shadowOpacity:  phase === 'listening' ? 0.9 : 0,
+      shadowRadius:   phase === 'listening' ? 22 : 0,
+      elevation:      phase === 'listening' ? 10 : 0,
+      borderWidth: 1.5,
+      borderColor: 'rgba(255,255,255,0.6)',
+      alignItems: 'center', justifyContent: 'center',
+    }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: BAR_GAP, height: BAR_HEIGHT }}>
+        {bars.map((bar, i) => (
+          <Animated.View
+            key={i}
+            style={{
+              width:           BAR_WIDTH,
+              height:          BAR_HEIGHT,
+              borderRadius:    BAR_WIDTH / 2,
+              backgroundColor: BAR_COLOR,
+              transform:       [{ scaleY: bar }],
+            }}
+          />
+        ))}
       </View>
     </View>
   );

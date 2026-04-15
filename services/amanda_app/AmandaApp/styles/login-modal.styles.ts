@@ -4,7 +4,7 @@ import { StyleSheet } from 'react-native';
 import { chatColors as C } from '../constants/theme';
 
 export const s = StyleSheet.create({
-  modalBackdrop:         { flex: 1, backgroundColor: 'rgba(45,30,28,0.55)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
+  modalBackdrop:         { flex: 1, backgroundColor: 'rgba(45,30,28,0.92)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
   modalCard:             { width: '100%', backgroundColor: 'rgba(241,227,211,0.97)', borderRadius: 28, borderWidth: 1, borderColor: 'rgba(168,122,116,0.25)', paddingHorizontal: 28, paddingTop: 36, paddingBottom: 32, alignItems: 'center', shadowColor: '#2d1e1c', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.18, shadowRadius: 32, elevation: 16 },
   modalAvatar:           { width: 80, height: 80, borderRadius: 40, marginBottom: 20, borderWidth: 2, borderColor: 'rgba(168,122,116,0.35)' },
   modalTitle:            { fontSize: 26, fontWeight: '700', color: C.text, marginBottom: 12, letterSpacing: -0.4 },

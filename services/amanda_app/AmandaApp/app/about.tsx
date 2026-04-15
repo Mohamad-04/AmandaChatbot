@@ -18,10 +18,10 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DisclaimerModal, { DISCLAIMER_KEY } from '../components/disclaimer';
 
 const ONBOARDED_KEY = '@amanda_onboarded';
 const markOnboarded = () => AsyncStorage.setItem(ONBOARDED_KEY, 'true').catch(() => {});
-import DisclaimerModal from '../components/disclaimer';
 import { styles, C } from '../styles/about.styles';
 
 
@@ -77,13 +77,20 @@ export default function AboutScreen() {
   const flatListRef = useRef<FlatList<typeof SLIDES[0]>>(null);
 
   // ── Scroll to next slide or show disclaimer on last ──────────────────────
-  const goToNext = () => {
+  const goToNext = async () => {
     if (currentIndex < SLIDES.length - 1) {
       const nextIndex = currentIndex + 1;
       flatListRef.current?.scrollToIndex({ index: nextIndex, animated: true });
       setCurrentIndex(nextIndex);
     } else {
-      setShowDisclaimer(true);
+      // Skip disclaimer if already accepted — go straight to chat
+      const accepted = await AsyncStorage.getItem(DISCLAIMER_KEY);
+      if (accepted) {
+        markOnboarded();
+        router.replace('/chat');
+      } else {
+        setShowDisclaimer(true);
+      }
     }
   };
 

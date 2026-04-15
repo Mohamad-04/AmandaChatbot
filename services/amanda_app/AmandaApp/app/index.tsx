@@ -6,7 +6,8 @@ import { View, Text, TouchableOpacity, Animated, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Disclaimer   from '../components/disclaimer';
+import Disclaimer, { DISCLAIMER_KEY } from '../components/disclaimer';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Navbar        from '../components/navbar';
 import ProfilePanel  from '../components/profile-panel';
 import { useAuth }   from '../hooks/use-auth';
@@ -43,8 +44,15 @@ export default function LandingScreen() {
 
   // ── Handlers ───────────────────────────────────────────────────────────
 
-  // Opens the disclaimer before entering chat — required on first visit
-  const handleGetStarted = () => setShowDisclaimer(true);
+  // Opens the disclaimer — skips it if user has already accepted once
+  const handleGetStarted = async () => {
+    const accepted = await AsyncStorage.getItem(DISCLAIMER_KEY);
+    if (accepted) {
+      router.push('/chat');
+    } else {
+      setShowDisclaimer(true);
+    }
+  };
 
   // Signs out and resets local auth state
   const handleSignOut = async () => {
@@ -67,6 +75,7 @@ export default function LandingScreen() {
           onSignup={() => router.push('/signup')}
           onProfile={() => setShowProfile(true)}
           onSignOut={handleSignOut}
+          lightText
         />
 
         {/* Hero card — Amanda's intro and call to action */}
@@ -116,6 +125,7 @@ export default function LandingScreen() {
             userEmail={userEmail}
             aiModel="gpt-5.1"
             onSignOut={handleSignOut}
+            forceLightMode
           />
         )}
 

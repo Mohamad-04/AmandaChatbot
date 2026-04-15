@@ -8,11 +8,14 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../hooks/use-auth';
 import { useThemeContext, useThemeColors } from '../contexts/theme-context';
 import { listChats } from '../services/api-client';
 import { sidebarStyles as s, SIDEBAR_WIDTH } from '../styles/chat-sidebar.styles';
 import ProfilePanel from './profile-panel';
+
+const PROFILE_KEY = '@amanda_profile';
 
 // Shape of a single chat session from the list endpoint
 type Chat = {
@@ -56,6 +59,7 @@ export default function ChatSidebar({
   const [loading,      setLoading]     = useState(false);
   const [showProfile,  setShowProfile] = useState(false);
   const [searchQuery,  setSearchQuery] = useState('');
+  const [displayName,  setDisplayName] = useState('');
   const { isDark, toggleTheme } = useThemeContext();
   const tc = useThemeColors();
 
@@ -81,9 +85,19 @@ export default function ChatSidebar({
     ? chats.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()))
     : chats;
 
-  // Fetches the chat list every time the sidebar opens
+  // Fetches the chat list and profile name every time the sidebar opens
   useEffect(() => {
-    if (visible) loadChats();
+    if (visible) {
+      loadChats();
+      AsyncStorage.getItem(PROFILE_KEY).then(val => {
+        if (val) {
+          const p = JSON.parse(val);
+          const first = (p.firstName || '').trim();
+          const last  = (p.lastName  || '').trim();
+          setDisplayName(first && last ? `${first} ${last}` : first || '');
+        }
+      }).catch(() => {});
+    }
   }, [visible]);
 
   // Loads all chats for the logged-in user from the backend
@@ -146,7 +160,7 @@ export default function ChatSidebar({
       </TouchableWithoutFeedback>
 
       {/* Sliding drawer */}
-      <Animated.View style={[s.drawer, { transform: [{ translateX: slideAnim }], backgroundColor: isDark ? 'rgba(44,30,26,0.93)' : '#E8D5CC' }]}>
+      <Animated.View style={[s.drawer, { transform: [{ translateX: slideAnim }], backgroundColor: isDark ? '#2C1E1A' : '#E8D5CC' }]}>
 
         {/* Brand + theme toggle */}
         <View style={[s.drawerHeader, { borderBottomColor: tc.border }]}>
@@ -225,11 +239,11 @@ export default function ChatSidebar({
         >
           <View style={s.profileAvatar}>
             <Text style={s.profileAvatarText}>
-              {userEmail ? userEmail[0].toUpperCase() : '?'}
+              {displayName ? displayName[0].toUpperCase() : userEmail ? userEmail[0].toUpperCase() : '?'}
             </Text>
           </View>
           <Text style={[s.profileEmail, { color: tc.text }]} numberOfLines={1}>
-            {userEmail ?? 'Account'}
+            {displayName || userEmail || 'Account'}
           </Text>
         </TouchableOpacity>
 

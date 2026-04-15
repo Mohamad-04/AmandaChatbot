@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   FlatList, KeyboardAvoidingView, Platform, ActivityIndicator,
-  StatusBar, SafeAreaView, Modal, Image, Animated,
+  StatusBar, SafeAreaView, Modal, Image, Animated, PanResponder,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -24,6 +24,7 @@ import { useChat }         from '../hooks/use-chat';
 import { useVoiceChat }    from '../hooks/use-voice-chat';
 import { useTranscription } from '../hooks/use-transcription';
 import { s }              from '../styles/chat.styles';
+import { SIDEBAR_WIDTH }  from '../styles/chat-sidebar.styles';
 import { chatColors as C } from '../constants/theme';
 import { useThemeContext, useThemeColors } from '../contexts/theme-context';
 
@@ -61,17 +62,19 @@ function VoiceChatIcon() {
 }
 
 // ─── Empty state ──────────────────────────────────────────────────────────────
-const EmptyState = ({ onChip, tc, isDark }: any) => (
+const EmptyState = ({ onChip, tc, isDark, voiceMode }: any) => (
   <View style={s.emptyState}>
     <Text style={[s.emptyTitle, { color: tc.text }]}>Hi, I'm Amanda</Text>
     <Text style={[s.emptySubtitle, { color: tc.textMuted }]}>I'm here to listen. What's on your mind?</Text>
-    <View style={s.chips}>
-      {["How are you feeling today?", "I need someone to talk to", "Help me manage my stress", "I've been feeling anxious"].map(c => (
-        <TouchableOpacity key={c} style={[s.chip, isDark && { backgroundColor: 'rgba(255,255,255,0.07)', borderColor: 'rgba(255,255,255,0.12)' }]} onPress={() => onChip(c)} activeOpacity={0.7}>
-          <Text style={[s.chipText, { color: tc.textMuted }]}>{c}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
+    {!voiceMode && (
+      <View style={s.chips}>
+        {["How are you feeling today?", "I need someone to talk to", "Help me manage my stress", "I've been feeling anxious"].map(c => (
+          <TouchableOpacity key={c} style={[s.chip, isDark && { backgroundColor: 'rgba(255,255,255,0.07)', borderColor: 'rgba(255,255,255,0.12)' }]} onPress={() => onChip(c)} activeOpacity={0.7}>
+            <Text style={[s.chipText, { color: tc.textMuted }]}>{c}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    )}
   </View>
 );
 
@@ -139,6 +142,9 @@ export default function ChatScreen() {
     voiceMode,
     voicePhase,
     voiceStatus,
+    voiceAmplitude,
+    voiceAssistantText,
+    clearVoiceAssistantText,
     enterVoiceMode,
     exitVoiceMode,
     handleIndicatorTap,
@@ -199,6 +205,68 @@ export default function ChatScreen() {
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 50);
   }, [messages, streamingText]);
 
+  // Typewriter effect — reveals streaming text gradually so it never dumps all at once
+  const [displayedText, setDisplayedText] = useState('');
+  const displayedLenRef = useRef(0);
+  const typewriterRef   = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!isStreaming) {
+      if (typewriterRef.current) clearInterval(typewriterRef.current);
+      setDisplayedText('');
+      displayedLenRef.current = 0;
+      return;
+    }
+  }, [isStreaming]);
+
+  useEffect(() => {
+    if (!isStreaming || !streamingText) return;
+    if (typewriterRef.current) clearInterval(typewriterRef.current);
+
+    typewriterRef.current = setInterval(() => {
+      const target = streamingText;
+      if (displayedLenRef.current >= target.length) {
+        clearInterval(typewriterRef.current!);
+        return;
+      }
+      // Reveal 2 characters per tick
+      displayedLenRef.current = Math.min(displayedLenRef.current + 2, target.length);
+      setDisplayedText(target.slice(0, displayedLenRef.current));
+    }, 16);
+
+    return () => { if (typewriterRef.current) clearInterval(typewriterRef.current); };
+  }, [streamingText]);
+
+  // Typewriter for voice assistant transcripts
+  const [voiceDisplayedText,   setVoiceDisplayedText]   = useState('');
+  const voiceDisplayedLenRef = useRef(0);
+  const voiceTypewriterRef   = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!voiceAssistantText) return;
+    voiceDisplayedLenRef.current = 0;
+    setVoiceDisplayedText('');
+    if (voiceTypewriterRef.current) clearInterval(voiceTypewriterRef.current);
+
+    voiceTypewriterRef.current = setInterval(() => {
+      const target = voiceAssistantText;
+      if (voiceDisplayedLenRef.current >= target.length) {
+        clearInterval(voiceTypewriterRef.current!);
+        // Add to messages and clear once fully revealed
+        setMessages(prev => [...prev, { role: 'assistant', content: target }]);
+        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+        setVoiceDisplayedText('');
+        voiceDisplayedLenRef.current = 0;
+        clearVoiceAssistantText();
+        return;
+      }
+      voiceDisplayedLenRef.current = Math.min(voiceDisplayedLenRef.current + 2, target.length);
+      setVoiceDisplayedText(target.slice(0, voiceDisplayedLenRef.current));
+    }, 25);
+
+    return () => { if (voiceTypewriterRef.current) clearInterval(voiceTypewriterRef.current); };
+  }, [voiceAssistantText]);
+
   // ── Render helpers — UI decisions only ────────────────────────────────
 
   // Indicator is disabled while Amanda is thinking or speaking
@@ -213,10 +281,22 @@ export default function ChatScreen() {
 
   // Renders the streaming bubble or typing dots at the bottom of the list
   const listFooter = () => {
+    if (voiceDisplayedText) return <ChatBubble role="assistant" content={voiceDisplayedText} />;
     if (!isStreaming) return null;
-    if (!streamingText) return <TypingDots />;
-    return <ChatBubble role="assistant" content={streamingText} />;
+    if (!displayedText) return <TypingDots />;
+    return <ChatBubble role="assistant" content={displayedText} />;
   };
+
+  // Swipe from left edge to open sidebar
+  const swipePanResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) =>
+        g.dx > 6 && Math.abs(g.dy) < 80 && g.moveX - g.x0 < 80,
+      onPanResponderRelease: (_, g) => {
+        if (g.dx > 15 || g.vx > 0.3) setShowSidebar(true);
+      },
+    })
+  ).current;
 
   // ── Loading state ──────────────────────────────────────────────────────
   if (isLoading) return (
@@ -228,7 +308,7 @@ export default function ChatScreen() {
 
   // ── Main render ────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={[s.safe, { backgroundColor: 'transparent' }]}>
+    <SafeAreaView style={[s.safe, { backgroundColor: 'transparent' }]} {...swipePanResponder.panHandlers}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
       {/* Gradient background — light mirrors website, dark uses same palette in deep tones */}
       <LinearGradient
@@ -246,11 +326,11 @@ export default function ChatScreen() {
         visible={showLoginModal}
         onLogin={() => {
           setShowLoginModal(false);
-          router.push('/login?from=chat' as any);
+          router.replace('/login?from=chat' as any);
         }}
         onSignup={() => {
           setShowLoginModal(false);
-          router.push('/signup?from=chat' as any);
+          router.replace('/signup?from=chat' as any);
         }}
         onClose={() => setShowLoginModal(false)}
       />
@@ -280,11 +360,11 @@ export default function ChatScreen() {
           activeOpacity={1}
           onPress={() => setShowChatMenu(false)}
         >
-          <View style={s.menuCard}>
-            <Text style={s.menuHeading} numberOfLines={1}>{chatTitle}</Text>
+          <View style={[s.menuCard, { backgroundColor: isDark ? 'rgba(44,30,26,0.98)' : 'rgba(241,227,211,0.98)', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(168,122,116,0.22)' }]}>
+            <Text style={[s.menuHeading, { color: tc.textMuted }]} numberOfLines={1}>{chatTitle}</Text>
 
             <TouchableOpacity
-              style={s.menuRow}
+              style={[s.menuRow, { borderTopWidth: 1, borderTopColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(168,122,116,0.10)' }]}
               activeOpacity={0.7}
               onPress={() => {
                 setShowChatMenu(false);
@@ -293,7 +373,7 @@ export default function ChatScreen() {
               }}
             >
               <Text style={s.menuRowIcon}>✏️</Text>
-              <Text style={s.menuRowText}>Rename</Text>
+              <Text style={[s.menuRowText, { color: tc.text }]}>Rename</Text>
             </TouchableOpacity>
 
             <View style={s.menuSeparator} />
@@ -314,14 +394,14 @@ export default function ChatScreen() {
           activeOpacity={1}
           onPress={() => setRenameModalVisible(false)}
         >
-          <TouchableOpacity activeOpacity={1} style={s.renameCard}>
-            <Text style={s.renameTitle}>Rename chat</Text>
+          <TouchableOpacity activeOpacity={1} style={[s.renameCard, { backgroundColor: isDark ? 'rgba(44,30,26,0.98)' : 'rgba(241,227,211,0.98)', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(168,122,116,0.22)' }]}>
+            <Text style={[s.renameTitle, { color: tc.text }]}>Rename chat</Text>
             <TextInput
-              style={s.renameInput}
+              style={[s.renameInput, isDark && { backgroundColor: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.10)', color: tc.text }]}
               value={renameText}
               onChangeText={setRenameText}
               placeholder="Chat name…"
-              placeholderTextColor={C.textLight}
+              placeholderTextColor={tc.textLight}
               autoFocus
               returnKeyType="done"
               onSubmitEditing={async () => {
@@ -331,11 +411,11 @@ export default function ChatScreen() {
             />
             <View style={s.renameActions}>
               <TouchableOpacity
-                style={s.renameBtnCancel}
+                style={[s.renameBtnCancel, isDark && { borderColor: 'rgba(255,255,255,0.12)' }]}
                 onPress={() => setRenameModalVisible(false)}
                 activeOpacity={0.7}
               >
-                <Text style={s.renameBtnCancelText}>Cancel</Text>
+                <Text style={[s.renameBtnCancelText, { color: tc.textMuted }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={s.renameBtnSave}
@@ -379,7 +459,7 @@ export default function ChatScreen() {
             style={s.headerTitleBtn}
           >
             <Text style={[s.headerTitle, { color: tc.text }]} numberOfLines={1}>
-              {chatTitle}{voiceMode ? ' · Voice' : ''}
+              {chatTitle}
             </Text>
             {!isAnonymous && !voiceMode && (
               <Text style={[s.headerTitleChevron, { color: tc.textMuted }]}>⌄</Text>
@@ -395,13 +475,7 @@ export default function ChatScreen() {
               <Text style={[s.headerSignInText, { color: tc.text }]}>Sign in</Text>
             </TouchableOpacity>
           ) : voiceMode ? (
-            <TouchableOpacity
-              style={[s.headerSignInBtn, isDark && { backgroundColor: 'rgba(221,208,196,0.15)', borderColor: 'rgba(221,208,196,0.25)' }]}
-              onPress={exitVoiceMode}
-              activeOpacity={0.7}
-            >
-              <Text style={[s.headerSignInText, { color: tc.text }]}>⌨️ Type</Text>
-            </TouchableOpacity>
+            <View style={s.headerBtn} />
           ) : (
             <View style={s.headerBtn} />
           )}
@@ -430,7 +504,7 @@ export default function ChatScreen() {
           data={messages}
           keyExtractor={(_, i) => String(i)}
           renderItem={renderItem}
-          ListEmptyComponent={<EmptyState onChip={sendMessageWithCrisisCheck} tc={tc} isDark={isDark} />}
+          ListEmptyComponent={<EmptyState onChip={sendMessageWithCrisisCheck} tc={tc} isDark={isDark} voiceMode={voiceMode} />}
           ListFooterComponent={listFooter}
           contentContainerStyle={s.listContent}
           showsVerticalScrollIndicator={false}
@@ -447,7 +521,9 @@ export default function ChatScreen() {
 
           // ── Voice conversation mode ──────────────────────────────────
           <View style={s.voiceBar}>
-            <Text style={[s.voiceStatus, { color: tc.text }]}>{voiceStatus}</Text>
+            <Text style={[s.voiceStatus, { color: tc.text }]}>
+              {voicePhase === 'idle' ? 'Tap to speak' : voiceStatus}
+            </Text>
 
             {/* Indicator — disabled while Amanda is thinking or speaking */}
             <TouchableOpacity
@@ -456,22 +532,17 @@ export default function ChatScreen() {
               activeOpacity={indicatorDisabled ? 1 : 0.85}
               style={{ opacity: indicatorDisabled ? 0.6 : 1 }}
             >
-              <VoiceIndicator phase={voicePhase} />
+              <VoiceIndicator phase={voicePhase} isDark={isDark} amplitude={voiceAmplitude} />
             </TouchableOpacity>
 
-            <Text style={[s.voiceHint, { color: tc.textMuted }]}>
-              {voicePhase === 'listening' ? 'Tap to send early · speak as long as you like' :
-               voicePhase === 'thinking'  ? 'Amanda is thinking — please wait' :
-               voicePhase === 'speaking'  ? 'Amanda is speaking — please wait' :
-                                            'Tap the indicator to start speaking'}
-            </Text>
 
             <TouchableOpacity
-              style={s.voiceCancelBtn}
+              style={[s.voiceTypeBtn, { backgroundColor: isDark ? 'rgba(201,162,157,0.30)' : 'rgba(45,30,28,0.55)', borderWidth: isDark ? 1 : 0, borderColor: isDark ? 'rgba(201,162,157,0.50)' : 'transparent' }]}
               onPress={exitVoiceMode}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
-              <Text style={s.voiceCancelText}>Cancel voice</Text>
+              <Feather name="edit-2" size={14} color="#ffffff" />
+              <Text style={[s.voiceTypeBtnText, { color: '#ffffff' }]}>Switch to typing</Text>
             </TouchableOpacity>
           </View>
 
@@ -564,9 +635,12 @@ export default function ChatScreen() {
           </View>
         )}
 
-        {/* Persistent footer — shown in both voice and text mode */}
-        <Text style={[s.disclaimer, { color: isDark ? tc.textLight : '#EDE0D4' }]}>Not a substitute for emergency services</Text>
+        {/* Footer — hidden in voice mode to give more space */}
+        {!voiceMode && (
+          <Text style={[s.disclaimer, { color: isDark ? tc.textLight : '#EDE0D4' }]}>Not a substitute for emergency services</Text>
+        )}
       </KeyboardAvoidingView>
+
     </SafeAreaView>
   );
 }

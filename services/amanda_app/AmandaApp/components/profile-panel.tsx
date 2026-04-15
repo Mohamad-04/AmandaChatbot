@@ -51,6 +51,7 @@ export interface ProfilePanelProps {
   userEmail?:      string;
   aiModel?:        string;
   onSignOut:       () => void;
+  forceLightMode?: boolean;
 }
 
 // ── Reusable layout components ─────────────────────────────────────────────────
@@ -84,10 +85,11 @@ const Row = ({
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function ProfilePanel({
-  onClose, onCloseSidebar, userEmail, onSignOut,
+  onClose, onCloseSidebar, userEmail, onSignOut, forceLightMode = false,
 }: ProfilePanelProps) {
   const router       = useRouter();
-  const { isDark }   = useThemeContext();
+  const { isDark: themeIsDark } = useThemeContext();
+  const isDark = forceLightMode ? false : themeIsDark;
   const tc           = isDark ? darkColors : colors;
   const panelAnim    = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
   const subAnim      = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
@@ -477,7 +479,7 @@ export default function ProfilePanel({
 
   return (
     <>
-      <Animated.View style={[ps.panel, { transform: [{ translateX: panelAnim }], backgroundColor: isDark ? 'rgba(44,30,26,0.98)' : '#E8D5CC' }]}>
+      <Animated.View style={[ps.panel, { transform: [{ translateX: panelAnim }], backgroundColor: isDark ? '#2C1E1A' : '#E8D5CC' }]}>
 
         {/* Main header */}
         <View style={[ps.header, { borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : C.border }]}>
@@ -527,7 +529,7 @@ export default function ProfilePanel({
         </ScrollView>
 
         {/* Sign out — pinned to bottom */}
-        <View style={[ps.signOutWrapper, { backgroundColor: isDark ? 'rgba(44,30,26,0.98)' : '#E8D5CC', borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : C.border }]}>
+        <View style={[ps.signOutWrapper, { backgroundColor: isDark ? '#2C1E1A' : '#E8D5CC', borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : C.border }]}>
           <TouchableOpacity style={ps.signOutBtn} onPress={onSignOut} activeOpacity={0.8}>
             <Text style={ps.signOutIcon}>→</Text>
             <Text style={ps.signOutText}>Sign out</Text>
@@ -536,7 +538,7 @@ export default function ProfilePanel({
 
         {/* ── Sub-page overlay — slides in over the main list ─────────── */}
         {subPage && (
-          <Animated.View style={[ps.subPage, { transform: [{ translateX: subAnim }], backgroundColor: isDark ? 'rgba(44,30,26,0.98)' : '#E8D5CC' }]}>
+          <Animated.View style={[ps.subPage, { transform: [{ translateX: subAnim }], backgroundColor: isDark ? '#2C1E1A' : '#E8D5CC' }]}>
             <View style={[ps.header, { borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : C.border }]}>
               <TouchableOpacity onPress={closeSubPage} style={ps.backBtn} activeOpacity={0.7}>
                 <Text style={[ps.backBtnText, { color: tc.text }]}>‹</Text>

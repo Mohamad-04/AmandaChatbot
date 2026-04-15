@@ -47,6 +47,10 @@ export function useVoiceChat({
   const [voicePhase,     setVoicePhase]     = useState<VoicePhase>('idle');
   const [voiceStatus,    setVoiceStatus]    = useState('Tap the indicator to start');
   const [voiceConnected, setVoiceConnected] = useState(false);
+  // Live mic amplitude (0-1) passed to the indicator so bars react to volume
+  const [voiceAmplitude, setVoiceAmplitude] = useState(0);
+  // Full assistant transcript — chat screen applies typewriter before adding to messages
+  const [voiceAssistantText, setVoiceAssistantText] = useState('');
 
   // ── Voice refs ─────────────────────────────────────────────────────────
   const voiceWsRef        = useRef<WebSocket | null>(null);
@@ -200,7 +204,7 @@ export function useVoiceChat({
           setVoicePhase('thinking');
           setVoiceStatus('Amanda is thinking…');
         } else if (['speaking', 'synthesizing'].includes(d.status)) {
-          setVoicePhase('speaking');
+          // Stay in thinking until audio actually plays — playVoiceQueue sets speaking
           setVoiceStatus('Amanda is speaking…');
         }
         break;
@@ -210,12 +214,15 @@ export function useVoiceChat({
         if (d.is_final && d.text?.trim()) {
           const text = d.text.trim();
           const role = d.role === 'user' ? 'user' : 'assistant';
-          // Run crisis detection on user speech — same check as typed messages
-          if (role === 'user') onUserMessage?.(text);
-          setMessages(prev => [...prev, { role, content: text }]);
-          setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-
-          // Persist to backend so transcript survives across sessions
+          if (role === 'user') {
+            // User speech added immediately
+            onUserMessage?.(text);
+            setMessages(prev => [...prev, { role, content: text }]);
+            setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+          } else {
+            // Assistant transcript goes through typewriter in chat.tsx before being added
+            setVoiceAssistantText(text);
+          }
           if (currentChatIdRef.current) {
             saveMessage(currentChatIdRef.current, role, text);
           }
@@ -357,6 +364,9 @@ export function useVoiceChat({
           const amplitude = Math.max(0, (level + 60) / 60);
           const now       = Date.now();
 
+          // Update amplitude so the indicator bars react to the user's volume
+          setVoiceAmplitude(amplitude);
+
           if (amplitude > VAD_THRESHOLD) {
             // Speech detected — reset silence timer
             lastSpeechRef.current = now;
@@ -400,6 +410,7 @@ export function useVoiceChat({
 
     setVoicePhase('thinking');
     setVoiceStatus('Amanda is thinking…');
+    setVoiceAmplitude(0);
 
     try {
       await voiceRecRef.current.stopAndUnloadAsync();
@@ -453,6 +464,9 @@ export function useVoiceChat({
     voicePhase,
     voiceStatus,
     voiceConnected,
+    voiceAmplitude,
+    voiceAssistantText,
+    clearVoiceAssistantText: () => setVoiceAssistantText(''),
     enterVoiceMode,
     exitVoiceMode,
     handleIndicatorTap,

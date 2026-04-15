@@ -29,6 +29,10 @@ import {
   ScrollView,
   Animated,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+
+export const DISCLAIMER_KEY = '@amanda_disclaimer_accepted';
 
 export default function disclaimer({ visible, onAgree, onCancel }) {
   // Whether the user has checked the acknowledgement box
@@ -70,6 +74,7 @@ export default function disclaimer({ visible, onAgree, onCancel }) {
      * This logs the acceptance for legal purposes.
      */
     console.log('Disclaimer accepted at:', new Date().toISOString());
+    AsyncStorage.setItem(DISCLAIMER_KEY, 'true').catch(() => {});
 
     onAgree();
   };
@@ -112,47 +117,51 @@ export default function disclaimer({ visible, onAgree, onCancel }) {
           </View>
 
           {/* ── Scrollable content ── */}
-          {/*
-            We require scrolling to the bottom before the checkbox
-            becomes active — this is a common legal UX pattern.
-          */}
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
-            indicatorStyle="black"
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-            showsVerticalScrollIndicator={true}
-          >
-            <Section title="Not a therapist">
-              Amanda is an AI-based emotional support tool. She is{' '}
-              <Bold>not a licensed therapist</Bold>, psychologist, or medical
-              professional and cannot provide clinical diagnoses or treatment.
-            </Section>
+          <View style={styles.scrollWrapper}>
+            <ScrollView
+              style={styles.scroll}
+              contentContainerStyle={styles.scrollContent}
+              indicatorStyle="black"
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
+              showsVerticalScrollIndicator={true}
+            >
+              <Section title="Not a therapist">
+                Amanda is an AI-based emotional support tool. She is{' '}
+                <Bold>not a licensed therapist</Bold>, psychologist, or medical
+                professional and cannot provide clinical diagnoses or treatment.
+              </Section>
 
-            <Section title="For support only">
-              Conversations with Amanda are for{' '}
-              <Bold>informational and emotional support only</Bold>. They do not
-              constitute medical advice and should not be treated as such.
-            </Section>
+              <Section title="For support only">
+                Conversations with Amanda are for{' '}
+                <Bold>informational and emotional support only</Bold>. They do not
+                constitute medical advice and should not be treated as such.
+              </Section>
 
-            <Section title="In an emergency">
-              If you are in crisis, experiencing thoughts of self-harm, or require
-              immediate help — please contact your{' '}
-              <Bold>local emergency services</Bold> or a crisis helpline immediately.
-              Amanda cannot respond to emergencies.
-            </Section>
+              <Section title="In an emergency">
+                If you are in crisis, experiencing thoughts of self-harm, or require
+                immediate help — please contact your{' '}
+                <Bold>local emergency services</Bold> or a crisis helpline immediately.
+                Amanda cannot respond to emergencies.
+              </Section>
 
-            <Section title="Your privacy">
-              Your conversations may be stored to improve the service. You are in
-              control of what you share. See our Privacy Policy for full details.
-            </Section>
+              <Section title="Your privacy">
+                Your conversations may be stored to improve the service. You are in
+                control of what you share. See our Privacy Policy for full details.
+              </Section>
+            </ScrollView>
 
-            {/* Scroll prompt — disappears once they've scrolled down */}
+            {/* Bottom fade + arrow — signals more content to scroll */}
             {!hasScrolled && (
-              <Text style={styles.scrollPrompt}>↓ Scroll to continue</Text>
+              <View style={styles.scrollFadeContainer} pointerEvents="none">
+                <LinearGradient
+                  colors={['rgba(250,248,244,0)', 'rgba(250,248,244,0.92)', C.bg]}
+                  style={styles.scrollFadeGradient}
+                />
+                <Text style={styles.scrollArrow}>↓</Text>
+              </View>
             )}
-          </ScrollView>
+          </View>
 
           {/* ── Acknowledgement checkbox ── */}
           <TouchableOpacity
@@ -329,14 +338,35 @@ const styles = StyleSheet.create({
   },
 
   // ── Scroll area ───────────────────────────────────────────────────────────
-  scroll: {
+  scrollWrapper: {
     maxHeight: 260,
+    position: 'relative',
+  },
+  scroll: {
     paddingHorizontal: 24,
   },
   scrollContent: {
     paddingTop: 16,
     paddingBottom: 8,
     gap: 16,
+  },
+  scrollFadeContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  scrollFadeGradient: {
+    width: '100%',
+    height: 56,
+  },
+  scrollArrow: {
+    position: 'absolute',
+    bottom: 4,
+    fontSize: 18,
+    color: C.warning,
+    fontWeight: '700',
   },
 
   // ── Sections ──────────────────────────────────────────────────────────────

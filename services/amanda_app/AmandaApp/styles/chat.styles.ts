@@ -87,20 +87,20 @@ export const s = StyleSheet.create({
   voiceBar:       { paddingHorizontal: 24, paddingTop: 10, paddingBottom: 4, alignItems: 'center', gap: 8 },
   voiceStatus:    { fontSize: 13, fontWeight: '600', color: C.text, textAlign: 'center' },
   voiceHint:      { fontSize: 11, color: C.textMuted, textAlign: 'center' },
-  voiceCancelBtn: { paddingHorizontal: 20, paddingVertical: 6, borderRadius: 20 },
-  voiceCancelText:{ fontSize: 13, color: C.textMuted, fontWeight: '500' },
+  voiceTypeBtn:     { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginTop: 2 },
+  voiceTypeBtnText: { fontSize: 13, fontWeight: '500' },
 
   // ── Chat options menu ────────────────────────────────────────────────
   menuOverlay:   { flex: 1, backgroundColor: 'rgba(45,30,28,0.35)', justifyContent: 'flex-start', alignItems: 'center', paddingTop: 100 },
-  menuCard:      { width: 220, backgroundColor: 'rgba(241,227,211,0.98)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(168,122,116,0.22)', overflow: 'hidden', shadowColor: '#2d1e1c', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 20, elevation: 12 },
-  menuHeading:   { fontSize: 13, fontWeight: '600', color: C.textLight, paddingHorizontal: 18, paddingTop: 14, paddingBottom: 10 },
+  menuCard:      { width: 220, borderRadius: 16, borderWidth: 1, overflow: 'hidden', shadowColor: '#2d1e1c', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 20, elevation: 12 },
+  menuHeading:   { fontSize: 13, fontWeight: '600', paddingHorizontal: 18, paddingTop: 14, paddingBottom: 10 },
   menuSeparator: { height: 1, backgroundColor: 'rgba(168,122,116,0.12)' },
   menuRow:       { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingVertical: 14 },
   menuRowIcon:   { fontSize: 16 },
   menuRowText:   { fontSize: 15, fontWeight: '500', color: C.text },
 
   // ── Rename modal ─────────────────────────────────────────────────────
-  renameCard:          { width: '85%', backgroundColor: 'rgba(241,227,211,0.98)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(168,122,116,0.22)', padding: 24, shadowColor: '#2d1e1c', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 20, elevation: 12 },
+  renameCard:          { width: '85%', borderRadius: 20, borderWidth: 1, padding: 24, shadowColor: '#2d1e1c', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 20, elevation: 12 },
   renameTitle:         { fontSize: 17, fontWeight: '700', color: C.text, marginBottom: 16, letterSpacing: -0.3 },
   renameInput:         { backgroundColor: 'rgba(168,122,116,0.10)', borderWidth: 1, borderColor: 'rgba(168,122,116,0.25)', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: C.text, marginBottom: 16 },
   renameActions:       { flexDirection: 'row', gap: 10 },

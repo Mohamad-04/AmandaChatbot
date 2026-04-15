@@ -22,6 +22,7 @@ type NavbarProps = {
   onSignup?:   () => void;
   onProfile?:  () => void;
   onSignOut?:  () => void;
+  lightText?:  boolean;
 };
 
 export default function Navbar({
@@ -32,6 +33,7 @@ export default function Navbar({
   onSignup,
   onProfile,
   onSignOut,
+  lightText = false,
 }: NavbarProps) {
   const router     = useRouter();
   const [menuOpen,    setMenuOpen]    = useState(false);
@@ -70,11 +72,11 @@ export default function Navbar({
       <View style={styles.navbar}>
         <View style={styles.navLeft}>
           <TouchableOpacity style={styles.menuBtn} onPress={openMenu} activeOpacity={0.7}>
-            <View style={styles.menuLine} />
-            <View style={styles.menuLine} />
-            <View style={styles.menuLine} />
+            <View style={[styles.menuLine, lightText && { backgroundColor: '#FFFFFF' }]} />
+            <View style={[styles.menuLine, lightText && { backgroundColor: '#FFFFFF' }]} />
+            <View style={[styles.menuLine, lightText && { backgroundColor: '#FFFFFF' }]} />
           </TouchableOpacity>
-          <Text style={styles.brand}>Amanda</Text>
+          <Text style={[styles.brand, lightText && { color: '#FFFFFF' }]}>Amanda</Text>
         </View>
         {showBack && (
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>

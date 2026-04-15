@@ -1,9 +1,8 @@
-// Modal shown to anonymous users prompting them to sign up or log in.
-// Slides up on appear, fades backdrop behind it.
+// Modal shown to anonymous users — blocks access to chat until logged in.
+// No dismiss option: user must sign up or log in to continue.
 
 import React, { useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Modal, Animated, Image } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Text, TouchableOpacity, Modal, Animated, Image } from 'react-native';
 import { s } from '../styles/login-modal.styles';
 
 interface LoginModalProps {
@@ -13,12 +12,10 @@ interface LoginModalProps {
   onClose:  () => void;
 }
 
-export default function LoginModal({ visible, onLogin, onSignup, onClose }: LoginModalProps) {
-  const router    = useRouter();
+export default function LoginModal({ visible, onLogin, onSignup }: LoginModalProps) {
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(60)).current;
 
-  // Animate in on show, reset instantly on hide
   useEffect(() => {
     if (visible) {
       Animated.parallel([
@@ -31,13 +28,8 @@ export default function LoginModal({ visible, onLogin, onSignup, onClose }: Logi
     }
   }, [visible]);
 
-  // Close modal before navigating so the transition feels clean
-  const handleLogin  = () => { onClose(); onLogin();  };
-  const handleSignup = () => { onClose(); onSignup(); };
-  const handleBack   = () => { onClose(); router.push('/'); };
-
   return (
-    <Modal visible={visible} transparent animationType="none" statusBarTranslucent>
+    <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={() => {}}>
       <Animated.View style={[s.modalBackdrop, { opacity: fadeAnim }]}>
         <Animated.View style={[s.modalCard, { transform: [{ translateY: slideAnim }] }]}>
 
@@ -46,28 +38,18 @@ export default function LoginModal({ visible, onLogin, onSignup, onClose }: Logi
             style={s.modalAvatar}
           />
 
-          <Text style={s.modalTitle}>Meet Amanda</Text>
+          <Text style={s.modalTitle}>Sign in to continue</Text>
           <Text style={s.modalSubtitle}>
-            Your personal space to talk, reflect, and feel heard.{'\n\n'}
-            Log in or create an account to start talking with Amanda.
+            Amanda is only available to registered users.{'\n\n'}
+            Create a free account or log in to start your conversation.
           </Text>
 
-          <TouchableOpacity style={s.modalBtnPrimary} onPress={handleSignup} activeOpacity={0.85}>
+          <TouchableOpacity style={s.modalBtnPrimary} onPress={onSignup} activeOpacity={0.85}>
             <Text style={s.modalBtnPrimaryText}>Create an account</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={s.modalBtnSecondary} onPress={handleLogin} activeOpacity={0.85}>
+          <TouchableOpacity style={s.modalBtnSecondary} onPress={onLogin} activeOpacity={0.85}>
             <Text style={s.modalBtnSecondaryText}>Log in</Text>
-          </TouchableOpacity>
-
-          <View style={s.modalDivider}>
-            <View style={s.modalDividerLine} />
-            <Text style={s.modalDividerText}>or</Text>
-            <View style={s.modalDividerLine} />
-          </View>
-
-          <TouchableOpacity onPress={handleBack} activeOpacity={0.7}>
-            <Text style={s.backText}>Maybe later</Text>
           </TouchableOpacity>
 
         </Animated.View>
