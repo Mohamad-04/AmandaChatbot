@@ -7,6 +7,7 @@ from flask import session, request
 from database import db
 from models.chat import Chat
 from models.message import Message
+from models.user import User
 from services.grpc_client import GRPCClient
 from config import get_config
 from utils.rate_limiter import socket_rate_limit, RateLimit
@@ -126,15 +127,20 @@ def register_handlers(socketio):
                 host=config.GRPC_AI_BACKEND_HOST,
                 port=config.GRPC_AI_BACKEND_PORT
             )
-            
+
+            # Fetch user's first name to personalise Amanda's responses
+            user = User.query.get(user_id)
+            first_name = user.first_name if user else None
+
             full_response = ""
-            
+
             try:
                 # Stream each chunk from the AI
                 for chunk in grpc_client.stream_chat(
                     user_id=str(user_id),
                     chat_id=str(chat_id),
-                    message=message_text
+                    message=message_text,
+                    first_name=first_name
                 ):
                     # Emit token to client
                     emit('message_token', {'text': chunk})
