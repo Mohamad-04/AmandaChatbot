@@ -165,13 +165,9 @@ export default function ChatSidebar({
         {/* Brand + theme toggle */}
         <View style={[s.drawerHeader, { borderBottomColor: tc.border }]}>
           <Text style={[s.drawerBrand, { color: tc.text }]}>Amanda</Text>
-          <Switch
-            value={isDark}
-            onValueChange={toggleTheme}
-            trackColor={{ false: 'rgba(168,122,116,0.30)', true: '#2d1e1c' }}
-            thumbColor={isDark ? '#C9A29D' : '#ffffff'}
-            style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
-          />
+          <TouchableOpacity onPress={toggleTheme} activeOpacity={0.7} style={{ padding: 4 }}>
+            <Feather name={isDark ? 'sun' : 'moon'} size={18} color={tc.textLight} />
+          </TouchableOpacity>
         </View>
 
         {/* Search bar */}
@@ -255,6 +251,10 @@ export default function ChatSidebar({
             userEmail={userEmail}
             aiModel={aiModel}
             onSignOut={handleSignOut}
+            onProfileSave={(first, last) => {
+              const name = first.trim() && last.trim() ? `${first.trim()} ${last.trim()}` : first.trim();
+              setDisplayName(name);
+            }}
           />
         )}
 

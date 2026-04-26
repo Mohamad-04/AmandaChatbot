@@ -5,11 +5,12 @@
 // UK numbers are used intentionally — the AI backend currently has US numbers
 // in its protocol files. These are the correct UK equivalents.
 //
-// Design: warm amber tone — serious but not alarming. Avoids red which
+// Design: warm amber tone  serious but not alarming. Avoids red which
 // research shows can trigger shame and cause users to disengage.
 
 import React, { useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Animated, Linking, StyleSheet } from 'react-native';
+import { crisisColors as C } from '../constants/tokens';
 
 // UK crisis resources — Samaritans is the primary, Mind for broader support
 const SAMARITANS_NUMBER = '116123';
@@ -60,14 +61,13 @@ export default function CrisisBanner() {
 }
 
 const s = StyleSheet.create({
-  // Warm amber background — signals urgency without feeling like an error
   banner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FDF3E3',
+    backgroundColor: C.bg,
     borderBottomWidth: 1,
-    borderBottomColor: '#E8C882',
+    borderBottomColor: C.border,
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
@@ -77,11 +77,10 @@ const s = StyleSheet.create({
     gap: 1,
   },
 
-  // Small uppercase label — signals this is a support prompt, not an error
   label: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#92621A',
+    color: C.textMuted,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
@@ -89,12 +88,12 @@ const s = StyleSheet.create({
   number: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#5C3D0E',
+    color: C.textDark,
   },
 
   availability: {
     fontSize: 11,
-    color: '#92621A',
+    color: C.textMuted,
   },
 
   actions: {
@@ -102,9 +101,8 @@ const s = StyleSheet.create({
     gap: 6,
   },
 
-  // Primary CTA — solid warm amber, high contrast
   callBtn: {
-    backgroundColor: '#D4860A',
+    backgroundColor: C.btn,
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: 20,
@@ -116,7 +114,6 @@ const s = StyleSheet.create({
     color: 'white',
   },
 
-  // Secondary link — understated, doesn't compete with Call now
   moreBtn: {
     paddingVertical: 2,
   },
@@ -124,6 +121,6 @@ const s = StyleSheet.create({
   moreBtnText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#92621A',
+    color: C.textMuted,
   },
 });

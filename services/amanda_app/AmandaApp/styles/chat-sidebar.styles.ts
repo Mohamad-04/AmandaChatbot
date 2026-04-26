@@ -1,19 +1,21 @@
 import { StyleSheet, Dimensions, Platform } from 'react-native';
+import { colors } from '../constants/tokens';
 
 export const SIDEBAR_WIDTH = Dimensions.get('window').width * 0.78;
 
+// Local aliases for brevity
 export const C = {
-  bg1:        '#DDD0C4',
-  bg3:        '#A87A74',
-  text:       '#2d1e1c',
-  textMuted:  '#6b4e4b',
-  textLight:  '#a89290',
-  border:     'rgba(168,122,116,0.18)',
-  drawerBg:   'rgba(241,227,211,0.82)',
+  bg1:        colors.bgBase,
+  bg3:        colors.primary,
+  text:       colors.text,
+  textMuted:  colors.textMuted,
+  textLight:  colors.textLight,
+  border:     colors.border,
+  drawerBg:   colors.bgGlass,
   activeChat: 'rgba(168,122,116,0.16)',
   sendBg:     'rgba(45,30,28,0.12)',
   sendBorder: 'rgba(45,30,28,0.15)',
-  danger:     '#c0392b',
+  danger:     colors.error,
 };
 
 export const sidebarStyles = StyleSheet.create({
@@ -293,14 +295,12 @@ export const profileStyles = StyleSheet.create({
   deleteModalEmoji:  { fontSize: 40, marginBottom: 16 },
   deleteModalTitle:  { fontSize: 20, fontWeight: '700', color: C.text, marginBottom: 10 },
   deleteModalSub:    { fontSize: 14, color: C.textMuted, textAlign: 'center', lineHeight: 20, marginBottom: 24 },
-  // Delete button is a "coming soon" placeholder — wired to real API when backend is ready
-  deleteModalComingSoon: {
+  deleteModalConfirm: {
     width: '100%', paddingVertical: 14, borderRadius: 14,
-    backgroundColor: 'rgba(192,57,43,0.08)',
-    borderWidth: 1, borderColor: 'rgba(192,57,43,0.20)',
+    backgroundColor: 'rgba(192,57,43,0.85)',
     alignItems: 'center', marginBottom: 12,
   },
-  deleteModalComingSoonText: { fontSize: 15, fontWeight: '600', color: C.textMuted },
+  deleteModalConfirmText: { fontSize: 15, fontWeight: '700', color: 'white' },
   deleteModalCancel: {
     width: '100%', paddingVertical: 14, borderRadius: 14,
     borderWidth: 1, borderColor: C.border, alignItems: 'center',

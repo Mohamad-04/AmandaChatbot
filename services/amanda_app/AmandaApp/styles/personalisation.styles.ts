@@ -123,7 +123,6 @@ export const styles = StyleSheet.create({
   },
 
   // ── Mood grid card ────────────────────────────────────────────────────────
-
   // Each mood option — 2-column grid
   moodCard: {
     paddingVertical: 20,
