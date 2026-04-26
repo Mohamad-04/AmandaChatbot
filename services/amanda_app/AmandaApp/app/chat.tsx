@@ -117,9 +117,7 @@ export default function ChatScreen() {
   const [showCrisisReminder, setShowCrisisReminder] = useState(false);
 
   // Placeholder: frontend keyword scan until backend emits a 'crisis_detected' socket event.
-  // Scans the USER's message only — not Amanda's response — to avoid false positives
-  // from Amanda reflecting language back empathetically.
-  // Keep this list short and high-confidence (low false positive rate).
+  // Scans the USER's message only — not Amanda's response 
   const CRISIS_KEYWORDS = [
     'want to die', 'kill myself', 'end my life', "don't want to be here",
     'suicide', 'suicidal', 'take my own life', "can't go on", 'no reason to live',
@@ -162,7 +160,7 @@ export default function ChatScreen() {
   const { isDark } = useThemeContext();
   const tc = useThemeColors();
 
-  // ── UI state — only things that affect display, nothing else ──────────
+  // UI state — only things that affect display, nothing else ──────────
   const [showLoginModal,     setShowLoginModal]     = useState(false);
   const [showSidebar,        setShowSidebar]        = useState(false);
   const [showChatMenu,       setShowChatMenu]       = useState(false);
@@ -481,8 +479,8 @@ export default function ChatScreen() {
           )}
         </View>
 
-        {/* Crisis support banner — persistent for the entire session once triggered */}
-        {crisisDetected && <CrisisBanner />}
+        {/* Crisis support banner — only shown in the chat where crisis was detected */}
+        {crisisDetected && currentChatId === crisisChatId && <CrisisBanner />}
 
         {/* Anonymous banner — tapping opens login modal */}
         {isAnonymous && (

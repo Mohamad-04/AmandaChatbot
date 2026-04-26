@@ -22,6 +22,7 @@ import InputField  from '../components/input-field';
 import { styles }  from '../styles/login.styles';
 import { colors }  from '../constants/tokens';
 import { theme }   from '../constants/theme';
+import { updateProfile } from '../services/api-client';
 
 // Stored locally — swapped for PATCH /api/users/profile when backend is ready
 const PROFILE_KEY = '@amanda_profile';
@@ -48,13 +49,16 @@ export default function ProfileSetupScreen() {
     ]).start();
   }, []);
 
-  // Saves the profile locally then moves to personalisation onboarding
-  // TODO: replace AsyncStorage with PATCH /api/users/profile when backend is ready
+  // Saves the profile to the backend and caches locally, then moves to personalisation
   const handleContinue = async () => {
-    await AsyncStorage.setItem(
-      PROFILE_KEY,
-      JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim(), ageRange }),
-    ).catch(() => {});
+    const trimmed = { firstName: firstName.trim(), lastName: lastName.trim(), ageRange };
+
+    // Cache locally for instant load on next open
+    await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(trimmed)).catch(() => {});
+
+    // Persist to backend
+    await updateProfile({ first_name: trimmed.firstName, last_name: trimmed.lastName, age_range: ageRange }).catch(() => {});
+
     router.replace('/personalisation');
   };
 

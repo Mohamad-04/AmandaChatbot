@@ -144,7 +144,8 @@ export function useChat(): UseChatReturn {
             }
             return;
           }
-
+          
+          console.log(auth.user)
           if (active) {
             setIsAnonymous(false);
             if (auth.user?.email) setUserEmail(auth.user.email);

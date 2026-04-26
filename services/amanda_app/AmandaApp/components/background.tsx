@@ -4,6 +4,7 @@
 
 import { StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../constants/tokens';
 
 interface BackgroundProps {
   children: React.ReactNode;
@@ -12,7 +13,7 @@ interface BackgroundProps {
 export default function Background({ children }: BackgroundProps) {
   return (
     <LinearGradient
-      colors={['#DDD0C4', '#C8A9A4', '#A87A74']}
+      colors={gradients.backgroundShort}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.container}

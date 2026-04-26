@@ -14,6 +14,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Linking } from 'react-native';
+import { getProfile, updateProfile, deleteAccount } from '../services/api-client';
 import { profileStyles as ps, C, SIDEBAR_WIDTH } from '../styles/chat-sidebar.styles';
 import { colors, darkColors } from '../constants/tokens';
 import { useThemeContext } from '../contexts/theme-context';
@@ -52,6 +53,7 @@ export interface ProfilePanelProps {
   aiModel?:        string;
   onSignOut:       () => void;
   forceLightMode?: boolean;
+  onProfileSave?:  (firstName: string, lastName: string) => void;
 }
 
 // ── Reusable layout components ─────────────────────────────────────────────────
@@ -85,7 +87,7 @@ const Row = ({
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function ProfilePanel({
-  onClose, onCloseSidebar, userEmail, onSignOut, forceLightMode = false,
+  onClose, onCloseSidebar, userEmail, onSignOut, forceLightMode = false, onProfileSave,
 }: ProfilePanelProps) {
   const router       = useRouter();
   const { isDark: themeIsDark } = useThemeContext();
@@ -112,7 +114,8 @@ export default function ProfilePanel({
   const [pTherapyExperience, setPTherapyExperience] = useState('');
   const [pTonePreference,    setPTonePreference]    = useState('');
 
-  // Load saved profile and personalisation from AsyncStorage on mount
+  // Load saved profile and personalisation on mount
+  // AsyncStorage is read first for an instant display, then backend is fetched to stay in sync
   useEffect(() => {
     AsyncStorage.getItem(PROFILE_KEY).then(val => {
       if (val) {
@@ -120,6 +123,17 @@ export default function ProfilePanel({
         setFirstName(p.firstName || '');
         setLastName(p.lastName  || '');
         setAgeRange(p.ageRange  || '');
+      }
+    }).catch(() => {});
+
+    // Fetch from backend and update state + cache
+    getProfile().then((res: any) => {
+      if (res?.success && res.profile) {
+        const { first_name, last_name, age_range } = res.profile;
+        setFirstName(first_name || '');
+        setLastName(last_name  || '');
+        setAgeRange(age_range  || '');
+        AsyncStorage.setItem(PROFILE_KEY, JSON.stringify({ firstName: first_name || '', lastName: last_name || '', ageRange: age_range || '' })).catch(() => {});
       }
     }).catch(() => {});
 
@@ -168,14 +182,18 @@ export default function ProfilePanel({
     setTimeout(() => router.push(path as any), 300);
   };
 
-  // ── Profile save (AsyncStorage placeholder) ────────────────────────────────
+  // ── Profile save ───────────────────────────────────────────────────────────
 
   const saveProfile = async () => {
-    // TODO: replace AsyncStorage call with PATCH /api/users/profile when backend is ready
-    await AsyncStorage.setItem(
-      PROFILE_KEY,
-      JSON.stringify({ firstName, lastName, ageRange }),
-    ).catch(() => {});
+    // Update local cache immediately so the sidebar footer reflects changes
+    await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify({ firstName, lastName, ageRange })).catch(() => {});
+
+    // Persist to backend
+    await updateProfile({ first_name: firstName, last_name: lastName, age_range: ageRange }).catch(() => {});
+
+    // Notify sidebar so it can update the displayed name without closing
+    onProfileSave?.(firstName, lastName);
+
     closeSubPage();
   };
 
@@ -592,11 +610,16 @@ export default function ProfilePanel({
               All your chats, profile data, and history will be permanently removed. This cannot be undone.
             </Text>
             <TouchableOpacity
-              style={ps.deleteModalComingSoon}
+              style={ps.deleteModalConfirm}
               activeOpacity={0.8}
+              onPress={async () => {
+                await deleteAccount().catch(() => {});
+                await AsyncStorage.multiRemove([PROFILE_KEY, PERSONALISATION_KEY]).catch(() => {});
+                setShowDeleteModal(false);
+                onSignOut();
+              }}
             >
-              {/* TODO: wire up account deletion API when backend endpoint is ready */}
-              <Text style={ps.deleteModalComingSoonText}>Coming soon</Text>
+              <Text style={ps.deleteModalConfirmText}>Delete my account</Text>
             </TouchableOpacity>
             <TouchableOpacity style={ps.deleteModalCancel} onPress={() => setShowDeleteModal(false)} activeOpacity={0.7}>
               <Text style={ps.deleteModalCancelText}>Cancel</Text>

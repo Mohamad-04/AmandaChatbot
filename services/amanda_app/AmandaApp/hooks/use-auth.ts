@@ -37,8 +37,8 @@ export function useAuth() {
       const msg = data.message || 'Login failed. Please try again.';
       setState({ loading: false, error: msg });
       return msg;
-    } catch {
-      const msg = 'Could not connect. Please try again.';
+    } catch (err: any) {
+      const msg = err?.message || 'Could not connect. Please try again.';
       setState({ loading: false, error: msg });
       return msg;
     }

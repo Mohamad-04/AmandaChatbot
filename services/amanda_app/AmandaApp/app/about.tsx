@@ -36,7 +36,7 @@ const SLIDES = [
     icon: '👋',
     tag: 'Welcome',
     title: 'Meet Amanda',
-    body: 'Amanda is your personal AI companion, designed to give you a safe and private space to talk, reflect, and feel heard — any time you need it.',
+    body: 'Amanda is your personal AI companion, designed to give you a safe and private space to talk, reflect, and feel heard. Any time you need it.',
   },
   {
     id: '2',
@@ -50,14 +50,14 @@ const SLIDES = [
     icon: '🔒',
     tag: 'Why Amanda',
     title: 'Your privacy, always',
-    body: 'Everything you share stays private. Amanda is designed with your confidentiality in mind — you are in control of what you share and when.',
+    body: 'Everything you share stays private. Amanda is designed with your confidentiality in mind. You are in control of what you share and when.',
   },
   {
     id: '4',
     icon: '🌱',
     tag: 'Why Amanda',
     title: 'Always here for you',
-    body: "Whether it's 2pm or 2am, Amanda is available. No scheduling, no waiting — just open the app and start talking whenever you're ready.",
+    body: "Whether it's 2pm or 2am, Amanda is available. No scheduling, no waiting. Just open the app and start talking whenever you're ready.",
   },
   {
     id: '5',

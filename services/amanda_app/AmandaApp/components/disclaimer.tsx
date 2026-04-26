@@ -31,6 +31,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
+import { colors, disclaimerColors } from '../constants/tokens';
 
 export const DISCLAIMER_KEY = '@amanda_disclaimer_accepted';
 
@@ -261,18 +262,18 @@ function Bold({ children }) {
   return <Text style={styles.bold}>{children}</Text>;
 }
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
+// Local aliases mapping disclaimer + core tokens for brevity
 const C = {
-  bg:           '#FAF8F4',      // warm off-white — matches landing screen feel
-  overlay:      'rgba(0,0,0,0.60)',
-  warning:      '#D97706',      // amber — cautionary but not alarming
-  warningLight: '#FEF3C7',      // light amber background for icon
-  brand:        '#2D2D2D',      // near-black text
-  textMuted:    '#6B6560',      // muted body text
-  border:       '#E5DED5',      // soft border
-  link:         '#B07D62',      // terracotta — matches landing screen accent
-  btnActive:    '#2D2D2D',      // dark active button
-  btnDisabled:  '#C5BDB6',      // greyed out disabled button
+  bg:           colors.bgDisclaimer,
+  overlay:      colors.backdrop,
+  warning:      disclaimerColors.warning,
+  warningLight: disclaimerColors.warningLight,
+  brand:        colors.text,
+  textMuted:    disclaimerColors.textMuted,
+  border:       disclaimerColors.border,
+  link:         disclaimerColors.link,
+  btnActive:    colors.text,
+  btnDisabled:  disclaimerColors.btnDisabled,
 };
 
 const styles = StyleSheet.create({
