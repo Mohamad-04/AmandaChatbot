@@ -25,6 +25,9 @@ class Config:
 
     # Database Configuration
     DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///amanda.db')
+    # Heroku/Railway provide postgres:// but SQLAlchemy 1.4+ requires postgresql://
+    if DATABASE_URL.startswith('postgres://'):
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
     SQLALCHEMY_DATABASE_URI = DATABASE_URL
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -77,6 +80,9 @@ class Config:
 
     # Frontend base URL for email links (verify/reset pages live here)
     FRONTEND_BASE_URL = os.getenv('FRONTEND_BASE_URL', 'http://localhost:3000')
+
+    # SocketIO async mode — threading for dev/Python 3.12+, gevent for production
+    SOCKETIO_ASYNC_MODE = os.getenv('SOCKETIO_ASYNC_MODE', 'threading')
 
     @classmethod
     def validate(cls):

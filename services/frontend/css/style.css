@@ -93,6 +93,7 @@ body{
   box-shadow: 0 2px 10px rgba(107, 62, 56, 0.18), 0 1px 3px rgba(0,0,0,0.08);
   font-weight: 500;
   transition: background 0.15s ease, box-shadow 0.15s ease;
+  touch-action: manipulation;
 }
 
 .navlinks a:hover{
@@ -123,7 +124,6 @@ body{
   padding: 52px 64px;
   border-radius: 24px;
   text-align: center;
-
 }
 
 .eyebrow{
@@ -220,7 +220,7 @@ body{
    ========================================================= */
 
 .page-footer{
-  padding: 18px 24px 26px;
+  padding: 18px 24px max(26px, env(safe-area-inset-bottom));
   display: flex;
   justify-content: center;
 }
@@ -231,11 +231,11 @@ body{
   flex-wrap: wrap;
   justify-content: center;
   font-size: 0.92rem;
-  color: rgba(255,255,255,0.62);
+  color: rgba(255,255,255,0.85);
 }
 
 .trust .dot{
-  opacity: 0.6;
+  opacity: 0.75;
 }
 
 
@@ -258,6 +258,7 @@ body{
   transition: all 450ms ease-in-out;
   text-decoration: none;
   user-select: none;
+  touch-action: manipulation;
 }
 
 .u-sparkle{
@@ -296,42 +297,122 @@ body{
 
 
 /* =========================================================
+   HAMBURGER NAV
+   ========================================================= */
+
+/* The toggle button — hidden on desktop */
+.nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: #ffffff;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 2px 10px rgba(107, 62, 56, 0.18), 0 1px 3px rgba(0,0,0,0.08);
+  color: #6b3e38;
+  cursor: pointer;
+  flex-shrink: 0;
+  touch-action: manipulation;
+  transition: background 0.15s ease;
+}
+
+.nav-toggle:hover { background: #f5eeeb; }
+
+/* Overlay behind open menu */
+#nav-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 98;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+#nav-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* =========================================================
    RESPONSIVE TWEAKS
    ========================================================= */
 
-@media (max-width: 640px){
-  :root{ font-size: 17px; }
+@media (max-width: 640px) {
+  :root { font-size: 17px; }
 
-  .navbar{
-    padding: 16px 16px;
+  .navbar {
+    padding: 14px 16px;
+    position: relative;
+    z-index: 100;
   }
 
-  .navlinks{
-    gap: 10px;
+  /* Show hamburger, hide desktop nav */
+  .nav-toggle { display: flex; }
+
+  #nav-overlay { display: block; }
+
+  .navlinks {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 16px;
+    width: min(260px, calc(100vw - 32px));
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow:
+      0 8px 32px rgba(107, 62, 56, 0.22),
+      0 2px 8px rgba(0, 0, 0, 0.10);
+    padding: 8px;
+    gap: 4px;
+    z-index: 99;
+    /* animate in */
+    transform-origin: top right;
+    animation: nav-pop 0.18s ease forwards;
   }
 
-  .navlinks a{
-    padding: 8px 10px;
+  .navlinks.is-open {
+    display: flex;
   }
 
-  .hero{
-    padding: 34px 16px;
+  @keyframes nav-pop {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
   }
 
-  .hero-card{
-    padding: 34px 22px;
+  .navlinks a {
+    padding: 13px 16px;
+    border-radius: 10px;
+    background: none;
+    box-shadow: none;
+    font-size: 0.95rem;
+    width: 100%;
+    display: block;
+  }
+
+  .navlinks a:hover { background: #f5eeeb; }
+
+  .hero { padding: 24px 16px 16px; }
+
+  .hero-card {
+    padding: 28px 20px;
     border-radius: 24px;
   }
 
   .avatar-img,
-  .avatar-placeholder{
+  .avatar-placeholder {
     width: 80px;
     height: 80px;
   }
 
-  .tagline{
-    margin-bottom: 18px;
-  }
+  .tagline { margin-bottom: 16px; }
+
+  /* Shrink the CTA button a bit so it fits */
+  .u-btn { width: 11em; }
 }
 
 
@@ -376,8 +457,24 @@ body.content-page .eyebrow {
   text-shadow: none;
 }
 
+/* Black text-shadow is for white-on-dark; remove it when text is dark */
+body.content-page .tagline {
+  text-shadow: none;
+}
+
 body.content-page .content-hero h1 {
   text-shadow: 0 2px 8px rgba(107, 62, 56, 0.18);
+}
+
+/* Give the intro hero block a card backdrop so dark text has a
+   neutral light surface instead of sitting raw on the warm gradient */
+body.content-page .content-hero {
+  background: rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(168, 122, 116, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 36px 40px;
 }
 
 body.content-page .content-card {
@@ -449,9 +546,8 @@ body.content-page .terms-section p {
   color: #5a3d3a;
 }
 
-body.content-page .trust {
-  color: #6b4e4b;
-}
+/* Trust text stays white on all pages — the footer sits on the dark gradient edge
+   regardless of page type (background-attachment: fixed), so dark text fails here. */
 
 /* ─────────────────────────────────────────────────────────────────────────── */
 
@@ -749,7 +845,7 @@ body.content-page .content-card .card-icon {
 
 /* Input bar */
 .chat-input-area {
-  padding: 10px 0 20px;
+  padding: 10px 0 max(20px, env(safe-area-inset-bottom));
   flex-shrink: 0;
 }
 
@@ -791,8 +887,8 @@ body.content-page .content-card .card-icon {
 
 .send-btn {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   background: rgba(255,255,255,0.12);
   border: 1px solid var(--card-border);
   border-radius: 50%;
@@ -802,6 +898,7 @@ body.content-page .content-card .card-icon {
   cursor: pointer;
   color: var(--text);
   transition: background 0.15s ease;
+  touch-action: manipulation;
 }
 
 .send-btn:hover {
@@ -816,4 +913,47 @@ body.content-page .content-card .card-icon {
 
 @media (max-width: 640px) {
   .message { max-width: 90%; }
+}
+
+
+/* =========================================================
+   SAFE AREA INSETS  — iPhone notch / Dynamic Island / home bar
+   ========================================================= */
+
+/* Push the navbar down if the device has a top notch/island */
+.navbar {
+  padding-top: max(22px, env(safe-area-inset-top));
+  padding-left:  max(36px, env(safe-area-inset-left));
+  padding-right: max(36px, env(safe-area-inset-right));
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    padding-top: max(14px, env(safe-area-inset-top));
+    padding-left:  max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* =========================================================
+   GLOBAL TOUCH INTERACTION
+   ========================================================= */
+
+/* Eliminate 300ms tap delay on all interactive elements */
+a, button, [role="button"] {
+  touch-action: manipulation;
 }

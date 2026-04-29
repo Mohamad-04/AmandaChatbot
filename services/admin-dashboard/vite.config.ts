@@ -14,9 +14,11 @@ export default defineConfig({
     },
   },
   assetsInclude: ['**/*.svg', '**/*.csv'],
+  // In production the SPA is served by Flask at /admin-app/
+  base: process.env.NODE_ENV === 'production' ? '/admin-app/' : '/',
   server: {
     proxy: {
-      '/api': 'http://localhost:5000',
+      '/api': process.env.VITE_API_URL || 'http://localhost:5000',
     },
   },
 })

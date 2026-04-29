@@ -3,7 +3,9 @@
  * Provides methods for authentication, user, and chat endpoints
  */
 
-const API_BASE_URL = 'http://localhost:5000';
+// Always talk to the Flask backend on port 5000, regardless of which port
+// the frontend static server is running on (3000 in dev, same origin in prod)
+const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:5000`;
 
 class API {
     constructor(baseURL = API_BASE_URL) {

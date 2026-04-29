@@ -9,6 +9,8 @@ from flask_cors import CORS
 import os
 import re
 
+FRONTEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend'))
+
 # Import configuration
 from config import get_config
 
@@ -23,6 +25,8 @@ from routes.email_verification import email_verification_bp
 from routes.password_reset import password_reset_bp
 from routes.admin import admin_bp
 from routes.admin_api import admin_api_bp
+from routes.admin_spa import admin_spa_bp
+from routes.frontend import frontend_bp
 
 # Import WebSocket handlers
 from websocket.chat_handler import register_handlers
@@ -40,8 +44,12 @@ def create_app():
     Returns:
         tuple: (Flask app, SocketIO instance)
     """
-    # Create Flask application
-    app = Flask(__name__)
+    # Create Flask application — static folder serves frontend assets at /static/
+    app = Flask(
+        __name__,
+        static_folder=os.path.join(FRONTEND_DIR, 'static'),
+        static_url_path='/static'
+    )
     
     # Load configuration
     config = get_config()
@@ -50,9 +58,9 @@ def create_app():
     # Initialize session handling
     Session(app)
     
-    # CORS — allow all localhost origins in dev (port varies per npx serve run)
+    # CORS — allow localhost and any local network IP in dev
     CORS(app,
-         origins=re.compile(r"http://localhost(:\d+)?"),
+         origins=re.compile(r"https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?"),
          supports_credentials=True,
          allow_headers=["Content-Type"],
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
@@ -73,28 +81,22 @@ def create_app():
     app.register_blueprint(password_reset_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(admin_api_bp)
+    app.register_blueprint(admin_spa_bp)
+    # Frontend must be registered last — its catch-all serves all non-API paths
+    app.register_blueprint(frontend_bp)
 
     # Initialize SocketIO for WebSocket support
     socketio = SocketIO(
         app,
-        cors_allowed_origins="*",
-        manage_session=False,  # We manage sessions ourselves
-        async_mode='threading'  # Use threading for Python 3.12+ compatibility
+        cors_allowed_origins=config.CORS_ORIGINS,
+        manage_session=False,
+        async_mode=config.SOCKETIO_ASYNC_MODE
     )
 
     # Register WebSocket event handlers
     register_handlers(socketio)
     register_voice_handlers(socketio)
     
-    # Root endpoint for health check
-    @app.route('/')
-    def index():
-        return {
-            'service': 'Amanda Backend',
-            'status': 'running',
-            'version': '1.0.0'
-        }, 200
-
     # Health check endpoint
     @app.route('/health')
     def health():
@@ -128,14 +130,21 @@ def main():
     print("Press CTRL+C to quit")
     print("=" * 60)
     
+    is_dev = config.FLASK_ENV == 'development'
+
+    # HTTPS via self-signed cert in dev so mobile browsers grant microphone access.
+    # In production, SSL is terminated by the hosting platform's reverse proxy.
+    ssl_context = 'adhoc' if is_dev else None
+
     # Run the application with SocketIO
     socketio.run(
         app,
         host=config.FLASK_HOST,
         port=config.FLASK_PORT,
-        debug=(config.FLASK_ENV == 'development'),
-        use_reloader=False,  # Disable reloader to prevent double initialization
-        allow_unsafe_werkzeug=True  # Allow Werkzeug for development/demo purposes
+        debug=is_dev,
+        use_reloader=False,
+        allow_unsafe_werkzeug=is_dev,
+        ssl_context=ssl_context
     )
 
 
