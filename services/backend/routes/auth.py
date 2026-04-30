@@ -100,20 +100,25 @@ def signup():
                 'message': 'Email already registered'
             }), 409
         
-        # Create new user with a verification token
+        # Create new user — auto-verified so login works immediately
         user = User(email=email)
         user.set_password(password)
-        token = user.generate_verification_token()
+        user.is_verified = True
 
         db.session.add(user)
         db.session.commit()
 
-        from services.email_service import send_verification_email
-        send_verification_email(user.email, token)
+        try:
+            token = user.generate_verification_token()
+            db.session.commit()
+            from services.email_service import send_verification_email
+            send_verification_email(user.email, token)
+        except Exception as mail_err:
+            print(f"Verification email failed (non-fatal): {mail_err}")
 
         return jsonify({
             'success': True,
-            'message': 'Account created. Please check your email to verify your account before logging in.',
+            'message': 'Account created successfully. You can now log in.',
             'user_id': user.id
         }), 201
         
@@ -170,13 +175,6 @@ def login():
                 'success': False,
                 'message': 'Invalid email or password'
             }), 401
-
-        # Require email verification before allowing login
-        if not user.is_verified:
-            return jsonify({
-                'success': False,
-                'message': 'Please verify your email address before logging in. Check your inbox or request a new link.'
-            }), 403
 
         # Update last active timestamp
         user.last_active_at = datetime.utcnow()
