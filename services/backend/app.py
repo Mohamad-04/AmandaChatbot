@@ -54,10 +54,17 @@ def create_app():
     # Load configuration
     config = get_config()
     app.config.from_object(config)
-    
+
+    # Initialize database first so Flask-Session can use our db instance
+    init_db(app)
+
+    # Give Flask-Session our existing SQLAlchemy instance (avoids double-registration)
+    if config.SESSION_TYPE == 'sqlalchemy':
+        app.config['SESSION_SQLALCHEMY'] = db
+
     # Initialize session handling
     Session(app)
-    
+
     # CORS — allow localhost and any local network IP in dev
     CORS(app,
          origins=re.compile(r"https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?"),
@@ -66,9 +73,6 @@ def create_app():
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
     cors_origins = config.CORS_ORIGINS
-
-    # Initialize database
-    init_db(app)
 
     # Initialize email service
     init_mail(app)
