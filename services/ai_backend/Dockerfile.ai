@@ -11,6 +11,8 @@ COPY requirements.prod.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+# Use example config as base if config.yaml is not present
+RUN if [ ! -f config.yaml ]; then cp config.example.yaml config.yaml; fi
 
 EXPOSE 8765
 
