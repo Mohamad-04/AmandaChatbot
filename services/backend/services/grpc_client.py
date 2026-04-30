@@ -105,7 +105,7 @@ class GRPCClient:
                 '/amanda.ai.AIService/StreamChat',
                 request_serializer=ChatMessage.SerializeToString,
                 response_deserializer=ChatChunk.FromString,
-            )(request)
+            )(request, timeout=30)
             
             # Yield text chunks until done
             for chunk in response_stream:
