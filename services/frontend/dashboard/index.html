@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Dashboard - Amanda</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,9 +15,16 @@
 <body>
     <div class="dashboard-container">
         <!-- Left Sidebar: Chat List -->
-        <div class="sidebar-left">
+        <div class="sidebar-left" id="sidebar-left">
             <div class="sidebar-header">
-                <h1>Amanda</h1>
+                <div class="sidebar-header-top">
+                    <h1>Amanda</h1>
+                    <button id="sidebar-close-btn" class="sidebar-close-btn" aria-label="Close menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
                 <p id="user-email" class="user-email"></p>
             </div>
             
@@ -44,8 +51,14 @@
         
         <!-- Main Chat Area -->
         <div class="main-chat">
+            <div id="sidebar-overlay" class="sidebar-overlay" aria-hidden="true"></div>
             <div class="chat-header">
                 <div class="chat-header-left">
+                    <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" aria-label="Open chat list" aria-expanded="false" aria-controls="sidebar-left">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
                     <button id="rename-chat-btn" class="chat-rename-btn" title="Rename chat" style="display: none;">
                         <svg class="chat-rename-icon" viewBox="0 0 512 512">
                             <path d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7 410.3 231zM160 399.4l-9.1 22.7c-4 3.1-8.5 5.4-13.3 6.9L59.4 452l23-78.1c1.4-4.9 3.8-9.4 6.9-13.3l22.7-9.1v32c0 8.8 7.2 16 16 16h32zM362.7 18.7L348.3 33.2 325.7 55.8 314.3 67.1l33.9 33.9 62.1 62.1 33.9 33.9 11.3-11.3 22.6-22.6 14.5-14.5c25-25 25-65.5 0-90.5L453.3 18.7c-25-25-65.5-25-90.5 0zm-47.4 168l-144 144c-6.2 6.2-16.4 6.2-22.6 0s-6.2-16.4 0-22.6l144-144c6.2-6.2 16.4-6.2 22.6 0s6.2 16.4 0 22.6z"></path>
@@ -54,7 +67,7 @@
                 </div>
                 <h2 id="chat-title">Select a chat or start a new one</h2>
                 <div class="chat-header-right">
-                    <a id="admin-dashboard-btn" href="http://localhost:5000/admin" target="_blank" class="admin-dashboard-btn" style="display:none;" title="Admin Dashboard">
+                    <a id="admin-dashboard-btn" href="/admin-app/" target="_blank" class="admin-dashboard-btn" style="display:none;" title="Admin Dashboard">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="3" width="7" height="7"/>
                             <rect x="14" y="3" width="7" height="7"/>
@@ -177,10 +190,11 @@
                             Cancel
                         </button>
                     </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
+
         <!-- Right Sidebar: Profile (hidden by default) -->
         <div id="profile-modal" class="profile-modal" style="display: none;">
             <div class="profile-content">
@@ -216,5 +230,6 @@
     <script src="/static/js/voice-recorder.js"></script>
     <script src="/static/js/voice-player.js"></script>
     <script type="module" src="/static/js/dashboard.js"></script>
+  <script src="/static/js/page-loader.js"></script>
 </body>
 </html>

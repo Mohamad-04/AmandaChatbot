@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amanda — Colour Palette</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@300;400;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lexend Deca', system-ui, sans-serif;
+      background: linear-gradient(145deg, #DDD0C4 0%, #C8A9A4 50%, #A87A74 100%);
+      min-height: 100vh;
+      padding: 48px 24px;
+      color: #2d1e1c;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      font-size: 0.95rem;
+      opacity: 0.65;
+      margin-bottom: 48px;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+    .section-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.55;
+      margin-bottom: 16px;
+    }
+
+    .swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .swatch {
+      width: 160px;
+    }
+    .swatch-color {
+      width: 100%;
+      height: 80px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.08);
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .swatch-color:hover { transform: scale(1.03); }
+
+    .swatch-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .swatch-hex {
+      font-size: 0.78rem;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', Consolas, monospace;
+      opacity: 0.60;
+      cursor: pointer;
+      user-select: all;
+    }
+    .swatch-hex:hover { opacity: 1; }
+
+    /* Gradient swatch */
+    .swatch-gradient {
+      width: 100%;
+      height: 80px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.08);
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    }
+    .swatch.wide { width: 340px; }
+    .swatch.wide .swatch-gradient { height: 80px; }
+
+    .glass-panel {
+      background: rgba(241, 227, 211, 0.50);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(168, 122, 116, 0.20);
+      border-radius: 20px;
+      padding: 28px 32px;
+      margin-bottom: 40px;
+    }
+
+    .copy-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: #2d1e1c;
+      color: #fff;
+      font-size: 0.82rem;
+      padding: 8px 18px;
+      border-radius: 999px;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+    }
+    .copy-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<h1>Amanda</h1>
+<p class="subtitle">Brand colour palette — click any hex code to copy</p>
+
+<!-- BRAND GRADIENT -->
+<div class="section">
+  <p class="section-title">Brand Gradient</p>
+  <div class="swatches">
+    <div class="swatch">
+      <div class="swatch-color" style="background:#DDD0C4;"></div>
+      <div class="swatch-name">Cream</div>
+      <div class="swatch-hex" onclick="copy('#DDD0C4')">#DDD0C4</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#C8A9A4;"></div>
+      <div class="swatch-name">Muted Rose</div>
+      <div class="swatch-hex" onclick="copy('#C8A9A4')">#C8A9A4</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#A87A74;"></div>
+      <div class="swatch-name">Terracotta</div>
+      <div class="swatch-hex" onclick="copy('#A87A74')">#A87A74</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#6b3e38;"></div>
+      <div class="swatch-name">Mahogany</div>
+      <div class="swatch-hex" onclick="copy('#6b3e38')">#6b3e38</div>
+    </div>
+    <div class="swatch wide">
+      <div class="swatch-gradient" style="background:linear-gradient(145deg,#DDD0C4 0%,#C8A9A4 50%,#A87A74 100%);"></div>
+      <div class="swatch-name">Background Gradient</div>
+      <div class="swatch-hex" onclick="copy('linear-gradient(145deg,#DDD0C4 0%,#C8A9A4 50%,#A87A74 100%)')">linear-gradient(145deg, #DDD0C4 → #C8A9A4 → #A87A74)</div>
+    </div>
+    <div class="swatch wide">
+      <div class="swatch-gradient" style="background:linear-gradient(180deg,#C9A29D,#A87A74);"></div>
+      <div class="swatch-name">Button Gradient</div>
+      <div class="swatch-hex" onclick="copy('linear-gradient(180deg,#C9A29D,#A87A74)')">linear-gradient(180deg, #C9A29D → #A87A74)</div>
+    </div>
+  </div>
+</div>
+
+<!-- TEXT -->
+<div class="section">
+  <p class="section-title">Text</p>
+  <div class="swatches">
+    <div class="swatch">
+      <div class="swatch-color" style="background:#2d1e1c;"></div>
+      <div class="swatch-name">Primary Text</div>
+      <div class="swatch-hex" onclick="copy('#2d1e1c')">#2d1e1c</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#5a3d3a;"></div>
+      <div class="swatch-name">Secondary / Links</div>
+      <div class="swatch-hex" onclick="copy('#5a3d3a')">#5a3d3a</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#6b4e4b;"></div>
+      <div class="swatch-name">Muted Text</div>
+      <div class="swatch-hex" onclick="copy('#6b4e4b')">#6b4e4b</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#a89290;"></div>
+      <div class="swatch-name">Subtle Text</div>
+      <div class="swatch-hex" onclick="copy('#a89290')">#a89290</div>
+    </div>
+  </div>
+</div>
+
+<!-- UI / SURFACES -->
+<div class="section">
+  <p class="section-title">UI Surfaces</p>
+  <div class="swatches">
+    <div class="swatch">
+      <div class="swatch-color" style="background:rgba(241,227,211,0.50); border:1px solid rgba(168,122,116,0.20);"></div>
+      <div class="swatch-name">Card Background</div>
+      <div class="swatch-hex" onclick="copy('rgba(241,227,211,0.50)')">rgba(241,227,211, 0.50)</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:rgba(241,227,211,0.32);"></div>
+      <div class="swatch-name">Panel Background</div>
+      <div class="swatch-hex" onclick="copy('rgba(241,227,211,0.32)')">rgba(241,227,211, 0.32)</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:rgba(168,122,116,0.20);"></div>
+      <div class="swatch-name">Border / Divider</div>
+      <div class="swatch-hex" onclick="copy('rgba(168,122,116,0.20)')">rgba(168,122,116, 0.20)</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#f5eeeb; border:1px solid rgba(168,122,116,0.15);"></div>
+      <div class="swatch-name">Warm White</div>
+      <div class="swatch-hex" onclick="copy('#f5eeeb')">#f5eeeb</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#ffffff; border:1px solid rgba(168,122,116,0.15);"></div>
+      <div class="swatch-name">White</div>
+      <div class="swatch-hex" onclick="copy('#ffffff')">#ffffff</div>
+    </div>
+  </div>
+</div>
+
+<!-- ACCENT / STATE -->
+<div class="section">
+  <p class="section-title">Accent &amp; State</p>
+  <div class="swatches">
+    <div class="swatch">
+      <div class="swatch-color" style="background:#C9A29D;"></div>
+      <div class="swatch-name">Accent Light</div>
+      <div class="swatch-hex" onclick="copy('#C9A29D')">#C9A29D</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:rgba(168,122,116,0.16);"></div>
+      <div class="swatch-name">Message Bubble</div>
+      <div class="swatch-hex" onclick="copy('rgba(168,122,116,0.16)')">rgba(168,122,116, 0.16)</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#c0392b;"></div>
+      <div class="swatch-name">Error</div>
+      <div class="swatch-hex" onclick="copy('#c0392b')">#c0392b</div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#1C1A1C;"></div>
+      <div class="swatch-name">Dark (Footer)</div>
+      <div class="swatch-hex" onclick="copy('#1C1A1C')">#1C1A1C</div>
+    </div>
+  </div>
+</div>
+
+<!-- LIVE EXAMPLE -->
+<div class="section">
+  <p class="section-title">Live Example</p>
+  <div class="glass-panel">
+    <p style="font-size:1.1rem;font-weight:600;margin-bottom:8px;">Glass Panel</p>
+    <p style="font-size:0.88rem;opacity:0.65;margin-bottom:20px;">Card background: rgba(241,227,211,0.50) + backdrop-filter:blur(16px)</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button style="background:linear-gradient(180deg,#C9A29D,#A87A74);color:#fff;border:none;border-radius:999px;padding:10px 22px;font-family:inherit;font-size:0.88rem;cursor:pointer;box-shadow:0 4px 14px rgba(107,62,56,0.30);">Primary Button</button>
+      <button style="background:rgba(168,122,116,0.16);color:#2d1e1c;border:1px solid rgba(168,122,116,0.25);border-radius:999px;padding:10px 22px;font-family:inherit;font-size:0.88rem;cursor:pointer;">Secondary Button</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="copy-toast">Copied!</div>
+
+<script>
+  function copy(val) {
+    navigator.clipboard.writeText(val).then(() => {
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1600);
+    });
+  }
+</script>
+</body>
+</html>

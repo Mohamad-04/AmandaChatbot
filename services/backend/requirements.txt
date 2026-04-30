@@ -11,7 +11,12 @@ python-socketio==5.10.0
 bcrypt==4.1.2
 cachelib==0.13.0
 Flask-Mail==0.10.0
+pyopenssl>=23.0.0
 
-# Optional async modes (threading mode is default, works with Python 3.12+)
-# eventlet==0.33.3  # Uncomment for eventlet mode (Python <3.12 only)
-# gevent==23.9.1    # Uncomment for gevent mode
+# Production WSGI server + async worker for SocketIO WebSocket support
+gunicorn>=21.2.0
+gevent>=23.9.1
+gevent-websocket>=0.10.1
+
+# PostgreSQL driver (used when DATABASE_URL is set to postgres://)
+psycopg2-binary>=2.9.9

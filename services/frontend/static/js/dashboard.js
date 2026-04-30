@@ -278,7 +278,7 @@ class Dashboard {
 
     async connectWebSocket() {
         try {
-            this.textSocket = io('http://localhost:5000', { withCredentials: true });
+            this.textSocket = io(`${window.location.protocol}//${window.location.hostname}:5000`, { withCredentials: true });
 
             this.textSocket.on('message_token', data => this.handleTokenReceived(data));
             this.textSocket.on('message_complete', data => this.handleMessageComplete(data));
@@ -446,6 +446,57 @@ class Dashboard {
             }
         });
 
+        // ── Mobile sidebar drawer ──────────────────────────────────────
+        const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+        const sidebarCloseBtn  = document.getElementById('sidebar-close-btn');
+        const sidebarOverlay   = document.getElementById('sidebar-overlay');
+        const sidebarEl        = document.getElementById('sidebar-left');
+        const mainChat         = document.querySelector('.main-chat');
+
+        const openSidebar = () => {
+            sidebarEl.classList.add('is-open');
+            sidebarOverlay.classList.add('visible');
+            sidebarToggleBtn && (sidebarToggleBtn.setAttribute('aria-expanded', 'true'));
+        };
+
+        const closeSidebar = () => {
+            sidebarEl.classList.remove('is-open');
+            sidebarOverlay.classList.remove('visible');
+            sidebarToggleBtn && (sidebarToggleBtn.setAttribute('aria-expanded', 'false'));
+        };
+
+        if (sidebarToggleBtn) sidebarToggleBtn.addEventListener('click', openSidebar);
+        if (sidebarCloseBtn)  sidebarCloseBtn.addEventListener('click', closeSidebar);
+        if (sidebarOverlay)   sidebarOverlay.addEventListener('click', closeSidebar);
+
+        // Close sidebar when a chat is selected on mobile
+        if (this.elements.chatList) {
+            this.elements.chatList.addEventListener('click', () => {
+                if (window.innerWidth <= 768) closeSidebar();
+            });
+        }
+
+        // Swipe right to open, swipe left to close
+        if (mainChat) {
+            let touchStartX = 0;
+            let touchStartY = 0;
+
+            mainChat.addEventListener('touchstart', e => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            mainChat.addEventListener('touchend', e => {
+                const dx = e.changedTouches[0].clientX - touchStartX;
+                const dy = e.changedTouches[0].clientY - touchStartY;
+                // Only trigger if mostly horizontal and significant distance
+                if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+                    if (dx > 0 && touchStartX < 40) openSidebar();  // right swipe from edge
+                    if (dx < 0) closeSidebar();                      // left swipe to close
+                }
+            }, { passive: true });
+        }
+
         this.elements.logoutBtn.addEventListener('click', () => this.logout());
 
         const darkToggle = document.getElementById('theme');
@@ -535,13 +586,13 @@ class Dashboard {
     initializeVoice() {
         if (typeof VoiceRecorder === 'undefined' || typeof VoicePlayer === 'undefined') {
             console.warn('Voice features not available');
-            this.elements.voiceBtn.style.display = 'none';
+            // Keep the button visible — it still switches back to orb mode on tap
             return;
         }
 
         if (!VoiceRecorder.isSupported()) {
             console.warn('Voice recording not supported in this browser');
-            this.elements.voiceBtn.style.display = 'none';
+            // Keep the button visible — it still switches back to orb mode on tap
             return;
         }
 
@@ -795,6 +846,26 @@ class Dashboard {
     }
 
     async toggleOrbVoiceRecording() {
+        if (!this.voiceRecorder) {
+            const isHttp = location.protocol === 'http:' && location.hostname !== 'localhost';
+            if (isHttp) {
+                if (this.elements.orbHint) {
+                    this.elements.orbHint.textContent = 'Voice needs HTTPS';
+                    setTimeout(() => {
+                        if (this.elements.orbHint) this.elements.orbHint.textContent = 'Tap to speak';
+                    }, 3000);
+                }
+            } else {
+                if (this.elements.orbHint) {
+                    this.elements.orbHint.textContent = 'Voice not supported';
+                    setTimeout(() => {
+                        if (this.elements.orbHint) this.elements.orbHint.textContent = 'Tap to speak';
+                    }, 3000);
+                }
+            }
+            return;
+        }
+
         if (this.isRecording) {
             this.voiceRecorder.stopRecording();
             this.isRecording = false;
@@ -814,7 +885,6 @@ class Dashboard {
                 if (this.elements.toggleChatBtn) {
                     this.elements.toggleChatBtn.classList.add('orb-busy');
                 }
-                // show recording time in hint
                 this.voiceRecorder.onTimerUpdate = seconds => {
                     this.elements.orbHint.textContent = `Tap to stop · ${VoiceRecorder.formatTime(seconds)}`;
                 };

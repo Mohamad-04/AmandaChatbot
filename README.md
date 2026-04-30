@@ -104,6 +104,18 @@ This project consists of multiple services that work together to provide a conve
    - Open http://localhost:8000 in your browser
    - Create an account and start chatting!
 
+4. **Set up app**
+   ```bash
+   1. git checkout app (currently)
+   2. cd services/amanda_app/AmandaApp
+   3. Open constants/config.ts and change the IP address to your own (run ipconfig on Windows / ifconfig on Mac to find it)
+   4. npm install
+   5. npx expo start
+   6. Download Expo Go on your phone
+   7. Scan the QR code that appears in the terminal
+   ```
+
+
 ## Project Structure
 
 ```
