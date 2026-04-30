@@ -90,11 +90,9 @@ def create_app():
     app.register_blueprint(frontend_bp)
 
     # Initialize SocketIO for WebSocket support
-    # Allow all localhost origins so the frontend (any port) can connect in dev
-    _localhost_origins = re.compile(r"https?://(localhost|127\.0\.0\.1)(:\d+)?")
     socketio = SocketIO(
         app,
-        cors_allowed_origins=_localhost_origins,
+        cors_allowed_origins="*",
         manage_session=False,
         async_mode=config.SOCKETIO_ASYNC_MODE
     )
