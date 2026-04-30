@@ -99,16 +99,24 @@ Tone & style:
         guard: str,
         template: str,
         project_prompt: Optional[str] = None,
+        user_first_name: Optional[str] = None,
     ) -> str:
         """
         Compose the final system prompt.
 
         Order matters:
         1) Hard identity & safety guard
-        2) Default Amanda guidance
-        3) Project/session-specific prompt (if present)
+        2) User's first name (if known)
+        3) Default Amanda guidance
+        4) Project/session-specific prompt (if present)
         """
         parts: List[str] = [guard.strip()]
+
+        if user_first_name and user_first_name.strip():
+            parts.append(
+                f"The user's name is {user_first_name.strip()}. "
+                "Use their name naturally and sparingly in conversation to be warm and personal."
+            )
 
         if template and template.strip():
             parts.append("Default Amanda guidance:")
@@ -125,16 +133,20 @@ Tone & style:
         Build the effective system prompt for this request.
 
         If a project/session prompt exists in context, include it.
+        If user's first name is in context, inject it into the prompt.
         Otherwise use the default Amanda prompt only.
         """
         project_prompt = None
+        user_first_name = None
         if context:
             project_prompt = context.get("project_prompt")
+            user_first_name = context.get("user_first_name")
 
         return self._compose_system_prompt(
             guard=self._IDENTITY_AND_SAFETY_GUARD,
             template=self.template_prompt,
             project_prompt=project_prompt,
+            user_first_name=user_first_name,
         )
 
     def _build_messages(

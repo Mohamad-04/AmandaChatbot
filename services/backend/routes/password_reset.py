@@ -52,6 +52,42 @@ def forgot_password():
         return jsonify({'success': False, 'message': 'An error occurred'}), 500
 
 
+@password_reset_bp.route('/verify-reset-token', methods=['POST'])
+@rate_limit(RateLimit(5, 60), identity="ip", scope="verify_reset_token")
+def verify_reset_token():
+    """
+    Validate a password reset token without consuming it.
+
+    Request JSON:
+        { "token": "<token>" }
+
+    Response JSON (success 200):
+        { "success": true }
+
+    Response JSON (failure 400):
+        { "success": false, "message": "<reason>" }
+    """
+    try:
+        data = request.get_json()
+        if not data or 'token' not in data:
+            return jsonify({'success': False, 'message': 'Token is required'}), 400
+
+        token = data['token'].strip()
+        user = User.query.filter_by(reset_token=token).first()
+
+        if not user:
+            return jsonify({'success': False, 'message': 'Invalid or expired reset token'}), 400
+
+        if user.reset_token_expires < datetime.utcnow():
+            return jsonify({'success': False, 'message': 'Reset token has expired. Please request a new one.'}), 400
+
+        return jsonify({'success': True}), 200
+
+    except Exception as e:
+        print(f"Verify reset token error: {e}")
+        return jsonify({'success': False, 'message': 'An error occurred'}), 500
+
+
 @password_reset_bp.route('/reset-password', methods=['POST'])
 @rate_limit(RateLimit(5, 60), identity="ip", scope="reset_password")
 def reset_password():
