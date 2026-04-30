@@ -2,7 +2,7 @@
 FROM node:20-slim AS admin-builder
 WORKDIR /admin
 COPY services/admin-dashboard/package.json services/admin-dashboard/package-lock.json ./
-RUN npm ci --ignore-scripts
+RUN npm ci
 COPY services/admin-dashboard/ ./
 RUN npm run build
 
