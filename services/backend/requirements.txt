@@ -12,6 +12,7 @@ bcrypt==4.1.2
 cachelib==0.13.0
 Flask-Mail==0.10.0
 pyopenssl>=23.0.0
+PyYAML>=6.0
 
 # Production WSGI server + async worker for SocketIO WebSocket support
 gunicorn>=21.2.0
