@@ -90,9 +90,11 @@ def create_app():
     app.register_blueprint(frontend_bp)
 
     # Initialize SocketIO for WebSocket support
+    # Allow all localhost origins so the frontend (any port) can connect in dev
+    _localhost_origins = re.compile(r"https?://(localhost|127\.0\.0\.1)(:\d+)?")
     socketio = SocketIO(
         app,
-        cors_allowed_origins=config.CORS_ORIGINS,
+        cors_allowed_origins=_localhost_origins,
         manage_session=False,
         async_mode=config.SOCKETIO_ASYNC_MODE
     )
@@ -136,10 +138,6 @@ def main():
     
     is_dev = config.FLASK_ENV == 'development'
 
-    # HTTPS via self-signed cert in dev so mobile browsers grant microphone access.
-    # In production, SSL is terminated by the hosting platform's reverse proxy.
-    ssl_context = 'adhoc' if is_dev else None
-
     # Run the application with SocketIO
     socketio.run(
         app,
@@ -148,7 +146,7 @@ def main():
         debug=is_dev,
         use_reloader=False,
         allow_unsafe_werkzeug=is_dev,
-        ssl_context=ssl_context
+        ssl_context=None
     )
 
 
