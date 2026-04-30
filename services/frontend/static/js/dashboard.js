@@ -278,7 +278,10 @@ class Dashboard {
 
     async connectWebSocket() {
         try {
-            this.textSocket = io(`${window.location.protocol}//${window.location.hostname}:5000`, { withCredentials: true });
+            const socketUrl = window.location.port === '5000' || window.location.hostname === 'localhost'
+                ? `${window.location.protocol}//${window.location.hostname}:5000`
+                : window.location.origin;
+            this.textSocket = io(socketUrl, { withCredentials: true });
 
             this.textSocket.on('message_token', data => this.handleTokenReceived(data));
             this.textSocket.on('message_complete', data => this.handleMessageComplete(data));
