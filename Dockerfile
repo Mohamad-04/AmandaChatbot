@@ -20,6 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY services/backend/ ./services/backend/
 COPY services/frontend/ ./services/frontend/
+COPY services/ai_backend/descriptors.py ./services/ai_backend/descriptors.py
 COPY --from=admin-builder /admin/dist/ ./services/admin-dashboard/dist/
 COPY wsgi.py ./wsgi.py
 
