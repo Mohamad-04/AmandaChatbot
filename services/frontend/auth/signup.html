@@ -18,16 +18,6 @@
                 <p>Create Your Account</p>
             </div>
             
-            <div id="success-view" style="display:none;">
-                <div class="success-message" style="margin-bottom: 20px;">
-                    Account created! Check your inbox and click the verification link to activate your account.
-                </div>
-                <p style="font-size:0.85rem; color: var(--text-secondary, #666); text-align:center;">
-                    Didn't receive it? <a href="#" id="resend-link">Resend verification email</a>
-                </p>
-                <div id="resend-message" style="display:none; margin-top:12px;"></div>
-            </div>
-
             <form id="signup-form" class="auth-form">
                 <div class="form-group">
                     <label for="email">Email</label>
@@ -90,11 +80,6 @@
         const confirmPasswordInput = document.getElementById('confirm-password');
         const errorMessage = document.getElementById('error-message');
         const signupBtn = document.getElementById('signup-btn');
-        const successView = document.getElementById('success-view');
-        const resendLink = document.getElementById('resend-link');
-        const resendMessage = document.getElementById('resend-message');
-
-        let registeredEmail = '';
 
         function showError(message) {
             errorMessage.textContent = message;
@@ -145,10 +130,7 @@
                 const result = await api.signup(email, password);
 
                 if (result.success && result.data.success) {
-                    registeredEmail = email;
-                    form.style.display = 'none';
-                    document.querySelector('.auth-footer').style.display = 'none';
-                    successView.style.display = 'block';
+                    window.location.href = '/dashboard/';
                 } else {
                     showError(result.data.message || 'Signup failed. Please try again.');
                     setLoading(false);
@@ -158,24 +140,6 @@
                 showError('An error occurred. Please try again.');
                 setLoading(false);
             }
-        });
-
-        resendLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-            resendLink.textContent = 'Sending…';
-            try {
-                await api.request('/api/auth/resend-verification', {
-                    method: 'POST',
-                    body: JSON.stringify({ email: registeredEmail })
-                });
-                resendMessage.className = 'success-message';
-                resendMessage.textContent = 'Verification email resent. Check your inbox.';
-            } catch {
-                resendMessage.className = 'error-message';
-                resendMessage.textContent = 'Could not resend. Please try again.';
-            }
-            resendMessage.style.display = 'block';
-            resendLink.textContent = 'Resend verification email';
         });
 
         emailInput.focus();

@@ -45,10 +45,6 @@
                 </div>
                 
                 <div id="error-message" class="error-message" style="display: none;"></div>
-                <div id="unverified-message" style="display:none; margin-top: 8px; font-size: 0.85rem; text-align: center; color: var(--text-secondary, #666);">
-                    <a href="#" id="resend-link">Resend verification email</a>
-                </div>
-                <div id="resend-message" style="display:none; margin-top:8px;"></div>
 
                 <button type="submit" class="btn btn-primary" id="login-btn">
                     Login
@@ -69,21 +65,15 @@
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const errorMessage = document.getElementById('error-message');
-        const unverifiedMessage = document.getElementById('unverified-message');
-        const resendLink = document.getElementById('resend-link');
-        const resendMessage = document.getElementById('resend-message');
         const loginBtn = document.getElementById('login-btn');
 
         function showError(message) {
             errorMessage.textContent = message;
             errorMessage.style.display = 'block';
-            unverifiedMessage.style.display = 'none';
         }
 
         function hideError() {
             errorMessage.style.display = 'none';
-            unverifiedMessage.style.display = 'none';
-            resendMessage.style.display = 'none';
         }
 
         function setLoading(loading) {
@@ -110,12 +100,6 @@
 
                 if (result.success && result.data.success) {
                     window.location.href = '/dashboard/';
-                } else if (result.status === 403) {
-                    // Unverified account
-                    errorMessage.textContent = result.data.message || 'Please verify your email before logging in.';
-                    errorMessage.style.display = 'block';
-                    unverifiedMessage.style.display = 'block';
-                    setLoading(false);
                 } else {
                     showError(result.data.message || 'Login failed. Please try again.');
                     setLoading(false);
@@ -125,24 +109,6 @@
                 showError('An error occurred. Please try again.');
                 setLoading(false);
             }
-        });
-
-        resendLink.addEventListener('click', async (e) => {
-            e.preventDefault();
-            resendLink.textContent = 'Sending…';
-            try {
-                await api.request('/api/auth/resend-verification', {
-                    method: 'POST',
-                    body: JSON.stringify({ email: emailInput.value.trim() })
-                });
-                resendMessage.className = 'success-message';
-                resendMessage.textContent = 'Verification email sent. Check your inbox.';
-            } catch {
-                resendMessage.className = 'error-message';
-                resendMessage.textContent = 'Could not resend. Please try again.';
-            }
-            resendMessage.style.display = 'block';
-            resendLink.textContent = 'Resend verification email';
         });
 
         emailInput.focus();

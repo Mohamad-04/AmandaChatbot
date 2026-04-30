@@ -7,7 +7,6 @@ from models.user import User
 from utils.rate_limiter import rate_limit, RateLimit
 from datetime import datetime
 import re
-import threading
 
 # Create blueprint
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
@@ -109,27 +108,15 @@ def signup():
         db.session.add(user)
         db.session.commit()
 
-        def send_email_async(app, email, token):
-            with app.app_context():
-                try:
-                    from services.email_service import send_verification_email
-                    send_verification_email(email, token)
-                except Exception as mail_err:
-                    print(f"Verification email failed (non-fatal): {mail_err}")
-
-        from flask import current_app
-        token = user.generate_verification_token()
-        db.session.commit()
-        threading.Thread(
-            target=send_email_async,
-            args=(current_app._get_current_object(), user.email, token),
-            daemon=True
-        ).start()
+        session.clear()
+        session.permanent = True
+        session['user_id'] = user.id
+        session['email'] = user.email
 
         return jsonify({
             'success': True,
-            'message': 'Account created successfully. You can now log in.',
-            'user_id': user.id
+            'message': 'Account created successfully.',
+            'user': {'id': user.id, 'email': user.email}
         }), 201
         
     except Exception as e:

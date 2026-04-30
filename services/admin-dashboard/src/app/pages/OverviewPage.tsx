@@ -34,12 +34,12 @@ export function OverviewPage() {
 
   useEffect(() => {
     fetch('/api/admin/overview', { credentials: 'include' })
-      .then(r => r.json())
+      .then(r => r.ok ? r.json() : null)
       .then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
-  const messageBreakdownData = data ? [
+  const messageBreakdownData = (data?.message_breakdown) ? [
     { name: "User Messages",   value: data.message_breakdown.user_messages,   color: "#A87A74" },
     { name: "Amanda Messages", value: data.message_breakdown.amanda_messages, color: "#C8A9A4" },
   ] : [];
