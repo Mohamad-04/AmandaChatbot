@@ -90,9 +90,10 @@ def create_app():
     app.register_blueprint(frontend_bp)
 
     # Initialize SocketIO for WebSocket support
+    is_dev = config.FLASK_ENV == 'development'
     socketio = SocketIO(
         app,
-        cors_allowed_origins=config.CORS_ORIGINS,
+        cors_allowed_origins="*" if is_dev else config.CORS_ORIGINS,
         manage_session=False,
         async_mode=config.SOCKETIO_ASYNC_MODE
     )
